@@ -74,51 +74,47 @@ CREATE TABLE DOCTOR (
 ) ENGINE=InnoDB;
 
 -- ====================================================
--- FAMILY UNIT (Merged Man/Woman/Family)
+-- MERGED FAMILY UNIT (Family + Woman + Man + Marriage)
 -- ====================================================
 
 CREATE TABLE FAMILY_UNIT (
     family_unit_id INT AUTO_INCREMENT PRIMARY KEY,
     phm_area_id INT NOT NULL,
     
-    -- Family Information
     address TEXT,
     registration_date DATE NOT NULL,
     contact_number VARCHAR(20),
+    marriage_date DATE,
     form_book_number VARCHAR(50) UNIQUE NOT NULL,
     
-    -- Husband Information
-    husband_nic VARCHAR(20) UNIQUE NOT NULL,
-    husband_name VARCHAR(255) NOT NULL,
-    husband_dob DATE,
-    husband_occupation VARCHAR(255),
-    husband_contact VARCHAR(20),
-    husband_blood_group VARCHAR(10),
-    
-    -- Wife Information (Mother)
-    wife_user_id INT UNIQUE,
-    wife_nic VARCHAR(20) UNIQUE NOT NULL,
-    wife_name VARCHAR(255) NOT NULL,
-    wife_dob DATE,
-    wife_occupation VARCHAR(255),
-    wife_contact VARCHAR(20),
-    wife_blood_group VARCHAR(10),
-    
-    -- Marriage Information
-    marriage_date DATE,
-    marriage_certificate_number VARCHAR(100),
-    
-    -- Status
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     
     FOREIGN KEY (phm_area_id) REFERENCES PHM_AREA(phm_area_id),
-    FOREIGN KEY (wife_user_id) REFERENCES USER(user_id) ON DELETE SET NULL,
-    INDEX idx_phm_wife (phm_area_id, wife_nic),
-    INDEX idx_husband_nic (husband_nic),
-    INDEX idx_form_book (form_book_number),
-    INDEX idx_wife_user (wife_user_id)
+    INDEX idx_phm_area (phm_area_id),
+    INDEX idx_form_book (form_book_number)
+) ENGINE=InnoDB;
+
+-- Family members (HUSBAND/WIFE), WIFE may link to USER for login
+CREATE TABLE FAMILY_MEMBER (
+    member_id INT AUTO_INCREMENT PRIMARY KEY,
+    family_unit_id INT NOT NULL,
+    role ENUM('HUSBAND','WIFE') NOT NULL,
+    nic VARCHAR(20) UNIQUE NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    date_of_birth DATE,
+    occupation VARCHAR(255),
+    contact_number VARCHAR(20),
+    blood_group VARCHAR(10),
+    user_id INT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (family_unit_id) REFERENCES FAMILY_UNIT(family_unit_id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES USER(user_id) ON DELETE SET NULL,
+    INDEX idx_family_role (family_unit_id, role),
+    INDEX idx_member_nic (nic),
+    INDEX idx_member_user (user_id)
 ) ENGINE=InnoDB;
 
 -- ====================================================
@@ -403,8 +399,8 @@ CREATE TABLE SESSION_ATTENDANCE (
 CREATE TABLE NOTIFICATION_TYPE (
     type_id INT AUTO_INCREMENT PRIMARY KEY,
     type_name VARCHAR(255) UNIQUE NOT NULL,
-    template TEXT,
     description TEXT,
+    template TEXT,
     priority ENUM('LOW', 'MEDIUM', 'HIGH', 'URGENT') DEFAULT 'MEDIUM'
 ) ENGINE=InnoDB;
 
@@ -433,25 +429,6 @@ CREATE TABLE NOTIFICATION (
     INDEX idx_status_sent (status, sent_date)
 ) ENGINE=InnoDB;
 
--- ====================================================
--- AUDIT LOG
--- ====================================================
-
-CREATE TABLE AUDIT_LOG (
-    log_id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT,
-    action VARCHAR(255) NOT NULL,
-    table_name VARCHAR(100) NOT NULL,
-    record_id INT,
-    old_value TEXT,
-    new_value TEXT,
-    ip_address VARCHAR(50),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    
-    FOREIGN KEY (user_id) REFERENCES USER(user_id) ON DELETE SET NULL,
-    INDEX idx_user_created (user_id, created_at),
-    INDEX idx_table_record (table_name, record_id)
-) ENGINE=InnoDB;
 
 -- ====================================================
 -- END OF SCHEMA
