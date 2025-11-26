@@ -2,6 +2,8 @@
 -- MOH Connect Backend - Database Schema
 -- ====================================================
 -- Database: moh_connect
+-- Generated: November 27, 2025
+-- ====================================================
 
 -- Drop database if exists and create fresh
 DROP DATABASE IF EXISTS moh_connect;
@@ -9,7 +11,7 @@ CREATE DATABASE moh_connect CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE moh_connect;
 
 -- ====================================================
--- AUTHENTICATION & AUTHORIZATION
+-- AUTHENTICATION & USER MANAGEMENT
 -- ====================================================
 
 CREATE TABLE USER (
@@ -24,18 +26,6 @@ CREATE TABLE USER (
     INDEX idx_username (username),
     INDEX idx_email (email),
     INDEX idx_role (role)
-) ENGINE=InnoDB;
-
-CREATE TABLE USER_SESSION (
-    session_id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
-    token VARCHAR(500) UNIQUE NOT NULL,
-    ip_address VARCHAR(50),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    expires_at TIMESTAMP NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES USER(user_id) ON DELETE CASCADE,
-    INDEX idx_token (token),
-    INDEX idx_user_session (user_id, expires_at)
 ) ENGINE=InnoDB;
 
 -- ====================================================
@@ -84,7 +74,7 @@ CREATE TABLE DOCTOR (
 ) ENGINE=InnoDB;
 
 -- ====================================================
--- FAMILY UNIT (Consolidated)
+-- FAMILY UNIT (Merged Man/Woman/Family)
 -- ====================================================
 
 CREATE TABLE FAMILY_UNIT (
@@ -132,7 +122,7 @@ CREATE TABLE FAMILY_UNIT (
 ) ENGINE=InnoDB;
 
 -- ====================================================
--- PREGNANCY & BABY
+-- PREGNANCY & BABIES
 -- ====================================================
 
 CREATE TABLE PREGNANCY (
@@ -140,18 +130,15 @@ CREATE TABLE PREGNANCY (
     family_unit_id INT NOT NULL,
     pregnancy_number VARCHAR(50) UNIQUE NOT NULL,
     
-    -- Pregnancy Dates
     lmp_date DATE NOT NULL,
     edd_date DATE NOT NULL,
     delivery_date DATE,
     delivery_type ENUM('NORMAL', 'C_SECTION', 'ASSISTED', 'OTHER'),
     
-    -- Pregnancy Status
     pregnancy_status ENUM('ACTIVE', 'COMPLETED', 'TERMINATED', 'MISCARRIAGE') DEFAULT 'ACTIVE',
     gravida INT DEFAULT 1,
     para INT DEFAULT 0,
     
-    -- Risk Assessment
     risk_level ENUM('LOW', 'MEDIUM', 'HIGH') DEFAULT 'LOW',
     risk_factors TEXT,
     
@@ -175,7 +162,6 @@ CREATE TABLE BABY (
     birth_height FLOAT COMMENT 'cm',
     birth_complications TEXT,
     
-    -- Additional Info
     apgar_score VARCHAR(20),
     birth_order INT DEFAULT 1,
     is_alive BOOLEAN DEFAULT TRUE,
@@ -203,19 +189,16 @@ CREATE TABLE MOTHER_RECORD (
     record_date DATE NOT NULL,
     gestational_age INT COMMENT 'weeks',
     
-    -- Vitals
     weight FLOAT COMMENT 'kg',
     bmi FLOAT,
     blood_pressure VARCHAR(20),
     shf FLOAT COMMENT 'Symphysis-fundal height',
     
-    -- Clinical Findings
     findings TEXT,
     recommendations TEXT,
     complications TEXT,
     notes TEXT,
     
-    -- Follow-up
     next_visit_date DATE,
     
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -235,23 +218,19 @@ CREATE TABLE BABY_RECORD (
     record_date DATE NOT NULL,
     age_months INT,
     
-    -- Growth Parameters
     weight FLOAT COMMENT 'kg',
     height FLOAT COMMENT 'cm',
     head_circumference FLOAT COMMENT 'cm',
     bmi FLOAT,
     
-    -- Development
     developmental_milestones TEXT,
     growth_status ENUM('NORMAL', 'UNDERWEIGHT', 'OVERWEIGHT', 'STUNTED', 'WASTED') DEFAULT 'NORMAL',
     
-    -- Clinical
     findings TEXT,
     recommendations TEXT,
     health_status VARCHAR(255),
     notes TEXT,
     
-    -- Follow-up
     next_visit_date DATE,
     
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -286,10 +265,7 @@ CREATE TABLE MOTHER_VACCINATION (
     batch_number VARCHAR(100),
     manufacturer VARCHAR(255),
     next_dose_date DATE,
-    
-    -- Side Effects
     adverse_reaction TEXT,
-    
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     
     FOREIGN KEY (pregnancy_id) REFERENCES PREGNANCY(pregnancy_id) ON DELETE CASCADE,
@@ -308,10 +284,7 @@ CREATE TABLE BABY_VACCINATION (
     batch_number VARCHAR(100),
     manufacturer VARCHAR(255),
     next_dose_date DATE,
-    
-    -- Side Effects
     adverse_reaction TEXT,
-    
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     
     FOREIGN KEY (baby_id) REFERENCES BABY(baby_id) ON DELETE CASCADE,
@@ -364,7 +337,6 @@ CREATE TABLE TRIPOSHA_DISTRIBUTION (
     
     beneficiary_signature TEXT,
     notes TEXT,
-    
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     
     FOREIGN KEY (baby_id) REFERENCES BABY(baby_id) ON DELETE CASCADE,
@@ -398,7 +370,6 @@ CREATE TABLE SESSION (
     capacity INT DEFAULT 50,
     
     status ENUM('SCHEDULED', 'COMPLETED', 'CANCELLED') DEFAULT 'SCHEDULED',
-    
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     
     FOREIGN KEY (midwife_id) REFERENCES MIDWIFE(midwife_id) ON DELETE CASCADE,
@@ -417,7 +388,6 @@ CREATE TABLE SESSION_ATTENDANCE (
     attendance_time TIMESTAMP NULL,
     notes TEXT,
     feedback TEXT,
-    
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     
     FOREIGN KEY (session_id) REFERENCES SESSION(session_id) ON DELETE CASCADE,
@@ -449,14 +419,11 @@ CREATE TABLE NOTIFICATION (
     status ENUM('PENDING', 'SENT', 'DELIVERED', 'FAILED') DEFAULT 'PENDING',
     delivery_method ENUM('SMS', 'EMAIL', 'WHATSAPP', 'CALL'),
     
-    -- Related Event
     event_date DATE,
     event_type VARCHAR(255),
     
-    -- Tracking
     read_at TIMESTAMP NULL,
     responded_at TIMESTAMP NULL,
-    
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     
     FOREIGN KEY (type_id) REFERENCES NOTIFICATION_TYPE(type_id),
