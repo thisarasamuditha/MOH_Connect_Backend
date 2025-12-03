@@ -1,4 +1,4 @@
-package com.moh.moh_backend.service;
+package com.moh.moh_backend.util;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
