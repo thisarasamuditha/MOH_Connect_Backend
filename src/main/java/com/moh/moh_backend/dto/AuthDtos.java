@@ -17,11 +17,34 @@ public class AuthDtos {
         public String password;
         @NotBlank
         public String role; // ADMIN/MIDWIFE/DOCTOR/MOTHER
+
+        // Doctor-specific fields
+        public DoctorDetails doctorDetails;
+        // Midwife-specific fields
+        public MidwifeDetails midwifeDetails;
+        // Mother-specific fields
+        public String wifeNic;
+
+        public static class DoctorDetails {
+            public String name;
+            public String specialization;
+            public String contactNumber;
+            public String email;
+            public String licenseNumber;
+        }
+        public static class MidwifeDetails {
+            public String name;
+            public Long phmAreaId;
+            public String contactNumber;
+            public String email;
+            public String assignmentDate;
+            public String qualifications;
+        }
     }
 
     public static class LoginRequest {
         @NotBlank
-        public String Email;
+        public String email;
         @NotBlank
         public String password;
     }
