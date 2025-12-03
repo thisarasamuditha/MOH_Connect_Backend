@@ -21,7 +21,7 @@ public class AuthDtos {
 
     public static class LoginRequest {
         @NotBlank
-        public String usernameOrEmail;
+        public String Email;
         @NotBlank
         public String password;
     }
