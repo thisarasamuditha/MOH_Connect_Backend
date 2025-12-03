@@ -18,16 +18,6 @@ public class PhmArea {
     @Column(name = "area_code", unique = true, nullable = false, length = 50)
     private String areaCode;
 
-    @Column(name = "description", columnDefinition = "TEXT")
-    private String description;
-
-    @Column(name = "created_at", updatable = false)
-    private LocalDateTime createdAt;
-
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-    }
 
     // Constructors
     public PhmArea() {
@@ -36,7 +26,6 @@ public class PhmArea {
     public PhmArea(String areaName, String areaCode, String description) {
         this.areaName = areaName;
         this.areaCode = areaCode;
-        this.description = description;
     }
 
     // Getters and Setters
@@ -62,21 +51,5 @@ public class PhmArea {
 
     public void setAreaCode(String areaCode) {
         this.areaCode = areaCode;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
     }
 }
