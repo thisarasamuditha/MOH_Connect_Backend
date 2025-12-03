@@ -34,7 +34,7 @@ public class AuthDtos {
         }
         public static class MidwifeDetails {
             public String name;
-            public Long phmAreaId;
+            public Integer phmAreaId;
             public String contactNumber;
             public String email;
             public String assignmentDate;
