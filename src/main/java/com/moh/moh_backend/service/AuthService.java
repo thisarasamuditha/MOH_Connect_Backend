@@ -4,6 +4,8 @@ import com.moh.moh_backend.dto.AuthDtos;
 import com.moh.moh_backend.model.User;
 import com.moh.moh_backend.model.UserRole;
 import com.moh.moh_backend.repository.UserRepository;
+import com.moh.moh_backend.util.JwtService;
+import com.moh.moh_backend.util.PasswordHashService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,6 +35,7 @@ public class AuthService {
     public AuthDtos.AuthResponse register(AuthDtos.RegisterRequest req) {
         if (userRepo.existsByUsername(req.username)) {
             throw new IllegalArgumentException("Username already taken");
+
         }
         if (userRepo.existsByEmail(req.email)) {
             throw new IllegalArgumentException("Email already registered");
@@ -58,8 +61,8 @@ public class AuthService {
     }
 
     public AuthDtos.AuthResponse login(AuthDtos.LoginRequest req) {
-        Optional<User> byUsername = userRepo.findByUsername(req.usernameOrEmail);
-        Optional<User> byEmail = byUsername.isPresent() ? Optional.empty() : userRepo.findByEmail(req.usernameOrEmail);
+        Optional<User> byUsername = userRepo.findByEmail(req.Email);
+        Optional<User> byEmail = byUsername.isPresent() ? Optional.empty() : userRepo.findByEmail(req.Email);
         User user = byUsername.orElseGet(() -> byEmail.orElseThrow(() -> new IllegalArgumentException("User not found")));
 
         String suppliedHash = hashService.hashSha256(req.password);
