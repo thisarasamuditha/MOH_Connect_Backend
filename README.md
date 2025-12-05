@@ -132,3 +132,4 @@
 - For MIDWIFE, `phmAreaId` must reference an existing PHM_AREA.
 - For MOTHER, `wifeNic` links the user to an existing FAMILY_MEMBER (role=WIFE).
 - Only authentication endpoints are implemented in the current project.
+- Midwife can add new mother users after logging in.
