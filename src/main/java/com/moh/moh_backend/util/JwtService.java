@@ -53,4 +53,29 @@ public class JwtService {
             return false;
         }
     }
+
+    public String getRole(String token) {
+        try {
+            var claims = Jwts.parser().verifyWith(key).build()
+                    .parseSignedClaims(token).getPayload();
+            Object role = claims.get("role");
+            return role != null ? role.toString() : null;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public Integer getUserId(String token) {
+        try {
+            var claims = Jwts.parser().verifyWith(key).build()
+                    .parseSignedClaims(token).getPayload();
+            Object userId = claims.get("userId");
+            if (userId == null) return null;
+            if (userId instanceof Integer) return (Integer) userId;
+            return Integer.valueOf(userId.toString());
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
 }
