@@ -88,9 +88,7 @@ public class AuthService {
             midwifeRepo.save(midwife);
         }
 
-        Map<String, Object> claims = new HashMap<>();
-        claims.put("role", user.getRole().name());
-        String token = jwtService.generateToken(user.getUsername(), claims);
+        String token = jwtService.issueToken(user.getUserId(), user.getEmail(), user.getRole().name());
 
         AuthDtos.AuthResponse resp = new AuthDtos.AuthResponse();
         resp.token = token;
@@ -111,9 +109,7 @@ public class AuthService {
             throw new IllegalStateException("User is inactive");
         }
 
-        Map<String, Object> claims = new HashMap<>();
-        claims.put("role", user.getRole().name());
-        String token = jwtService.generateToken(user.getUsername(), claims);
+        String token = jwtService.issueToken(user.getUserId(), user.getEmail(), user.getRole().name());
 
         AuthDtos.AuthResponse resp = new AuthDtos.AuthResponse();
         resp.token = token;
