@@ -1,7 +1,6 @@
 package com.moh.moh_backend.util;
 
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
@@ -10,6 +9,7 @@ import org.springframework.stereotype.Service;
 import javax.crypto.SecretKey;
 import java.time.Instant;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -18,10 +18,7 @@ import java.util.Map;
  */
 @Service
 public class JwtService {
-    // HS256 secret in Base64 form loaded from application.properties
     private final SecretKey key;
-
-    // Default token validity 24h
     private final long defaultTtlMillis;
 
     public JwtService(
@@ -32,6 +29,15 @@ public class JwtService {
         this.defaultTtlMillis = ttlMillis;
     }
 
+    /** Generate a JWT with userId, email, role. */
+    public String issueToken(Integer userId, String email, String role) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("userId", userId);
+        claims.put("email", email);
+        claims.put("role", role);
+        return generateToken(email, claims);
+    }
+
     /** Generate a JWT with standard claims. */
     public String generateToken(String subject, Map<String, Object> claims) {
         Instant now = Instant.now();
@@ -40,7 +46,7 @@ public class JwtService {
                 .claims(claims)
                 .issuedAt(Date.from(now))
                 .expiration(new Date(now.toEpochMilli() + defaultTtlMillis))
-                .signWith(key, SignatureAlgorithm.HS256)
+                .signWith(key)
                 .compact();
     }
 
@@ -72,10 +78,10 @@ public class JwtService {
             Object userId = claims.get("userId");
             if (userId == null) return null;
             if (userId instanceof Integer) return (Integer) userId;
+            if (userId instanceof Number) return ((Number) userId).intValue();
             return Integer.valueOf(userId.toString());
         } catch (Exception e) {
             return null;
         }
     }
-
 }
