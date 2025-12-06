@@ -74,12 +74,6 @@
   }
 }
 ```
-**Success Response (200 OK):**
-```json"User registered successfully"
-```
-**Error Responses:**
-- `400 Bad Request`: Username/email already exists, missing required fields, invalid role, or missing role-specific details
-
 
 ### 2. Login
 **Endpoint:** `POST /api/auth/login`
