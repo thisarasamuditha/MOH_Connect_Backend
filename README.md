@@ -74,18 +74,12 @@
   }
 }
 ```
-- **Mother:**
-```json
-{
-  "username": "priya_silva",
-  "email": "priya@example.com",
-  "password": "MotherPass@123",
-  "role": "MOTHER",
-  "wifeNic": "856234567V"
-}
+**Success Response (200 OK):**
+```json"User registered successfully"
 ```
+**Error Responses:**
+- `400 Bad Request`: Username/email already exists, missing required fields, invalid role, or missing role-specific details
 
----
 
 ### 2. Login
 **Endpoint:** `POST /api/auth/login`
