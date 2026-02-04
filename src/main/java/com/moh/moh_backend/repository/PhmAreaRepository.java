@@ -1,7 +1,6 @@
 package com.moh.moh_backend.repository;
 
 import com.moh.moh_backend.model.PhmArea;
-import com.moh.moh_backend.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
