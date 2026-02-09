@@ -1,7 +1,6 @@
 package com.moh.moh_backend.model;
 
 import jakarta.persistence.*;
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "PHM_AREA")
