@@ -7,6 +7,10 @@
 4. [Baby Endpoints](#baby-endpoints)
 5. [Mother Record Endpoints](#mother-record-endpoints)
 6. [Baby Record Endpoints](#baby-record-endpoints)
+7. [Vaccination Endpoints](#vaccination-endpoints)
+   - [Vaccine Schedule](#vaccine-schedule-endpoints)
+   - [Mother Vaccination](#mother-vaccination-endpoints)
+   - [Baby Vaccination](#baby-vaccination-endpoints)
 
 ---
 
@@ -944,6 +948,507 @@
 
 ---
 
+## Vaccination Endpoints
+
+## Vaccine Schedule Endpoints
+
+### 24. Create Vaccine Schedule
+**Endpoint:** `POST /api/vaccine-schedules`
+
+**Request Body:**
+```json
+{
+  "vaccineName": "string (required)",
+  "targetGroup": "MOTHER | BABY (required)",
+  "doseNumber": "integer (required, >= 1)",
+  "recommendedAgeDays": "integer (optional)",
+  "description": "string (optional)"
+}
+```
+
+**Example:**
+```json
+{
+  "vaccineName": "Tetanus Toxoid (TT)",
+  "targetGroup": "MOTHER",
+  "doseNumber": 1,
+  "recommendedAgeDays": 0,
+  "description": "First dose of Tetanus Toxoid during pregnancy"
+}
+```
+
+**Success Response (201 Created):**
+```json
+{
+  "scheduleId": 1,
+  "vaccineName": "Tetanus Toxoid (TT)",
+  "targetGroup": "MOTHER",
+  "doseNumber": 1,
+  "recommendedAgeDays": 0,
+  "description": "First dose of Tetanus Toxoid during pregnancy",
+  "createdAt": "2026-02-10T10:30:00"
+}
+```
+
+---
+
+### 25. Get Vaccine Schedule by ID
+**Endpoint:** `GET /api/vaccine-schedules/{id}`
+
+**Success Response (200 OK):**
+```json
+{
+  "scheduleId": 1,
+  "vaccineName": "Tetanus Toxoid (TT)",
+  "targetGroup": "MOTHER",
+  "doseNumber": 1,
+  "recommendedAgeDays": 0,
+  "description": "First dose of Tetanus Toxoid during pregnancy",
+  "createdAt": "2026-02-10T10:30:00"
+}
+```
+
+**Error Responses:**
+- `404 Not Found`: Vaccine schedule not found
+
+---
+
+### 26. Get All Vaccine Schedules
+**Endpoint:** `GET /api/vaccine-schedules`
+
+**Success Response (200 OK):**
+```json
+[
+  {
+    "scheduleId": 1,
+    "vaccineName": "Tetanus Toxoid (TT)",
+    "targetGroup": "MOTHER",
+    "doseNumber": 1,
+    "recommendedAgeDays": 0,
+    "description": "First dose of Tetanus Toxoid during pregnancy"
+  },
+  {
+    "scheduleId": 2,
+    "vaccineName": "BCG",
+    "targetGroup": "BABY",
+    "doseNumber": 1,
+    "recommendedAgeDays": 0,
+    "description": "BCG vaccine at birth"
+  }
+]
+```
+
+---
+
+### 27. Get Schedules by Target Group
+**Endpoint:** `GET /api/vaccine-schedules/by-target-group/{targetGroup}`
+
+**Path Parameters:**
+- `targetGroup`: `MOTHER` or `BABY`
+
+**Example:** `GET /api/vaccine-schedules/by-target-group/BABY`
+
+**Success Response (200 OK):**
+```json
+[
+  {
+    "scheduleId": 7,
+    "vaccineName": "BCG",
+    "targetGroup": "BABY",
+    "doseNumber": 1,
+    "recommendedAgeDays": 0,
+    "description": "BCG vaccine at birth"
+  },
+  {
+    "scheduleId": 10,
+    "vaccineName": "DTP",
+    "targetGroup": "BABY",
+    "doseNumber": 1,
+    "recommendedAgeDays": 60,
+    "description": "First dose of DTP at 2 months"
+  }
+]
+```
+
+**Error Responses:**
+- `400 Bad Request`: Invalid target group value
+
+---
+
+### 28. Update Vaccine Schedule
+**Endpoint:** `PUT /api/vaccine-schedules/{id}`
+
+**Request Body:** (all fields optional)
+```json
+{
+  "vaccineName": "string",
+  "description": "string",
+  "recommendedAgeDays": "integer"
+}
+```
+
+**Example:**
+```json
+{
+  "vaccineName": "Tetanus Toxoid (TT) - Updated",
+  "description": "Updated description",
+  "recommendedAgeDays": 7
+}
+```
+
+**Success Response (200 OK):**
+```json
+{
+  "scheduleId": 1,
+  "vaccineName": "Tetanus Toxoid (TT) - Updated",
+  "targetGroup": "MOTHER",
+  "doseNumber": 1,
+  "recommendedAgeDays": 7,
+  "description": "Updated description",
+  "createdAt": "2026-02-10T10:30:00"
+}
+```
+
+**Error Responses:**
+- `404 Not Found`: Vaccine schedule not found
+
+---
+
+### 29. Delete Vaccine Schedule
+**Endpoint:** `DELETE /api/vaccine-schedules/{id}`
+
+**Success Response (204 No Content)**
+
+**Error Responses:**
+- `404 Not Found`: Vaccine schedule not found
+
+---
+
+## Mother Vaccination Endpoints
+
+### 30. Administer Mother Vaccine
+**Endpoint:** `POST /api/mother-vaccinations`
+
+**Request Body:**
+```json
+{
+  "pregnancyId": "integer (required)",
+  "midwifeId": "integer (optional)",
+  "scheduleId": "integer (required)",
+  "vaccinationDate": "string (YYYY-MM-DD, required)",
+  "batchNumber": "string (optional)",
+  "manufacturer": "string (optional)",
+  "nextDoseDate": "string (YYYY-MM-DD, optional)",
+  "adverseReaction": "string (optional)"
+}
+```
+
+**Example:**
+```json
+{
+  "pregnancyId": 1,
+  "midwifeId": 2,
+  "scheduleId": 1,
+  "vaccinationDate": "2026-02-10",
+  "batchNumber": "TT-2026-001",
+  "manufacturer": "Serum Institute of India",
+  "nextDoseDate": "2026-03-10",
+  "adverseReaction": null
+}
+```
+
+**Success Response (201 Created):**
+```json
+{
+  "vaccinationId": 1,
+  "pregnancyId": 1,
+  "motherName": "Priya Silva",
+  "midwifeId": 2,
+  "midwifeName": "Nimal Perera",
+  "schedule": {
+    "scheduleId": 1,
+    "vaccineName": "Tetanus Toxoid (TT)",
+    "targetGroup": "MOTHER",
+    "doseNumber": 1,
+    "recommendedAgeDays": 0,
+    "description": "First dose of Tetanus Toxoid during pregnancy"
+  },
+  "vaccinationDate": "2026-02-10",
+  "batchNumber": "TT-2026-001",
+  "manufacturer": "Serum Institute of India",
+  "nextDoseDate": "2026-03-10",
+  "adverseReaction": null,
+  "createdAt": "2026-02-10T11:00:00"
+}
+```
+
+**Error Responses:**
+- `400 Bad Request`: Pregnancy not found
+- `400 Bad Request`: Vaccine schedule not found
+- `400 Bad Request`: "Selected vaccine schedule is not for mothers"
+- `400 Bad Request`: Midwife not found (if midwifeId provided)
+
+---
+
+### 31. Get Mother Vaccination by ID
+**Endpoint:** `GET /api/mother-vaccinations/{id}`
+
+**Success Response (200 OK):**
+```json
+{
+  "vaccinationId": 1,
+  "pregnancyId": 1,
+  "motherName": "Priya Silva",
+  "midwifeId": 2,
+  "midwifeName": "Nimal Perera",
+  "schedule": {
+    "scheduleId": 1,
+    "vaccineName": "Tetanus Toxoid (TT)",
+    "targetGroup": "MOTHER",
+    "doseNumber": 1
+  },
+  "vaccinationDate": "2026-02-10",
+  "batchNumber": "TT-2026-001",
+  "manufacturer": "Serum Institute of India",
+  "nextDoseDate": "2026-03-10",
+  "adverseReaction": null,
+  "createdAt": "2026-02-10T11:00:00"
+}
+```
+
+**Error Responses:**
+- `404 Not Found`: Mother vaccination not found
+
+---
+
+### 32. Get Mother Vaccinations by Pregnancy
+**Endpoint:** `GET /api/mother-vaccinations/by-pregnancy/{pregnancyId}`
+
+**Success Response (200 OK):**
+```json
+[
+  {
+    "vaccinationId": 1,
+    "pregnancyId": 1,
+    "motherName": "Priya Silva",
+    "schedule": {
+      "vaccineName": "Tetanus Toxoid (TT)",
+      "doseNumber": 1
+    },
+    "vaccinationDate": "2026-02-10",
+    "nextDoseDate": "2026-03-10"
+  },
+  {
+    "vaccinationId": 2,
+    "pregnancyId": 1,
+    "motherName": "Priya Silva",
+    "schedule": {
+      "vaccineName": "Influenza Vaccine",
+      "doseNumber": 1
+    },
+    "vaccinationDate": "2026-02-15",
+    "nextDoseDate": null
+  }
+]
+```
+
+---
+
+### 33. Get Mother Vaccinations by Mother ID
+**Endpoint:** `GET /api/mother-vaccinations/by-mother/{motherId}`
+
+**Description:** Get all vaccinations across all pregnancies for a specific mother.
+
+**Success Response (200 OK):**
+```json
+[
+  {
+    "vaccinationId": 1,
+    "pregnancyId": 1,
+    "motherName": "Priya Silva",
+    "schedule": {
+      "vaccineName": "Tetanus Toxoid (TT)",
+      "doseNumber": 1
+    },
+    "vaccinationDate": "2026-02-10"
+  }
+]
+```
+
+---
+
+### 34. Delete Mother Vaccination
+**Endpoint:** `DELETE /api/mother-vaccinations/{id}`
+
+**Success Response (204 No Content)**
+
+**Error Responses:**
+- `404 Not Found`: Mother vaccination not found
+
+---
+
+## Baby Vaccination Endpoints
+
+### 35. Administer Baby Vaccine
+**Endpoint:** `POST /api/baby-vaccinations`
+
+**Request Body:**
+```json
+{
+  "babyId": "integer (required)",
+  "midwifeId": "integer (optional)",
+  "scheduleId": "integer (required)",
+  "vaccinationDate": "string (YYYY-MM-DD, required)",
+  "batchNumber": "string (optional)",
+  "manufacturer": "string (optional)",
+  "nextDoseDate": "string (YYYY-MM-DD, optional)",
+  "adverseReaction": "string (optional)"
+}
+```
+
+**Example:**
+```json
+{
+  "babyId": 1,
+  "midwifeId": 2,
+  "scheduleId": 7,
+  "vaccinationDate": "2026-08-05",
+  "batchNumber": "BCG-2026-050",
+  "manufacturer": "Japan BCG Laboratory",
+  "nextDoseDate": null,
+  "adverseReaction": null
+}
+```
+
+**Success Response (201 Created):**
+```json
+{
+  "vaccinationId": 1,
+  "babyId": 1,
+  "babyName": "Baby Silva",
+  "midwifeId": 2,
+  "midwifeName": "Nimal Perera",
+  "schedule": {
+    "scheduleId": 7,
+    "vaccineName": "BCG",
+    "targetGroup": "BABY",
+    "doseNumber": 1,
+    "recommendedAgeDays": 0,
+    "description": "BCG vaccine at birth"
+  },
+  "vaccinationDate": "2026-08-05",
+  "batchNumber": "BCG-2026-050",
+  "manufacturer": "Japan BCG Laboratory",
+  "nextDoseDate": null,
+  "adverseReaction": null,
+  "createdAt": "2026-08-05T14:30:00"
+}
+```
+
+**Error Responses:**
+- `400 Bad Request`: Baby not found
+- `400 Bad Request`: Vaccine schedule not found
+- `400 Bad Request`: "Selected vaccine schedule is not for babies"
+- `400 Bad Request`: Midwife not found (if midwifeId provided)
+
+---
+
+### 36. Get Baby Vaccination by ID
+**Endpoint:** `GET /api/baby-vaccinations/{id}`
+
+**Success Response (200 OK):**
+```json
+{
+  "vaccinationId": 1,
+  "babyId": 1,
+  "babyName": "Baby Silva",
+  "midwifeId": 2,
+  "midwifeName": "Nimal Perera",
+  "schedule": {
+    "scheduleId": 7,
+    "vaccineName": "BCG",
+    "targetGroup": "BABY",
+    "doseNumber": 1
+  },
+  "vaccinationDate": "2026-08-05",
+  "batchNumber": "BCG-2026-050",
+  "manufacturer": "Japan BCG Laboratory",
+  "nextDoseDate": null,
+  "adverseReaction": null,
+  "createdAt": "2026-08-05T14:30:00"
+}
+```
+
+**Error Responses:**
+- `404 Not Found`: Baby vaccination not found
+
+---
+
+### 37. Get Baby Vaccinations by Baby
+**Endpoint:** `GET /api/baby-vaccinations/by-baby/{babyId}`
+
+**Success Response (200 OK):**
+```json
+[
+  {
+    "vaccinationId": 1,
+    "babyId": 1,
+    "babyName": "Baby Silva",
+    "schedule": {
+      "vaccineName": "BCG",
+      "doseNumber": 1
+    },
+    "vaccinationDate": "2026-08-05"
+  },
+  {
+    "vaccinationId": 2,
+    "babyId": 1,
+    "babyName": "Baby Silva",
+    "schedule": {
+      "vaccineName": "DTP",
+      "doseNumber": 1
+    },
+    "vaccinationDate": "2026-10-05",
+    "nextDoseDate": "2026-12-05"
+  }
+]
+```
+
+---
+
+### 38. Get Baby Vaccinations by Mother ID
+**Endpoint:** `GET /api/baby-vaccinations/by-mother/{motherId}`
+
+**Description:** Get all vaccinations for all babies of a specific mother.
+
+**Success Response (200 OK):**
+```json
+[
+  {
+    "vaccinationId": 1,
+    "babyId": 1,
+    "babyName": "Baby Silva",
+    "schedule": {
+      "vaccineName": "BCG",
+      "doseNumber": 1
+    },
+    "vaccinationDate": "2026-08-05"
+  }
+]
+```
+
+---
+
+### 39. Delete Baby Vaccination
+**Endpoint:** `DELETE /api/baby-vaccinations/{id}`
+
+**Success Response (204 No Content)**
+
+**Error Responses:**
+- `404 Not Found`: Baby vaccination not found
+
+---
+
 ## Common Error Responses
 
 **400 Bad Request:**
@@ -1008,9 +1513,41 @@
 - `STUNTED`: Below expected height for age
 - `WASTED`: Low weight for height ratio
 
+### TargetGroup Enum Values (Vaccination System)
+- `MOTHER`: Vaccines administered to pregnant mothers
+- `BABY`: Vaccines administered to babies/children
+
+### Sri Lanka EPI Vaccination Schedule
+The vaccination system includes Sri Lanka's Expanded Programme of Immunization (EPI) schedule:
+
+**Mother Vaccines:**
+- Tetanus Toxoid (TT): 3 doses during pregnancy
+- Influenza Vaccine: 1 dose during pregnancy
+- COVID-19 Vaccine: 2 doses during pregnancy
+
+**Baby Vaccines:**
+- **Birth**: BCG, Hepatitis B (1st dose), OPV (1st dose)
+- **2 months**: DTP (1st), Hib (1st), Hepatitis B (2nd), OPV (2nd)
+- **4 months**: DTP (2nd), Hib (2nd), OPV (3rd)
+- **6 months**: DTP (3rd), Hib (3rd), Hepatitis B (3rd), OPV (4th)
+- **9 months**: Measles (1st)
+- **12 months**: MMR (1st)
+- **18 months**: DTP (4th booster), OPV (5th booster)
+- **3 years**: Japanese Encephalitis (1st)
+- **5 years**: DT booster, MMR (2nd)
+
 ### Best Practices
 - Use query parameters for filtering (e.g., `?motherId=1&pregnancyId=2`)
 - Update operations support partial updates (only send fields to update)
 - Delete operations return `204 No Content` on success
 - All timestamps are in ISO 8601 format with timezone
 - List endpoints return empty arrays `[]` when no records found
+
+**Vaccination Best Practices:**
+- Always verify `targetGroup` matches the vaccination type (MOTHER vs BABY)
+- Record batch numbers for vaccine traceability and safety recalls
+- Document any adverse reactions immediately for safety monitoring
+- Set `nextDoseDate` for multi-dose vaccines to track follow-ups
+- Use `recommendedAgeDays` to help schedule vaccinations appropriately
+- Query vaccinations by pregnancy or mother ID to view complete immunization history
+- Midwife association is optional but recommended for accountability
