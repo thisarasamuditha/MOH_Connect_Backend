@@ -292,9 +292,10 @@ CREATE TABLE MEDICATION (
 );
 
 -- ====================================================
--- TRIPOSHA DISTRIBUTION
+-- TRIPOSHA STOCK & DISTRIBUTION (v2)
 -- ====================================================
 
+-- Legacy table kept for historical data
 CREATE TABLE TRIPOSHA_DISTRIBUTION (
     distribution_id INT AUTO_INCREMENT PRIMARY KEY,
     baby_id INT NOT NULL,
@@ -311,6 +312,52 @@ CREATE TABLE TRIPOSHA_DISTRIBUTION (
 
     FOREIGN KEY (baby_id) REFERENCES BABY(baby_id) ON DELETE CASCADE,
     FOREIGN KEY (midwife_id) REFERENCES MIDWIFE(midwife_id) ON DELETE SET NULL
+);
+
+-- Stock management
+CREATE TABLE TRIPOSHA_STOCK (
+    stock_id INT AUTO_INCREMENT PRIMARY KEY,
+    quantity_kg DOUBLE NOT NULL,
+    batch_number VARCHAR(100) UNIQUE NOT NULL,
+    expiry_date DATE NOT NULL,
+    received_date DATE NOT NULL,
+    supplier VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- Mother-level distribution linked to pregnancy
+CREATE TABLE MOTHER_TRIPOSHA_DISTRIBUTION (
+    distribution_id INT AUTO_INCREMENT PRIMARY KEY,
+    pregnancy_id INT NOT NULL,
+    midwife_id INT NOT NULL,
+    quantity_kg DOUBLE NOT NULL,
+    distribution_date DATE NOT NULL,
+    remarks TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (pregnancy_id) REFERENCES PREGNANCY(pregnancy_id) ON DELETE CASCADE,
+    FOREIGN KEY (midwife_id) REFERENCES MIDWIFE(midwife_id) ON DELETE CASCADE,
+
+    INDEX idx_pregnancy (pregnancy_id),
+    INDEX idx_midwife (midwife_id)
+);
+
+-- Baby-level distribution
+CREATE TABLE BABY_TRIPOSHA_DISTRIBUTION (
+    distribution_id INT AUTO_INCREMENT PRIMARY KEY,
+    baby_id INT NOT NULL,
+    midwife_id INT NOT NULL,
+    quantity_kg DOUBLE NOT NULL,
+    distribution_date DATE NOT NULL,
+    remarks TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (baby_id) REFERENCES BABY(baby_id) ON DELETE CASCADE,
+    FOREIGN KEY (midwife_id) REFERENCES MIDWIFE(midwife_id) ON DELETE CASCADE,
+
+    INDEX idx_baby (baby_id),
+    INDEX idx_midwife_baby (midwife_id)
 );
 
 -- ====================================================
