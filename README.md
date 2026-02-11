@@ -14,6 +14,10 @@
 8. [Notification Endpoints](#notification-endpoints)
    - [Notification Types](#notification-type-endpoints)
    - [Notifications](#notification-crud-endpoints)
+9. [Session Endpoints](#session-endpoints)
+   - [Session Types](#session-type-endpoints)
+   - [Sessions](#session-crud-endpoints)
+   - [Session Attendance](#session-attendance-endpoints)
 
 ---
 
@@ -1797,3 +1801,325 @@ The vaccination system includes Sri Lanka's Expanded Programme of Immunization (
 - Track delivery lifecycle: `PENDING` → `SENT` → `DELIVERED` (or `FAILED`)
 - `midwifeId` is optional — system-generated notifications may not have a midwife
 - List endpoints return empty arrays `[]` when no notifications found
+
+---
+
+## Session Endpoints
+
+### Session Type Endpoints
+
+#### Create Session Type
+**Endpoint:** `POST /api/session-types`
+
+**Request Body:**
+```json
+{
+  "typeName": "string (required, unique)",
+  "description": "string",
+  "targetAudience": "PREGNANT_MOTHERS | NEW_MOTHERS | FAMILIES | ALL"
+}
+```
+
+**Example:**
+```json
+{
+  "typeName": "ANTENATAL_CLINIC",
+  "description": "Regular antenatal care clinic for pregnant mothers",
+  "targetAudience": "PREGNANT_MOTHERS"
+}
+```
+
+**Success Response (201 Created):**
+```json
+{
+  "sessionTypeId": 1,
+  "typeName": "ANTENATAL_CLINIC",
+  "description": "Regular antenatal care clinic for pregnant mothers",
+  "targetAudience": "PREGNANT_MOTHERS"
+}
+```
+
+---
+
+#### List All Session Types
+**Endpoint:** `GET /api/session-types`
+
+**Success Response (200 OK):**
+```json
+[
+  {
+    "sessionTypeId": 1,
+    "typeName": "ANTENATAL_CLINIC",
+    "description": "Regular antenatal care clinic for pregnant mothers",
+    "targetAudience": "PREGNANT_MOTHERS"
+  }
+]
+```
+
+---
+
+#### Get Session Type by ID
+**Endpoint:** `GET /api/session-types/{id}`
+
+**Success Response (200 OK):** Returns single session type object.
+
+---
+
+#### Update Session Type
+**Endpoint:** `PUT /api/session-types/{id}`
+
+**Request Body:** (partial update supported)
+```json
+{
+  "typeName": "POSTNATAL_CLINIC",
+  "targetAudience": "NEW_MOTHERS"
+}
+```
+
+**Success Response (200 OK):** Returns updated session type object.
+
+---
+
+#### Delete Session Type
+**Endpoint:** `DELETE /api/session-types/{id}`
+
+**Success Response:** `204 No Content`
+
+---
+
+### Session CRUD Endpoints
+
+#### Create Session
+**Endpoint:** `POST /api/sessions`
+
+**Request Body:**
+```json
+{
+  "midwifeId": "integer (required)",
+  "sessionTypeId": "integer (required)",
+  "phmAreaId": "integer (required)",
+  "sessionDate": "string (YYYY-MM-DD, required)",
+  "startTime": "string (HH:mm, required)",
+  "endTime": "string (HH:mm)",
+  "topic": "string",
+  "venue": "string",
+  "description": "string",
+  "capacity": "integer"
+}
+```
+
+**Example:**
+```json
+{
+  "midwifeId": 1,
+  "sessionTypeId": 1,
+  "phmAreaId": 1,
+  "sessionDate": "2026-03-15",
+  "startTime": "09:00",
+  "endTime": "12:00",
+  "topic": "Nutrition during pregnancy",
+  "venue": "MOH Office, Colombo",
+  "description": "Monthly antenatal clinic covering nutrition and exercise",
+  "capacity": 30
+}
+```
+
+**Success Response (201 Created):**
+```json
+{
+  "sessionId": 1,
+  "midwifeId": 1,
+  "midwifeName": "Nimal Perera",
+  "sessionTypeId": 1,
+  "sessionTypeName": "ANTENATAL_CLINIC",
+  "phmAreaId": 1,
+  "phmAreaName": "Area A",
+  "sessionDate": "2026-03-15",
+  "startTime": "09:00:00",
+  "endTime": "12:00:00",
+  "topic": "Nutrition during pregnancy",
+  "venue": "MOH Office, Colombo",
+  "description": "Monthly antenatal clinic covering nutrition and exercise",
+  "capacity": 30,
+  "status": "SCHEDULED",
+  "createdAt": "2026-02-11T12:00:00"
+}
+```
+
+---
+
+#### Get Session by ID
+**Endpoint:** `GET /api/sessions/{sessionId}`
+
+**Success Response (200 OK):** Returns session response object.
+
+---
+
+#### Get Sessions by Midwife
+**Endpoint:** `GET /api/sessions/midwife/{midwifeId}`
+
+**Success Response (200 OK):** Returns array of sessions ordered by date descending.
+
+---
+
+#### Get Scheduled Sessions by Midwife
+**Endpoint:** `GET /api/sessions/midwife/{midwifeId}/scheduled`
+
+**Success Response (200 OK):** Returns array of sessions with status `SCHEDULED`, ordered by date ascending.
+
+---
+
+#### Get Sessions by PHM Area
+**Endpoint:** `GET /api/sessions/phm-area/{phmAreaId}`
+
+**Success Response (200 OK):** Returns array of sessions ordered by date descending.
+
+---
+
+#### Get Sessions by Status
+**Endpoint:** `GET /api/sessions/status/{status}`
+
+**Path Parameters:**
+- `status`: `SCHEDULED` | `COMPLETED` | `CANCELLED`
+
+**Success Response (200 OK):** Returns array of session response objects.
+
+---
+
+#### Get Sessions by Date Range
+**Endpoint:** `GET /api/sessions/date-range?from={date}&to={date}`
+
+**Query Parameters:**
+- `from`: Start date (YYYY-MM-DD, required)
+- `to`: End date (YYYY-MM-DD, required)
+
+**Example:** `GET /api/sessions/date-range?from=2026-03-01&to=2026-03-31`
+
+**Success Response (200 OK):** Returns array of sessions within the date range, ordered ascending.
+
+---
+
+#### Update Session
+**Endpoint:** `PUT /api/sessions/{sessionId}`
+
+**Request Body:** (partial update supported)
+```json
+{
+  "sessionDate": "2026-03-20",
+  "startTime": "10:00",
+  "endTime": "13:00",
+  "topic": "Updated topic",
+  "venue": "Community Hall",
+  "description": "Updated description",
+  "capacity": 40,
+  "status": "COMPLETED"
+}
+```
+
+**Success Response (200 OK):** Returns updated session response object.
+
+---
+
+#### Delete Session
+**Endpoint:** `DELETE /api/sessions/{sessionId}`
+
+**Success Response:** `204 No Content`
+
+---
+
+### Session Attendance Endpoints
+
+#### Register Mother for Session
+**Endpoint:** `POST /api/session-attendance`
+
+**Request Body:**
+```json
+{
+  "sessionId": "integer (required)",
+  "motherId": "integer (required)",
+  "notes": "string"
+}
+```
+
+**Example:**
+```json
+{
+  "sessionId": 1,
+  "motherId": 1,
+  "notes": "First-time attendee"
+}
+```
+
+**Success Response (201 Created):**
+```json
+{
+  "attendanceId": 1,
+  "sessionId": 1,
+  "sessionTopic": "Nutrition during pregnancy",
+  "sessionDate": "2026-03-15",
+  "motherId": 1,
+  "motherName": "Priya Silva",
+  "attended": false,
+  "attendanceTime": null,
+  "notes": "First-time attendee",
+  "feedback": null,
+  "createdAt": "2026-02-11T12:00:00"
+}
+```
+
+**Error Responses:**
+- `400 Bad Request`: Session or Mother not found
+- `400 Bad Request`: Session is at full capacity
+- `400 Bad Request`: Mother is already registered for this session
+- `400 Bad Request`: Cannot register for a cancelled session
+
+---
+
+#### Mark Attendance
+**Endpoint:** `PUT /api/session-attendance/{attendanceId}/mark`
+
+**Request Body:**
+```json
+{
+  "attended": true,
+  "feedback": "Very informative session"
+}
+```
+
+**Success Response (200 OK):** Returns updated attendance with `attended: true` and `attendanceTime` set.
+
+---
+
+#### Get Attendees by Session
+**Endpoint:** `GET /api/session-attendance/session/{sessionId}`
+
+**Success Response (200 OK):** Returns array of attendance records for a session.
+
+---
+
+#### Get Sessions Attended by Mother
+**Endpoint:** `GET /api/session-attendance/mother/{motherId}`
+
+**Success Response (200 OK):** Returns array of attendance records for a mother.
+
+---
+
+#### Delete Attendance Record
+**Endpoint:** `DELETE /api/session-attendance/{attendanceId}`
+
+**Success Response:** `204 No Content`
+
+---
+
+### Session Best Practices
+- Sessions are created with status `SCHEDULED` by default
+- Update status to `COMPLETED` or `CANCELLED` via `PUT /api/sessions/{id}`
+- Use `GET /midwife/{midwifeId}/scheduled` to show upcoming sessions for a midwife
+- Use `GET /date-range?from=&to=` for calendar views
+- Register mothers before the session; mark attendance during or after
+- Capacity is enforced at registration time — registrations are rejected when full
+- Duplicate registrations (same mother + same session) are prevented
+- Cannot register mothers for cancelled sessions
+- `attendanceTime` is auto-set when `attended` is marked `true`
+- Use `feedback` field to collect post-session feedback from mothers
+- List endpoints return empty arrays `[]` when no records found
