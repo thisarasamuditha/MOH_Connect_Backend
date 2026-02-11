@@ -11,6 +11,9 @@
    - [Vaccine Schedule](#vaccine-schedule-endpoints)
    - [Mother Vaccination](#mother-vaccination-endpoints)
    - [Baby Vaccination](#baby-vaccination-endpoints)
+8. [Notification Endpoints](#notification-endpoints)
+   - [Notification Types](#notification-type-endpoints)
+   - [Notifications](#notification-crud-endpoints)
 
 ---
 
@@ -1551,3 +1554,246 @@ The vaccination system includes Sri Lanka's Expanded Programme of Immunization (
 - Use `recommendedAgeDays` to help schedule vaccinations appropriately
 - Query vaccinations by pregnancy or mother ID to view complete immunization history
 - Midwife association is optional but recommended for accountability
+
+---
+
+## Notification Endpoints
+
+### Notification Type Endpoints
+
+#### Create Notification Type
+**Endpoint:** `POST /api/notification-types`
+
+**Request Body:**
+```json
+{
+  "typeName": "string (required, unique)",
+  "description": "string",
+  "template": "string",
+  "priority": "LOW | MEDIUM | HIGH | URGENT"
+}
+```
+
+**Example:**
+```json
+{
+  "typeName": "APPOINTMENT_REMINDER",
+  "description": "Reminder for upcoming clinic appointments",
+  "template": "Dear {motherName}, your next appointment is on {eventDate}.",
+  "priority": "MEDIUM"
+}
+```
+
+**Success Response (201 Created):**
+```json
+{
+  "typeId": 1,
+  "typeName": "APPOINTMENT_REMINDER",
+  "description": "Reminder for upcoming clinic appointments",
+  "template": "Dear {motherName}, your next appointment is on {eventDate}.",
+  "priority": "MEDIUM"
+}
+```
+
+---
+
+#### List All Notification Types
+**Endpoint:** `GET /api/notification-types`
+
+**Success Response (200 OK):**
+```json
+[
+  {
+    "typeId": 1,
+    "typeName": "APPOINTMENT_REMINDER",
+    "description": "Reminder for upcoming clinic appointments",
+    "template": "Dear {motherName}, your next appointment is on {eventDate}.",
+    "priority": "MEDIUM"
+  }
+]
+```
+
+---
+
+#### Get Notification Type by ID
+**Endpoint:** `GET /api/notification-types/{id}`
+
+**Success Response (200 OK):** Same as single object above.
+
+---
+
+#### Update Notification Type
+**Endpoint:** `PUT /api/notification-types/{id}`
+
+**Request Body:** (partial update supported)
+```json
+{
+  "typeName": "VACCINATION_REMINDER",
+  "priority": "HIGH"
+}
+```
+
+**Success Response (200 OK):** Returns updated notification type object.
+
+---
+
+#### Delete Notification Type
+**Endpoint:** `DELETE /api/notification-types/{id}`
+
+**Success Response:** `204 No Content`
+
+---
+
+### Notification CRUD Endpoints
+
+#### Create Notification
+**Endpoint:** `POST /api/notifications`
+
+**Request Body:**
+```json
+{
+  "typeId": "integer (required)",
+  "midwifeId": "integer (optional)",
+  "motherId": "integer (required)",
+  "message": "string (required)",
+  "deliveryMethod": "SMS | EMAIL | WHATSAPP | CALL",
+  "eventDate": "string (YYYY-MM-DD)",
+  "eventType": "string"
+}
+```
+
+**Example:**
+```json
+{
+  "typeId": 1,
+  "midwifeId": 1,
+  "motherId": 1,
+  "message": "Dear Priya, your next clinic visit is on 2026-03-01.",
+  "deliveryMethod": "SMS",
+  "eventDate": "2026-03-01",
+  "eventType": "CLINIC_VISIT"
+}
+```
+
+**Success Response (201 Created):**
+```json
+{
+  "notificationId": 1,
+  "typeId": 1,
+  "typeName": "APPOINTMENT_REMINDER",
+  "priority": "MEDIUM",
+  "midwifeId": 1,
+  "midwifeName": "Nimal Perera",
+  "motherId": 1,
+  "motherName": "Priya Silva",
+  "message": "Dear Priya, your next clinic visit is on 2026-03-01.",
+  "status": "PENDING",
+  "deliveryMethod": "SMS",
+  "sentDate": "2026-02-11T12:00:00",
+  "eventDate": "2026-03-01",
+  "eventType": "CLINIC_VISIT",
+  "readAt": null,
+  "respondedAt": null,
+  "createdAt": "2026-02-11T12:00:00"
+}
+```
+
+---
+
+#### Get Notification by ID
+**Endpoint:** `GET /api/notifications/{id}`
+
+**Success Response (200 OK):** Returns notification response object.
+
+---
+
+#### Get All Notifications for a Mother
+**Endpoint:** `GET /api/notifications/mother/{motherId}`
+
+**Success Response (200 OK):** Returns array of notification response objects, ordered by sent date descending.
+
+---
+
+#### Get Unread Notifications for a Mother
+**Endpoint:** `GET /api/notifications/mother/{motherId}/unread`
+
+**Success Response (200 OK):** Returns array of notifications where `readAt` is null.
+
+---
+
+#### Get Unread Notification Count
+**Endpoint:** `GET /api/notifications/mother/{motherId}/unread-count`
+
+**Success Response (200 OK):**
+```json
+{
+  "motherId": 1,
+  "unreadCount": 5
+}
+```
+
+---
+
+#### Get Notifications Sent by a Midwife
+**Endpoint:** `GET /api/notifications/midwife/{midwifeId}`
+
+**Success Response (200 OK):** Returns array of notification response objects.
+
+---
+
+#### Get Notifications by Status
+**Endpoint:** `GET /api/notifications/status/{status}`
+
+**Path Parameters:**
+- `status`: `PENDING` | `SENT` | `DELIVERED` | `FAILED`
+
+**Success Response (200 OK):** Returns array of notification response objects.
+
+---
+
+#### Mark Notification as Read
+**Endpoint:** `PUT /api/notifications/{id}/read`
+
+**Success Response (200 OK):** Returns updated notification with `readAt` timestamp set.
+
+---
+
+#### Mark Notification as Responded
+**Endpoint:** `PUT /api/notifications/{id}/responded`
+
+**Success Response (200 OK):** Returns updated notification with `respondedAt` timestamp set.
+
+---
+
+#### Update Notification Status
+**Endpoint:** `PUT /api/notifications/{id}/status`
+
+**Request Body:**
+```json
+{
+  "status": "SENT"
+}
+```
+
+**Allowed values:** `PENDING`, `SENT`, `DELIVERED`, `FAILED`
+
+**Success Response (200 OK):** Returns updated notification response object.
+
+---
+
+#### Delete Notification
+**Endpoint:** `DELETE /api/notifications/{id}`
+
+**Success Response:** `204 No Content`
+
+---
+
+### Notification Best Practices
+- Always provide a `typeId` that matches a valid `NOTIFICATION_TYPE` record
+- Use `deliveryMethod` to specify the preferred communication channel
+- Set `eventDate` and `eventType` for appointment/event-based notifications
+- Use `GET /mother/{motherId}/unread-count` for badge counts in frontend
+- Mark notifications as read via `PUT /{id}/read` when the mother views them
+- Track delivery lifecycle: `PENDING` → `SENT` → `DELIVERED` (or `FAILED`)
+- `midwifeId` is optional — system-generated notifications may not have a midwife
+- List endpoints return empty arrays `[]` when no notifications found
