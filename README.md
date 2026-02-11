@@ -16,7 +16,7 @@
    - [Notifications](#notification-crud-endpoints)
 9. [Session Endpoints](#session-endpoints)
    - [Session Types](#session-type-endpoints)
-   - [Sessions](#session-crud-endpoints)
+   - [Sessions] (#session-crud-endpoints)
    - [Session Attendance](#session-attendance-endpoints)
 
 ---
