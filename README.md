@@ -18,6 +18,10 @@
    - [Session Types](#session-type-endpoints)
    - [Sessions] (#session-crud-endpoints)
    - [Session Attendance](#session-attendance-endpoints)
+10. [Triposha Distribution Endpoints](#triposha-distribution-endpoints)
+    - [Triposha Stock](#triposha-stock-endpoints)
+    - [Mother Triposha Distribution](#mother-triposha-distribution-endpoints)
+    - [Baby Triposha Distribution](#baby-triposha-distribution-endpoints)
 
 ---
 
@@ -2123,3 +2127,222 @@ The vaccination system includes Sri Lanka's Expanded Programme of Immunization (
 - `attendanceTime` is auto-set when `attended` is marked `true`
 - Use `feedback` field to collect post-session feedback from mothers
 - List endpoints return empty arrays `[]` when no records found
+
+---
+
+## Triposha Distribution Endpoints
+
+Manage Triposha nutritional supplement stock and distribution to pregnant mothers and babies.
+
+### Triposha Stock Endpoints
+
+#### Add Stock
+**Endpoint:** `POST /api/triposha/stock`
+
+**Request Body:**
+```json
+{
+  "quantityKg": 50.0,
+  "batchNumber": "BATCH-2026-001",
+  "expiryDate": "2027-06-30",
+  "receivedDate": "2026-02-01",
+  "supplier": "National Nutrition Bureau"
+}
+```
+
+**Success Response (201 Created):**
+```json
+{
+  "stockId": 1,
+  "quantityKg": 50.0,
+  "batchNumber": "BATCH-2026-001",
+  "expiryDate": "2027-06-30",
+  "receivedDate": "2026-02-01",
+  "supplier": "National Nutrition Bureau",
+  "createdAt": "2026-02-01T10:00:00",
+  "updatedAt": "2026-02-01T10:00:00"
+}
+```
+
+---
+
+#### Update Stock Quantity
+**Endpoint:** `PUT /api/triposha/stock/{stockId}/quantity?quantity={value}`
+
+**Example:** `PUT /api/triposha/stock/1/quantity?quantity=45.5`
+
+**Success Response (200 OK):**
+```json
+{
+  "stockId": 1,
+  "quantityKg": 45.5,
+  "batchNumber": "BATCH-2026-001",
+  "expiryDate": "2027-06-30",
+  "receivedDate": "2026-02-01",
+  "supplier": "National Nutrition Bureau",
+  "createdAt": "2026-02-01T10:00:00",
+  "updatedAt": "2026-02-11T14:30:00"
+}
+```
+
+---
+
+#### List Available Stock
+**Endpoint:** `GET /api/triposha/stock`
+
+**Success Response (200 OK):** Returns array of stock items with quantity > 0 and expiry date >= today, ordered by expiry date (FIFO).
+```json
+[
+  {
+    "stockId": 1,
+    "quantityKg": 45.5,
+    "batchNumber": "BATCH-2026-001",
+    "expiryDate": "2027-06-30",
+    "receivedDate": "2026-02-01",
+    "supplier": "National Nutrition Bureau",
+    "createdAt": "2026-02-01T10:00:00",
+    "updatedAt": "2026-02-11T14:30:00"
+  }
+]
+```
+
+---
+
+#### Get Stock by ID
+**Endpoint:** `GET /api/triposha/stock/{stockId}`
+
+**Success Response (200 OK):** Returns a single stock item.
+
+---
+
+#### Get Total Available Quantity
+**Endpoint:** `GET /api/triposha/stock/total`
+
+**Success Response (200 OK):**
+```json
+{
+  "totalAvailableKg": 95.5
+}
+```
+
+---
+
+### Mother Triposha Distribution Endpoints
+
+#### Distribute Triposha to Mother
+**Endpoint:** `POST /api/triposha/mother`
+
+**Request Body:**
+```json
+{
+  "pregnancyId": 1,
+  "midwifeId": 2,
+  "quantityKg": 2.5,
+  "distributionDate": "2026-02-11",
+  "remarks": "Monthly distribution - 6th month"
+}
+```
+
+**Success Response (201 Created):**
+```json
+{
+  "distributionId": 1,
+  "pregnancyId": 1,
+  "pregnancyNumber": "PREG-001",
+  "motherId": 5,
+  "motherName": "Kumari Perera",
+  "midwifeId": 2,
+  "midwifeName": "Nimal Silva",
+  "quantityKg": 2.5,
+  "distributionDate": "2026-02-11",
+  "remarks": "Monthly distribution - 6th month",
+  "createdAt": "2026-02-11T09:00:00"
+}
+```
+
+**Validation Rules:**
+- Pregnancy must have status `ACTIVE`
+- Stock is deducted automatically using FIFO (earliest expiry first)
+- Returns `400 Bad Request` if pregnancy is not active
+- Returns `400 Bad Request` if insufficient stock available
+
+---
+
+#### Get Distributions by Pregnancy
+**Endpoint:** `GET /api/triposha/mother/pregnancy/{pregnancyId}`
+
+**Success Response (200 OK):** Returns array of distribution records for a specific pregnancy.
+
+---
+
+#### Get Distributions by Mother
+**Endpoint:** `GET /api/triposha/mother/mother/{motherId}`
+
+**Success Response (200 OK):** Returns array of all distribution records across all pregnancies for a mother.
+
+---
+
+### Baby Triposha Distribution Endpoints
+
+#### Distribute Triposha to Baby
+**Endpoint:** `POST /api/triposha/baby`
+
+**Request Body:**
+```json
+{
+  "babyId": 1,
+  "midwifeId": 2,
+  "quantityKg": 1.0,
+  "distributionDate": "2026-02-11",
+  "remarks": "Monthly distribution - 8 months old"
+}
+```
+
+**Success Response (201 Created):**
+```json
+{
+  "distributionId": 1,
+  "babyId": 1,
+  "babyName": "Baby Perera",
+  "motherId": 5,
+  "midwifeId": 2,
+  "midwifeName": "Nimal Silva",
+  "quantityKg": 1.0,
+  "distributionDate": "2026-02-11",
+  "remarks": "Monthly distribution - 8 months old",
+  "createdAt": "2026-02-11T09:15:00"
+}
+```
+
+**Validation Rules:**
+- Baby must be alive (`isAlive = true`)
+- Stock is deducted automatically using FIFO (earliest expiry first)
+- Returns `400 Bad Request` if baby is not alive
+- Returns `400 Bad Request` if insufficient stock available
+
+---
+
+#### Get Distributions by Baby
+**Endpoint:** `GET /api/triposha/baby/baby/{babyId}`
+
+**Success Response (200 OK):** Returns array of distribution records for a specific baby.
+
+---
+
+#### Get Distributions by Mother (Baby)
+**Endpoint:** `GET /api/triposha/baby/mother/{motherId}`
+
+**Success Response (200 OK):** Returns array of all baby distribution records for babies belonging to a specific mother.
+
+---
+
+### Triposha Distribution Best Practices
+- Stock is managed using **FIFO** (First In, First Out) — batches closest to expiry are used first
+- Always check `GET /api/triposha/stock/total` before distributing to verify sufficient stock
+- Expired stock batches are automatically excluded from available stock
+- Each stock batch has a unique `batchNumber` for traceability
+- Mother distributions require an **active pregnancy** — completed or cancelled pregnancies are rejected
+- Baby distributions require the baby to be **alive** (`isAlive = true`)
+- Use `remarks` field to record distribution context (e.g., month of pregnancy, baby age)
+- List endpoints return empty arrays `[]` when no records found
+- Error responses follow the standard `ErrorResponse` format with `message` and `success` fields
