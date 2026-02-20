@@ -115,4 +115,93 @@ public class AuthService {
         resp.role = user.getRole().name();
         return resp;
     }
+
+    public AuthDtos.UserResponse getUserById(Integer userId) {
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + userId));
+        return toUserResponse(user);
+    }
+
+    @Transactional
+    public AuthDtos.UserResponse updateUser(Integer userId, AuthDtos.UserUpdateRequest req) {
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + userId));
+
+        boolean updated = false;
+
+        if (req.username != null) {
+            String newUsername = req.username.trim();
+            if (newUsername.isEmpty()) {
+                throw new IllegalArgumentException("Username cannot be blank");
+            }
+            if (!newUsername.equals(user.getUsername())) {
+                if (userRepo.existsByUsername(newUsername)) {
+                    throw new IllegalArgumentException("Username already taken");
+                }
+                user.setUsername(newUsername);
+                updated = true;
+            }
+        }
+
+        if (req.email != null) {
+            String newEmail = req.email.trim();
+            if (newEmail.isEmpty()) {
+                throw new IllegalArgumentException("Email cannot be blank");
+            }
+
+            Optional<User> existing = userRepo.findByEmail(newEmail);
+            if (existing.isPresent() && !existing.get().getUserId().equals(userId)) {
+                throw new IllegalArgumentException("Email already registered");
+            }
+
+            if (!newEmail.equalsIgnoreCase(user.getEmail())) {
+                user.setEmail(newEmail);
+                updated = true;
+            }
+        }
+
+        if (req.password != null) {
+            String newPassword = req.password;
+            if (newPassword.isBlank()) {
+                throw new IllegalArgumentException("Password cannot be blank");
+            }
+            user.setPasswordHash(hashService.hashSha256(newPassword));
+            updated = true;
+        }
+
+        if (req.isActive != null && !req.isActive.equals(user.getIsActive())) {
+            user.setIsActive(req.isActive);
+            updated = true;
+        }
+
+        if (!updated) {
+            throw new IllegalArgumentException("No fields to update");
+        }
+
+        User saved = userRepo.save(user);
+        return toUserResponse(saved);
+    }
+
+    /**
+     * "Delete" implemented as deactivation to avoid FK constraint issues (Doctor/Midwife/etc reference USER).
+     */
+    @Transactional
+    public void deleteUser(Integer userId) {
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + userId));
+        user.setIsActive(false);
+        userRepo.save(user);
+    }
+
+    private AuthDtos.UserResponse toUserResponse(User user) {
+        AuthDtos.UserResponse resp = new AuthDtos.UserResponse();
+        resp.userId = user.getUserId();
+        resp.username = user.getUsername();
+        resp.email = user.getEmail();
+        resp.role = user.getRole() != null ? user.getRole().name() : null;
+        resp.isActive = user.getIsActive();
+        resp.createdAt = user.getCreatedAt() != null ? user.getCreatedAt().toString() : null;
+        resp.lastLogin = user.getLastLogin() != null ? user.getLastLogin().toString() : null;
+        return resp;
+    }
 }
