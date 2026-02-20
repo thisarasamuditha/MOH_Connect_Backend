@@ -11,6 +11,7 @@ import com.moh.moh_backend.util.PasswordHashService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -114,6 +115,11 @@ public class AuthService {
         resp.username = user.getUsername();
         resp.role = user.getRole().name();
         return resp;
+    }
+
+    public Iterable<AuthDtos.UserResponse> getAllUsers() {
+        List<User> users = userRepo.findAll();
+        return users.stream().map(this::toUserResponse).toList();
     }
 
     public AuthDtos.UserResponse getUserById(Integer userId) {
