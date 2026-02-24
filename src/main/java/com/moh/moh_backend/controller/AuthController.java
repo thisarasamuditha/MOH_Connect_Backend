@@ -33,9 +33,24 @@ public class AuthController {
     /**
      * User management APIs (no Spring Security enforced in this project).
      */
-    @GetMapping("/users")
-    public ResponseEntity<Iterable<AuthDtos.UserResponse>> getAllUsers() {
-        return ResponseEntity.ok(authService.getAllUsers());
+    @GetMapping("/admins")
+    public ResponseEntity<Iterable<AuthDtos.UserResponse>> getAllAdmins() {
+        return ResponseEntity.ok(authService.getAllAdmins());
+    }
+
+    @GetMapping("/mothers")
+    public ResponseEntity<Iterable<AuthDtos.UserResponse>> getAllMothers() {
+        return ResponseEntity.ok(authService.getAllMothers());
+    }
+
+    @GetMapping("/midwives")
+    public ResponseEntity<Iterable<AuthDtos.UserResponse>> getAllMidwives() {
+        return ResponseEntity.ok(authService.getAllMidwives());
+    }
+
+    @GetMapping("/doctors")
+    public ResponseEntity<Iterable<AuthDtos.UserResponse>> getAllDoctors() {
+        return ResponseEntity.ok(authService.getAllDoctors());
     }
 
     @GetMapping("/users/{id}")

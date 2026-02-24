@@ -13,7 +13,7 @@ public class AuthDtos {
         public String username;
         @NotBlank @Email
         public String email;
-        @NotBlank @Size(min = 6, max = 128)
+        @NotBlank @Size(min = 6, max = 30)
         public String password;
         @NotBlank
         public String role; // ADMIN/MIDWIFE/DOCTOR/MOTHER

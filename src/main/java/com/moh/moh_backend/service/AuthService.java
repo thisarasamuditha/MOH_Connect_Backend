@@ -117,8 +117,23 @@ public class AuthService {
         return resp;
     }
 
-    public Iterable<AuthDtos.UserResponse> getAllUsers() {
-        List<User> users = userRepo.findAll();
+    public Iterable<AuthDtos.UserResponse> getAllAdmins() {
+        List<User> users = userRepo.findByRole(UserRole.ADMIN);
+        return users.stream().map(this::toUserResponse).toList();
+    }
+
+    public Iterable<AuthDtos.UserResponse> getAllMothers() {
+        List<User> users = userRepo.findByRole(UserRole.MOTHER);
+        return users.stream().map(this::toUserResponse).toList();
+    }
+
+    public Iterable<AuthDtos.UserResponse> getAllMidwives() {
+        List<User> users = userRepo.findByRole(UserRole.MIDWIFE);
+        return users.stream().map(this::toUserResponse).toList();
+    }
+
+    public Iterable<AuthDtos.UserResponse> getAllDoctors() {
+        List<User> users = userRepo.findByRole(UserRole.DOCTOR);
         return users.stream().map(this::toUserResponse).toList();
     }
 
