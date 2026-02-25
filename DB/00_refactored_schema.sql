@@ -5,9 +5,9 @@
 -- Generated: February 20, 2026
 -- ====================================================
 
-DROP DATABASE IF EXISTS moh_connect;
-CREATE DATABASE moh_connect CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE moh_connect;
+DROP DATABASE IF EXISTS moh_db;
+CREATE DATABASE moh_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE moh_db;
 
 -- ====================================================
 -- AUTHENTICATION & USER MANAGEMENT
@@ -432,6 +432,6 @@ SELECT
 FROM 
     INFORMATION_SCHEMA.TABLES
 WHERE 
-    TABLE_SCHEMA = 'moh_connect'
+    TABLE_SCHEMA = 'moh_db'
 ORDER BY 
     TABLE_NAME;

@@ -184,7 +184,7 @@ ENUM('LOW', 'MEDIUM', 'HIGH', 'URGENT')
 1. **Fresh Installation:**
    ```bash
    mysql -u root -p < 00_refactored_schema.sql
-   mysql -u root -p moh_connect < 00_refactored_data.sql
+   mysql -u root -p moh_db < 00_refactored_data.sql
    ```
 
 2. **From Existing Database:**
@@ -282,7 +282,7 @@ After applying the refactored schema:
 
 1. **Use the refactored schema** (`00_refactored_schema.sql`) for new deployments
 2. **Keep old files** for reference and migration purposes
-3. **Update application.properties** to point to `moh_connect` database
+3. **Update application.properties** to point to `moh_db` database
 4. **Run validation queries** after schema creation
 5. **Test thoroughly** before production deployment
 

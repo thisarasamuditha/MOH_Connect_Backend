@@ -13,7 +13,7 @@ public class AuthDtos {
         public String username;
         @NotBlank @Email
         public String email;
-        @NotBlank @Size(min = 6, max = 128)
+        @NotBlank @Size(min = 6, max = 30)
         public String password;
         @NotBlank
         public String role; // ADMIN/MIDWIFE/DOCTOR/MOTHER
@@ -53,5 +53,35 @@ public class AuthDtos {
         public String token;
         public String username;
         public String role;
+    }
+
+    /**
+     * Safe user representation (never exposes passwordHash).
+     */
+    public static class UserResponse {
+        public Integer userId;
+        public String username;
+        public String email;
+        public String role;
+        public Boolean isActive;
+        public String createdAt;
+        public String lastLogin;
+    }
+
+    /**
+     * User profile update request.
+     * All fields are optional; at least one must be provided.
+     */
+    public static class UserUpdateRequest {
+        @Size(min = 3, max = 100)
+        public String username;
+
+        @Email
+        public String email;
+
+        @Size(min = 6, max = 128)
+        public String password;
+
+        public Boolean isActive;
     }
 }

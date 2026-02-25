@@ -147,6 +147,101 @@
 
 ---
 
+### 2.1 Get All Users
+**Endpoint:** `GET /api/auth/users`
+
+**Request Body:** None
+
+**Success Response (200 OK):**
+```json
+[
+  {
+    "userId": 1,
+    "username": "admin_colombo",
+    "email": "admin@moh.gov.lk",
+    "role": "ADMIN",
+    "isActive": true,
+    "createdAt": "2026-02-10T10:30:00",
+    "lastLogin": null
+  }
+]
+```
+
+---
+
+### 2.2 Get User by ID
+**Endpoint:** `GET /api/auth/users/{id}`
+
+**Request Body:** None
+
+**Success Response (200 OK):**
+```json
+{
+  "userId": 1,
+  "username": "admin_colombo",
+  "email": "admin@moh.gov.lk",
+  "role": "ADMIN",
+  "isActive": true,
+  "createdAt": "2026-02-10T10:30:00",
+  "lastLogin": null
+}
+```
+
+**Error Responses:**
+- `400 Bad Request`: User not found
+
+---
+
+### 2.3 Update User
+**Endpoint:** `PUT /api/auth/users/{id}`
+
+**Request Body:** (all fields optional; provide at least one)
+```json
+{
+  "username": "string (optional)",
+  "email": "string (optional, valid email)",
+  "password": "string (optional)",
+  "isActive": true
+}
+```
+
+**Example:**
+```json
+{
+  "email": "new_admin@moh.gov.lk",
+  "isActive": true
+}
+```
+
+**Success Response (200 OK):**
+```json
+{
+  "userId": 1,
+  "username": "admin_colombo",
+  "email": "new_admin@moh.gov.lk",
+  "role": "ADMIN",
+  "isActive": true,
+  "createdAt": "2026-02-10T10:30:00",
+  "lastLogin": null
+}
+```
+
+**Error Responses:**
+- `400 Bad Request`: Validation errors, duplicate username/email, or no fields to update
+
+---
+
+### 2.4 Delete (Deactivate) User
+**Endpoint:** `DELETE /api/auth/users/{id}`
+
+**Request Body:** None
+
+**Success Response (204 No Content)**
+
+**Note:** This API deactivates the user (`isActive=false`) instead of physically deleting the row to avoid foreign-key issues with related tables (e.g., DOCTOR, MIDWIFE).
+
+---
+
 ## Mother Management Endpoints
 
 ### 3. Register Mother (Midwife Only)
