@@ -47,6 +47,14 @@ public class AuthService {
             throw new IllegalArgumentException("Email already registered");
         }
 
+        // Validate required details for specific roles
+        if ("DOCTOR".equalsIgnoreCase(req.role) && req.doctorDetails == null) {
+            throw new IllegalArgumentException("Doctor details are required for DOCTOR role");
+        }
+        if ("MIDWIFE".equalsIgnoreCase(req.role) && req.midwifeDetails == null) {
+            throw new IllegalArgumentException("Midwife details are required for MIDWIFE role");
+        }
+
         User user = new User();
         user.setUsername(req.username);
         user.setEmail(req.email);
