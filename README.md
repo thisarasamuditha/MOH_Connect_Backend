@@ -16,7 +16,6 @@
    - [Notifications](#notification-crud-endpoints)
 9. [Session Endpoints](#session-endpoints)
    - [Session Types](#session-type-endpoints)
-   
    - [Session Attendance](#session-attendance-endpoints)
 10. [Triposha Distribution Endpoints](#triposha-distribution-endpoints)
     - [Triposha Stock](#triposha-stock-endpoints)
