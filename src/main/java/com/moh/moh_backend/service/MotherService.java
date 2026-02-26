@@ -87,7 +87,10 @@ public class MotherService {
     @Transactional(readOnly = true)
     public List<MotherResponse> getMothersByMidwife(Integer midwifeUserId) {
         Midwife midwife = midwifeRepo.findByUser_UserId(midwifeUserId)
-                .orElseThrow(() -> new IllegalArgumentException("Midwife not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Midwife not found for userId: " + midwifeUserId));
+        if (midwife.getPhmArea() == null) {
+            throw new IllegalStateException("Midwife has no PHM area assigned");
+        }
         Integer phmAreaId = midwife.getPhmArea().getPhmAreaId();
         return motherRepo.findByPhmArea_PhmAreaId(phmAreaId)
                 .stream()
@@ -98,7 +101,10 @@ public class MotherService {
     @Transactional(readOnly = true)
     public List<FamilyResponse> getFamiliesForMidwife(Integer midwifeUserId) {
         Midwife midwife = midwifeRepo.findByUser_UserId(midwifeUserId)
-                .orElseThrow(() -> new IllegalArgumentException("Midwife not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Midwife not found for userId: " + midwifeUserId));
+        if (midwife.getPhmArea() == null) {
+            throw new IllegalStateException("Midwife has no PHM area assigned");
+        }
         Integer phmAreaId = midwife.getPhmArea().getPhmAreaId();
         return motherRepo.findByPhmArea_PhmAreaId(phmAreaId)
                 .stream()
