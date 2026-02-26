@@ -4,6 +4,7 @@ import com.moh.moh_backend.dto.AuthDtos;
 import com.moh.moh_backend.model.*;
 import com.moh.moh_backend.repository.DoctorRepository;
 import com.moh.moh_backend.repository.MidwifeRepository;
+import com.moh.moh_backend.repository.MotherRepository;
 import com.moh.moh_backend.repository.PhmAreaRepository;
 import com.moh.moh_backend.repository.UserRepository;
 import com.moh.moh_backend.util.JwtService;
@@ -27,14 +28,16 @@ public class AuthService {
     private final JwtService jwtService;
     private final DoctorRepository doctorRepo;
     private final MidwifeRepository midwifeRepo;
+    private final MotherRepository motherRepo;
     private final PhmAreaRepository phmAreaRepo;
 
-    public AuthService(UserRepository userRepo, PasswordHashService hashService, JwtService jwtService, DoctorRepository doctorRepo, MidwifeRepository midwifeRepo,PhmAreaRepository phmAreaRepo) {
+    public AuthService(UserRepository userRepo, PasswordHashService hashService, JwtService jwtService, DoctorRepository doctorRepo, MidwifeRepository midwifeRepo, MotherRepository motherRepo, PhmAreaRepository phmAreaRepo) {
         this.userRepo = userRepo;
         this.hashService = hashService;
         this.jwtService = jwtService;
         this.doctorRepo = doctorRepo;
         this.midwifeRepo = midwifeRepo;
+        this.motherRepo = motherRepo;
         this.phmAreaRepo = phmAreaRepo;
     }
 
@@ -91,6 +94,7 @@ public class AuthService {
 
         AuthDtos.AuthResponse resp = new AuthDtos.AuthResponse();
         resp.token = token;
+        resp.userId = user.getUserId();
         resp.username = user.getUsername();
         resp.role = user.getRole().name();
         return resp;
@@ -113,6 +117,7 @@ public class AuthService {
 
         AuthDtos.AuthResponse resp = new AuthDtos.AuthResponse();
         resp.token = token;
+        resp.userId = user.getUserId();
         resp.username = user.getUsername();
         resp.role = user.getRole().name();
 
@@ -120,7 +125,20 @@ public class AuthService {
             midwifeRepo.findByUser_UserId(user.getUserId()).ifPresent(m -> {
                 resp.name = m.getName();
                 resp.staffId = m.getMidwifeId();
-                if (m.getPhmArea() != null) resp.phmAreaName = m.getPhmArea().getAreaName();
+                if (m.getPhmArea() != null) {
+                    resp.phmAreaId = m.getPhmArea().getPhmAreaId();
+                    resp.phmAreaName = m.getPhmArea().getAreaName();
+                }
+            });
+        } else if (user.getRole() == UserRole.DOCTOR) {
+            doctorRepo.findByUser_UserId(user.getUserId()).ifPresent(d -> {
+                resp.name = d.getName();
+                resp.staffId = d.getDoctorId();
+            });
+        } else if (user.getRole() == UserRole.MOTHER) {
+            motherRepo.findByUser_UserId(user.getUserId()).ifPresent(m -> {
+                resp.name = m.getName();
+                resp.staffId = m.getMotherId();
             });
         }
 

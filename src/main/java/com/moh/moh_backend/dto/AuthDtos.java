@@ -51,10 +51,12 @@ public class AuthDtos {
 
     public static class AuthResponse {
         public String token;
+        public Integer userId;     // users table PK
         public String username;
         public String role;
         public String name;        // Full name (from Midwife/Doctor profile)
         public Integer staffId;    // midwife_id or doctor_id
+        public Integer phmAreaId;  // Midwife's PHM area ID
         public String phmAreaName; // Midwife's PHM area name
     }
 
