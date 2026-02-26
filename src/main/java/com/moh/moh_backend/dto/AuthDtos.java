@@ -53,6 +53,9 @@ public class AuthDtos {
         public String token;
         public String username;
         public String role;
+        public String name;        // Full name (from Midwife/Doctor profile)
+        public Integer staffId;    // midwife_id or doctor_id
+        public String phmAreaName; // Midwife's PHM area name
     }
 
     /**

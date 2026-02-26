@@ -3,6 +3,9 @@ package com.moh.moh_backend.repository;
 import com.moh.moh_backend.model.Mother;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
+
 public interface MotherRepository extends JpaRepository <Mother, Integer> {
     boolean existsByNic(String nic);
+    List<Mother> findByPhmArea_PhmAreaId(Integer phmAreaId);
 }

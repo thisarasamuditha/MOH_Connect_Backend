@@ -96,6 +96,7 @@ public class AuthService {
         return resp;
     }
 
+    @Transactional(readOnly = true)
     public AuthDtos.AuthResponse login(AuthDtos.LoginRequest req) {
         Optional<User> byEmail = userRepo.findByEmail(req.email); // Optional<User> specifies a object in JSON format
         User user = byEmail.orElseThrow(() -> new IllegalArgumentException("User not found"));
@@ -114,6 +115,15 @@ public class AuthService {
         resp.token = token;
         resp.username = user.getUsername();
         resp.role = user.getRole().name();
+
+        if (user.getRole() == UserRole.MIDWIFE) {
+            midwifeRepo.findByUser_UserId(user.getUserId()).ifPresent(m -> {
+                resp.name = m.getName();
+                resp.staffId = m.getMidwifeId();
+                if (m.getPhmArea() != null) resp.phmAreaName = m.getPhmArea().getAreaName();
+            });
+        }
+
         return resp;
     }
 
