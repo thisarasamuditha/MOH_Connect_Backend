@@ -2,6 +2,7 @@ package com.moh.moh_backend.service;
 
 import com.moh.moh_backend.dto.AuthDtos;
 import com.moh.moh_backend.model.*;
+
 import com.moh.moh_backend.repository.DoctorRepository;
 import com.moh.moh_backend.repository.MidwifeRepository;
 import com.moh.moh_backend.repository.MotherRepository;
@@ -65,7 +66,7 @@ public class AuthService {
         user.setPasswordHash(hashService.hashSha256(req.password));
         user.setRole(UserRole.valueOf(req.role));
         user.setIsActive(true);
-        userRepo.save(user);
+        user = userRepo.save(user); // Save and get the persisted user with ID
 
         // Doctor registration: fill DOCTOR table
         if ("DOCTOR".equalsIgnoreCase(req.role) && req.doctorDetails != null) {
@@ -82,20 +83,26 @@ public class AuthService {
         }
 
         if ("MIDWIFE".equalsIgnoreCase(req.role) && req.midwifeDetails != null) {
-            Midwife midwife = new Midwife();
-            midwife.setUser(user); // Set the User entity, not userId
-            midwife.setName(req.midwifeDetails.name);
+            try {
+                Midwife midwife = new Midwife();
+                midwife.setUser(user);
+                midwife.setName(req.midwifeDetails.name);
 
-            // Fetch existing PHM_AREA by ID
-            PhmArea phmArea = phmAreaRepo.findById(req.midwifeDetails.phmAreaId)
-                    .orElseThrow(() -> new IllegalArgumentException("Invalid PHM Area ID"));
-            midwife.setPhmArea(phmArea);
+                // Fetch existing PHM_AREA by ID
+                PhmArea phmArea = phmAreaRepo.findById(req.midwifeDetails.phmAreaId)
+                        .orElseThrow(() -> new IllegalArgumentException("Invalid PHM Area ID: " + req.midwifeDetails.phmAreaId));
+                midwife.setPhmArea(phmArea);
 
-            midwife.setContactNumber(req.midwifeDetails.contactNumber);
-            midwife.setEmail(req.midwifeDetails.email);
-//            midwife.setAssignmentDate(req.midwifeDetails.assignmentDate);
-            midwife.setQualifications(req.midwifeDetails.qualifications);
-            midwifeRepo.save(midwife);
+                midwife.setContactNumber(req.midwifeDetails.contactNumber);
+                midwife.setEmail(req.midwifeDetails.email);
+                midwife.setQualifications(req.midwifeDetails.qualifications);
+                midwifeRepo.save(midwife);
+                System.out.println("Midwife saved successfully with ID: " + midwife.getMidwifeId());
+            } catch (Exception e) {
+                System.err.println("Error saving midwife: " + e.getMessage());
+                e.printStackTrace();
+                throw new IllegalStateException("Failed to create midwife record: " + e.getMessage(), e);
+            }
         }
 
         String token = jwtService.issueToken(user.getUserId(), user.getEmail(), user.getRole().name());
@@ -147,6 +154,10 @@ public class AuthService {
             motherRepo.findByUser_UserId(user.getUserId()).ifPresent(m -> {
                 resp.name = m.getName();
                 resp.staffId = m.getMotherId();
+                if (m.getPhmArea() != null) {
+                    resp.phmAreaId = m.getPhmArea().getPhmAreaId();
+                    resp.phmAreaName = m.getPhmArea().getAreaName();
+                }
             });
         }
 
