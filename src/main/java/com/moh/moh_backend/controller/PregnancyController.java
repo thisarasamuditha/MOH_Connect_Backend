@@ -23,7 +23,7 @@ public class PregnancyController {
 
     @PostMapping
     public ResponseEntity<?> createPregnancy(
-            @RequestHeader("Authorization") String authorization,
+            @RequestHeader(value = "Authorization", required = false) String authorization,
             @RequestParam Integer motherId,
             @RequestBody Pregnancy pregnancy) {
         
@@ -47,7 +47,7 @@ public class PregnancyController {
 
     @GetMapping("/{pregnancyId}")
     public ResponseEntity<?> getPregnancyById(
-            @RequestHeader("Authorization") String authorization,
+            @RequestHeader(value = "Authorization", required = false) String authorization,
             @PathVariable Integer pregnancyId) {
         
         if (authorization == null || !authorization.startsWith("Bearer ")) {
@@ -64,7 +64,7 @@ public class PregnancyController {
 
     @GetMapping("/mother/{motherId}")
     public ResponseEntity<?> getPregnanciesByMotherId(
-            @RequestHeader("Authorization") String authorization,
+            @RequestHeader(value = "Authorization", required = false) String authorization,
             @PathVariable Integer motherId) {
         
         if (authorization == null || !authorization.startsWith("Bearer ")) {
@@ -81,7 +81,7 @@ public class PregnancyController {
 
     @GetMapping("/active")
     public ResponseEntity<?> getActivePregnancies(
-            @RequestHeader("Authorization") String authorization) {
+            @RequestHeader(value = "Authorization", required = false) String authorization) {
         
         if (authorization == null || !authorization.startsWith("Bearer ")) {
             return ResponseEntity.status(401).body("Missing Bearer token");
@@ -104,7 +104,7 @@ public class PregnancyController {
 
     @PutMapping("/{pregnancyId}")
     public ResponseEntity<?> updatePregnancy(
-            @RequestHeader("Authorization") String authorization,
+            @RequestHeader(value = "Authorization", required = false) String authorization,
             @PathVariable Integer pregnancyId,
             @RequestBody Pregnancy pregnancy) {
         
@@ -129,7 +129,7 @@ public class PregnancyController {
 
     @DeleteMapping("/{pregnancyId}")
     public ResponseEntity<?> deletePregnancy(
-            @RequestHeader("Authorization") String authorization,
+            @RequestHeader(value = "Authorization", required = false) String authorization,
             @PathVariable Integer pregnancyId) {
         
         if (authorization == null || !authorization.startsWith("Bearer ")) {

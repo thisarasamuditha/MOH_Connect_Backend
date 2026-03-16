@@ -25,7 +25,7 @@ public class MotherController {
 
     @PostMapping("/register")
     public ResponseEntity<?> registerMother(
-            @RequestHeader("Authorization") String authorization,
+            @RequestHeader(value = "Authorization", required = false) String authorization,
             @RequestBody MotherRegisterRequest req) {
 
         if (authorization == null || !authorization.startsWith("Bearer ")) {
@@ -51,7 +51,7 @@ public class MotherController {
 
     @GetMapping("/my-mothers")
     public ResponseEntity<?> getMyMothers(
-            @RequestHeader("Authorization") String authorization) {
+            @RequestHeader(value = "Authorization", required = false) String authorization) {
 
         if (authorization == null || !authorization.startsWith("Bearer ")) {
             return ResponseEntity.status(401).body(Map.of("error", "Missing Bearer token"));
@@ -76,7 +76,7 @@ public class MotherController {
 
     @GetMapping("/my-families")
     public ResponseEntity<?> getMyFamilies(
-            @RequestHeader("Authorization") String authorization) {
+            @RequestHeader(value = "Authorization", required = false) String authorization) {
 
         if (authorization == null || !authorization.startsWith("Bearer ")) {
             return ResponseEntity.status(401).body(Map.of("error", "Missing Bearer token"));
@@ -101,7 +101,7 @@ public class MotherController {
 
     @PutMapping("/{motherId}")
     public ResponseEntity<?> updateFamily(
-            @RequestHeader("Authorization") String authorization,
+            @RequestHeader(value = "Authorization", required = false) String authorization,
             @PathVariable Integer motherId,
             @RequestBody MotherUpdateRequest req) {
 
@@ -128,7 +128,7 @@ public class MotherController {
 
     @DeleteMapping("/{motherId}")
     public ResponseEntity<?> deleteFamily(
-            @RequestHeader("Authorization") String authorization,
+            @RequestHeader(value = "Authorization", required = false) String authorization,
             @PathVariable Integer motherId) {
 
         if (authorization == null || !authorization.startsWith("Bearer ")) {
