@@ -11,7 +11,7 @@ public class MotherRegisterRequest {
     @NotBlank public String password;
     @NotBlank public String nic;
     @NotBlank public String name;
-    @NotNull public Integer phmAreaId;
+    public Integer phmAreaId; // optional — backend uses midwife's PHM area
     public String address;
     public LocalDate dateOfBirth;
     public String occupation;

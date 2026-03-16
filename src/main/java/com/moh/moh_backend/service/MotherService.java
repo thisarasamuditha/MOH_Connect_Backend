@@ -43,11 +43,12 @@ public class MotherService {
     @Transactional
     public void registerMother(MotherRegisterRequest req, Integer midwifeUserId) {
         System.out.println("Registering mother: " + req.username + " by midwife user ID: " + midwifeUserId);
-        // Load midwife and enforce PHM area ownership
+        // Load midwife — mother is automatically assigned to midwife's PHM area
         Midwife midwife = midwifeRepo.findByUser_UserId(midwifeUserId)
                 .orElseThrow(() -> new IllegalArgumentException("Midwife not found"));
-        if (midwife.getPhmArea() == null || !midwife.getPhmArea().getPhmAreaId().equals(req.phmAreaId)) {
-            throw new IllegalStateException("Midwife not assigned to this PHM area");
+        PhmArea phmArea = midwife.getPhmArea();
+        if (phmArea == null) {
+            throw new IllegalStateException("Midwife has no PHM area assigned");
         }
 
         // Uniqueness checks
@@ -63,10 +64,6 @@ public class MotherService {
         user.setRole(UserRole.MOTHER);
         user.setIsActive(true);
         userRepo.save(user);
-
-        // Validate PHM area
-        PhmArea phmArea = phmAreaRepo.findById(req.phmAreaId)
-                .orElseThrow(() -> new IllegalArgumentException("PHM Area not found"));
 
         // Create MOTHER
         Mother mother = new Mother();
