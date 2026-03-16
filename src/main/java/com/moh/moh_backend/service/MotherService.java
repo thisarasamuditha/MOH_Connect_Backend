@@ -3,6 +3,7 @@ package com.moh.moh_backend.service;
 import com.moh.moh_backend.dto.FamilyResponse;
 import com.moh.moh_backend.dto.MotherRegisterRequest;
 import com.moh.moh_backend.dto.MotherResponse;
+import com.moh.moh_backend.dto.MotherUpdateRequest;
 import com.moh.moh_backend.model.Midwife;
 import com.moh.moh_backend.model.Mother;
 import com.moh.moh_backend.model.PhmArea;
@@ -94,7 +95,7 @@ public class MotherService {
             throw new IllegalStateException("Midwife has no PHM area assigned");
         }
         Integer phmAreaId = midwife.getPhmArea().getPhmAreaId();
-        return motherRepo.findByPhmArea_PhmAreaId(phmAreaId)
+        return motherRepo.findByPhmArea_PhmAreaIdAndIsActiveTrue(phmAreaId)
                 .stream()
                 .map(MotherResponse::from)
                 .collect(Collectors.toList());
@@ -108,9 +109,78 @@ public class MotherService {
             throw new IllegalStateException("Midwife has no PHM area assigned");
         }
         Integer phmAreaId = midwife.getPhmArea().getPhmAreaId();
-        return motherRepo.findByPhmArea_PhmAreaId(phmAreaId)
+        return motherRepo.findByPhmArea_PhmAreaIdAndIsActiveTrue(phmAreaId)
                 .stream()
                 .map(mother -> FamilyResponse.from(mother, babyRepo.findByMotherId(mother.getMotherId())))
                 .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public FamilyResponse updateFamilyForMidwife(Integer motherId, MotherUpdateRequest req, Integer midwifeUserId) {
+        Mother mother = getMotherForMidwife(motherId, midwifeUserId);
+
+        if (req.nic != null) {
+            String nic = req.nic.trim();
+            if (nic.isEmpty()) {
+                throw new IllegalArgumentException("NIC cannot be empty");
+            }
+            if (!nic.equals(mother.getNic()) && motherRepo.existsByNic(nic)) {
+                throw new IllegalArgumentException("NIC already registered");
+            }
+            mother.setNic(nic);
+        }
+
+        if (req.name != null) {
+            String name = req.name.trim();
+            if (name.isEmpty()) {
+                throw new IllegalArgumentException("Mother name cannot be empty");
+            }
+            mother.setName(name);
+        }
+
+        if (req.dateOfBirth != null) mother.setDateOfBirth(req.dateOfBirth);
+        if (req.occupation != null) mother.setOccupation(normalize(req.occupation));
+        if (req.contactNumber != null) mother.setContactNumber(normalize(req.contactNumber));
+        if (req.bloodGroup != null) mother.setBloodGroup(normalize(req.bloodGroup));
+        if (req.address != null) mother.setAddress(normalize(req.address));
+
+        if (req.fatherName != null) mother.setFatherName(normalize(req.fatherName));
+        if (req.fatherNic != null) mother.setFatherNic(normalize(req.fatherNic));
+        if (req.fatherDateOfBirth != null) mother.setFatherDateOfBirth(req.fatherDateOfBirth);
+        if (req.fatherContactNumber != null) mother.setFatherContactNumber(normalize(req.fatherContactNumber));
+        if (req.fatherEmail != null) mother.setFatherEmail(normalize(req.fatherEmail));
+
+        Mother saved = motherRepo.save(mother);
+        return FamilyResponse.from(saved, babyRepo.findByMotherId(saved.getMotherId()));
+    }
+
+    @Transactional
+    public void deleteFamilyForMidwife(Integer motherId, Integer midwifeUserId) {
+        Mother mother = getMotherForMidwife(motherId, midwifeUserId);
+        mother.setActive(false);
+        motherRepo.save(mother);
+
+        User user = mother.getUser();
+        if (user != null) {
+            user.setIsActive(false);
+            userRepo.save(user);
+        }
+    }
+
+    private Mother getMotherForMidwife(Integer motherId, Integer midwifeUserId) {
+        Midwife midwife = midwifeRepo.findByUser_UserId(midwifeUserId)
+                .orElseThrow(() -> new IllegalArgumentException("Midwife not found"));
+        if (midwife.getPhmArea() == null) {
+            throw new IllegalStateException("Midwife has no PHM area assigned");
+        }
+
+        Integer phmAreaId = midwife.getPhmArea().getPhmAreaId();
+        return motherRepo.findByMotherIdAndPhmArea_PhmAreaId(motherId, phmAreaId)
+                .orElseThrow(() -> new IllegalArgumentException("Family not found in your PHM area"));
+    }
+
+    private String normalize(String value) {
+        String trimmed = value == null ? null : value.trim();
+        return (trimmed == null || trimmed.isEmpty()) ? null : trimmed;
     }
 }
