@@ -39,6 +39,21 @@ public class Mother {
     @Column(name = "contact_number", length = 20)
     private String contactNumber;
 
+    @Column(name = "father_name", length = 120)
+    private String fatherName;
+
+    @Column(name = "father_nic", length = 20)
+    private String fatherNic;
+
+    @Column(name = "father_date_of_birth")
+    private LocalDate fatherDateOfBirth;
+
+    @Column(name = "father_contact_number", length = 20)
+    private String fatherContactNumber;
+
+    @Column(name = "father_email", length = 255)
+    private String fatherEmail;
+
     @Column(name = "blood_group", length = 10)
     private String bloodGroup;
 
@@ -121,6 +136,46 @@ public class Mother {
 
     public void setContactNumber(String contactNumber) {
         this.contactNumber = contactNumber;
+    }
+
+    public String getFatherName() {
+        return fatherName;
+    }
+
+    public void setFatherName(String fatherName) {
+        this.fatherName = fatherName;
+    }
+
+    public String getFatherNic() {
+        return fatherNic;
+    }
+
+    public void setFatherNic(String fatherNic) {
+        this.fatherNic = fatherNic;
+    }
+
+    public LocalDate getFatherDateOfBirth() {
+        return fatherDateOfBirth;
+    }
+
+    public void setFatherDateOfBirth(LocalDate fatherDateOfBirth) {
+        this.fatherDateOfBirth = fatherDateOfBirth;
+    }
+
+    public String getFatherContactNumber() {
+        return fatherContactNumber;
+    }
+
+    public void setFatherContactNumber(String fatherContactNumber) {
+        this.fatherContactNumber = fatherContactNumber;
+    }
+
+    public String getFatherEmail() {
+        return fatherEmail;
+    }
+
+    public void setFatherEmail(String fatherEmail) {
+        this.fatherEmail = fatherEmail;
     }
 
     public String getBloodGroup() {

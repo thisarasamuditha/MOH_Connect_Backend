@@ -75,6 +75,11 @@ public class MotherService {
         mother.setDateOfBirth(req.dateOfBirth);
         mother.setOccupation(req.occupation);
         mother.setContactNumber(req.contactNumber);
+        mother.setFatherName(req.fatherName);
+        mother.setFatherNic(req.fatherNic);
+        mother.setFatherDateOfBirth(req.fatherDateOfBirth);
+        mother.setFatherContactNumber(req.fatherContactNumber);
+        mother.setFatherEmail(req.fatherEmail);
         mother.setBloodGroup(req.bloodGroup);
         mother.setRegistrationDate(req.registrationDate);
         mother.setActive(true);

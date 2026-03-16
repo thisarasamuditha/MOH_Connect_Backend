@@ -18,4 +18,10 @@ public class MotherRegisterRequest {
     public String contactNumber;
     public String bloodGroup;
     public LocalDate registrationDate;
+
+    public String fatherName;
+    public String fatherNic;
+    public LocalDate fatherDateOfBirth;
+    public String fatherContactNumber;
+    public String fatherEmail;
 }
