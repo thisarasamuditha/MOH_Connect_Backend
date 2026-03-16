@@ -22,10 +22,10 @@ public class Pregnancy {
     @Column(name = "pregnancy_number", length = 50, unique = true, nullable = false)
     private String pregnancyNumber;
 
-    @Column(name = "lmp_date", nullable = false)
+    @Column(name = "lmp_date", nullable = false) // Last Menstrual Period, used to calculate gestational age and EDD
     private LocalDate lmpDate;
 
-    @Column(name = "edd_date", nullable = false)
+    @Column(name = "edd_date", nullable = false) // Estimated Due Date, calculated based on LMP
     private LocalDate eddDate;
 
     @Column(name = "delivery_date")
@@ -39,10 +39,10 @@ public class Pregnancy {
     @Enumerated(EnumType.STRING)
     private PregnancyStatus pregnancyStatus = PregnancyStatus.ACTIVE;
 
-    @Column(name = "gravida")
+    @Column(name = "gravida") //This represents the number of times a woman has been pregnant, regardless of the outcome
     private Integer gravida = 1;
 
-    @Column(name = "para")
+    @Column(name = "para")  // This represents the number of pregnancies that have reached viable gestational age (20 weeks or more), regardless of the outcome (live birth, stillbirth, or miscarriage)
     private Integer para = 0;
 
     @Column(name = "risk_level")
