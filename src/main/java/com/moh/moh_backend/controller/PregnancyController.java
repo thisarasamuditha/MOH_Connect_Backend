@@ -102,6 +102,30 @@ public class PregnancyController {
         }
     }
 
+    @GetMapping("/my-active")
+    public ResponseEntity<?> getMyActivePregnancies(
+            @RequestHeader(value = "Authorization", required = false) String authorization) {
+
+        if (authorization == null || !authorization.startsWith("Bearer ")) {
+            return ResponseEntity.status(401).body("Missing Bearer token");
+        }
+
+        String token = authorization.substring("Bearer ".length()).trim();
+        String role = jwtService.getRole(token);
+
+        if (!"MIDWIFE".equalsIgnoreCase(role)) {
+            return ResponseEntity.status(403).body("Only midwives can view PHM-area active pregnancies");
+        }
+
+        try {
+            Integer midwifeUserId = jwtService.getUserId(token);
+            List<Pregnancy> pregnancies = pregnancyService.getActivePregnanciesByMidwife(midwifeUserId);
+            return ResponseEntity.ok(pregnancies);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
+
     @PutMapping("/{pregnancyId}")
     public ResponseEntity<?> updatePregnancy(
             @RequestHeader(value = "Authorization", required = false) String authorization,

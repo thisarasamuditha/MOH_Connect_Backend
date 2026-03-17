@@ -1,7 +1,9 @@
 package com.moh.moh_backend.service;
 
 import com.moh.moh_backend.model.Mother;
+import com.moh.moh_backend.model.Midwife;
 import com.moh.moh_backend.model.Pregnancy;
+import com.moh.moh_backend.repository.MidwifeRepository;
 import com.moh.moh_backend.repository.MotherRepository;
 import com.moh.moh_backend.repository.PregnancyRepository;
 import org.springframework.stereotype.Service;
@@ -14,10 +16,12 @@ public class PregnancyService {
 
     private final PregnancyRepository pregnancyRepository;
     private final MotherRepository motherRepository;
+    private final MidwifeRepository midwifeRepository;
 
-    public PregnancyService(PregnancyRepository pregnancyRepository, MotherRepository motherRepository) {
+    public PregnancyService(PregnancyRepository pregnancyRepository, MotherRepository motherRepository, MidwifeRepository midwifeRepository) {
         this.pregnancyRepository = pregnancyRepository;
         this.motherRepository = motherRepository;
+        this.midwifeRepository = midwifeRepository;
     }
 
     @Transactional
@@ -40,6 +44,21 @@ public class PregnancyService {
 
     public List<Pregnancy> getActivePregnancies() {
         return pregnancyRepository.findByPregnancyStatus(Pregnancy.PregnancyStatus.ACTIVE);
+    }
+
+    public List<Pregnancy> getActivePregnanciesByMidwife(Integer midwifeUserId) {
+        Midwife midwife = midwifeRepository.findByUser_UserId(midwifeUserId)
+                .orElseThrow(() -> new RuntimeException("Midwife not found"));
+
+        if (midwife.getPhmArea() == null) {
+            throw new RuntimeException("Midwife has no PHM area assigned");
+        }
+
+        Integer phmAreaId = midwife.getPhmArea().getPhmAreaId();
+        return pregnancyRepository.findByMother_PhmArea_PhmAreaIdAndPregnancyStatus(
+                phmAreaId,
+                Pregnancy.PregnancyStatus.ACTIVE
+        );
     }
 
     @Transactional

@@ -10,6 +10,7 @@ import java.util.Optional;
 public interface PregnancyRepository extends JpaRepository<Pregnancy, Integer> {
     List<Pregnancy> findByMother_MotherId(Integer motherId);
     List<Pregnancy> findByMother_MotherIdAndPregnancyStatus(Integer motherId, PregnancyStatus status);
+    List<Pregnancy> findByMother_PhmArea_PhmAreaIdAndPregnancyStatus(Integer phmAreaId, PregnancyStatus status);
     Optional<Pregnancy> findByPregnancyNumber(String pregnancyNumber);
     List<Pregnancy> findByPregnancyStatus(PregnancyStatus status);
 }
