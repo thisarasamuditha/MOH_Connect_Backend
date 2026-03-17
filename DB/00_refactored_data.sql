@@ -35,20 +35,20 @@ SET FOREIGN_KEY_CHECKS = 1;
 
 -- ====================================================
 -- 1. USER TABLE
--- Password for all users: 'password123' (bcrypt hash)
+-- Password for all users: 'password123' (SHA-256 hash)
 -- ====================================================
 INSERT INTO USER (username, email, password_hash, role, is_active, created_at) VALUES
-('admin_moh', 'admin@moh.gov.lk', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'ADMIN', TRUE, NOW()),
-('midwife_nimal', 'nimal.perera@moh.gov.lk', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'MIDWIFE', TRUE, NOW()),
-('midwife_chamari', 'chamari.silva@moh.gov.lk', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'MIDWIFE', TRUE, NOW()),
-('midwife_sachini', 'sachini.fernando@moh.gov.lk', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'MIDWIFE', TRUE, NOW()),
-('dr_ruwan', 'dr.ruwan@moh.gov.lk', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'DOCTOR', TRUE, NOW()),
-('dr_samantha', 'dr.samantha@moh.gov.lk', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'DOCTOR', TRUE, NOW()),
-('mother_priya', 'priya.silva@gmail.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'MOTHER', TRUE, NOW()),
-('mother_dilini', 'dilini.fernando@gmail.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'MOTHER', TRUE, NOW()),
-('mother_sanduni', 'sanduni.perera@gmail.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'MOTHER', TRUE, NOW()),
-('mother_madhavi', 'madhavi.rajapaksha@gmail.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'MOTHER', TRUE, NOW()),
-('mother_nimali', 'nimali.wickramasinghe@gmail.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'MOTHER', TRUE, NOW());
+('admin_moh', 'admin@moh.gov.lk', 'ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f', 'ADMIN', TRUE, NOW()),
+('midwife_nimal', 'nimal.perera@moh.gov.lk', 'ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f', 'MIDWIFE', TRUE, NOW()),
+('midwife_chamari', 'chamari.silva@moh.gov.lk', 'ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f', 'MIDWIFE', TRUE, NOW()),
+('midwife_sachini', 'sachini.fernando@moh.gov.lk', 'ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f', 'MIDWIFE', TRUE, NOW()),
+('dr_ruwan', 'dr.ruwan@moh.gov.lk', 'ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f', 'DOCTOR', TRUE, NOW()),
+('dr_samantha', 'dr.samantha@moh.gov.lk', 'ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f', 'DOCTOR', TRUE, NOW()),
+('mother_priya', 'priya.silva@gmail.com', 'ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f', 'MOTHER', TRUE, NOW()),
+('mother_dilini', 'dilini.fernando@gmail.com', 'ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f', 'MOTHER', TRUE, NOW()),
+('mother_sanduni', 'sanduni.perera@gmail.com', 'ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f', 'MOTHER', TRUE, NOW()),
+('mother_madhavi', 'madhavi.rajapaksha@gmail.com', 'ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f', 'MOTHER', TRUE, NOW()),
+('mother_nimali', 'nimali.wickramasinghe@gmail.com', 'ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f', 'MOTHER', TRUE, NOW());
 
 -- ====================================================
 -- 2. PHM_AREA TABLE
