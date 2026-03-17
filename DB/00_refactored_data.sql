@@ -5,7 +5,7 @@
 -- Generated: February 20, 2026
 -- ====================================================
 
-USE moh_connect;
+USE moh_db;
 
 -- Clear existing data (in reverse order of dependencies)
 SET FOREIGN_KEY_CHECKS = 0;
@@ -78,12 +78,12 @@ INSERT INTO DOCTOR (user_id, name, specialization, contact_number, email, licens
 -- ====================================================
 -- 5. MOTHER TABLE
 -- ====================================================
-INSERT INTO MOTHER (user_id, phm_area_id, address, nic, name, date_of_birth, occupation, contact_number, father_name, father_nic, father_date_of_birth, father_contact_number, father_email, blood_group, registration_date, is_active, created_at) VALUES
-(7, 1, '123 Main Street, Colombo 03', '900234567V', 'Priya Silva', '1990-02-15', 'Teacher', '0771234572', 'Nimal Silva', '850123456V', '1985-01-23', '0771234561', 'nimal.silva@gmail.com', 'A+', '2025-12-06', TRUE, NOW()),
-(8, 2, '456 Galle Road, Colombo 04', '920567890V', 'Dilini Fernando', '1992-05-20', 'Accountant', '0771234573', 'Saman Fernando', '880456789V', '1988-04-15', '0771234562', 'saman.fernando@gmail.com', 'AB+', '2025-11-10', TRUE, NOW()),
-(9, 3, '789 Peradeniya Road, Kandy', '910789012V', 'Sanduni Perera', '1991-07-10', 'Nurse', '0771234574', 'Kamal Perera', '860678901V', '1986-06-30', '0771234563', 'kamal.perera@gmail.com', 'O+', '2025-10-15', TRUE, NOW()),
-(10, 4, '234 Matara Road, Galle', '930901234V', 'Madhavi Rajapaksha', '1993-09-25', 'Designer', '0771234575', 'Ruwan Rajapaksha', '870890123V', '1987-08-12', '0771234564', 'ruwan.rajapaksha@gmail.com', 'A+', '2025-09-20', TRUE, NOW()),
-(11, 5, '567 Ward Place, Kurunegala', '940223456V', 'Nimali Wickramasinghe', '1994-02-28', 'Pharmacist', '0771234576', 'Asanka Wickramasinghe', '890112345V', '1989-01-18', '0771234565', 'asanka.wickramasinghe@gmail.com', 'B+', '2025-08-05', TRUE, NOW());
+INSERT INTO MOTHER (user_id, phm_area_id, address, nic, name, date_of_birth, occupation, contact_number, father_name, father_nic, father_date_of_birth, father_contact_number, father_email, blood_group, registration_date, is_active, created_at, updated_at) VALUES
+(7, 1, '123 Main Street, Colombo 03', '900234567V', 'Priya Silva', '1990-02-15', 'Teacher', '0771234572', 'Nimal Silva', '850123456V', '1985-01-23', '0771234561', 'nimal.silva@gmail.com', 'A+', '2025-12-06', TRUE, NOW(), NOW()),
+(8, 2, '456 Galle Road, Colombo 04', '920567890V', 'Dilini Fernando', '1992-05-20', 'Accountant', '0771234573', 'Saman Fernando', '880456789V', '1988-04-15', '0771234562', 'saman.fernando@gmail.com', 'AB+', '2025-11-10', TRUE, NOW(), NOW()),
+(9, 3, '789 Peradeniya Road, Kandy', '910789012V', 'Sanduni Perera', '1991-07-10', 'Nurse', '0771234574', 'Kamal Perera', '860678901V', '1986-06-30', '0771234563', 'kamal.perera@gmail.com', 'O+', '2025-10-15', TRUE, NOW(), NOW()),
+(10, 4, '234 Matara Road, Galle', '930901234V', 'Madhavi Rajapaksha', '1993-09-25', 'Designer', '0771234575', 'Ruwan Rajapaksha', '870890123V', '1987-08-12', '0771234564', 'ruwan.rajapaksha@gmail.com', 'A+', '2025-09-20', TRUE, NOW(), NOW()),
+(11, 5, '567 Ward Place, Kurunegala', '940223456V', 'Nimali Wickramasinghe', '1994-02-28', 'Pharmacist', '0771234576', 'Asanka Wickramasinghe', '890112345V', '1989-01-18', '0771234565', 'asanka.wickramasinghe@gmail.com', 'B+', '2025-08-05', TRUE, NOW(), NOW());
 
 -- ====================================================
 -- 6. PREGNANCY TABLE
