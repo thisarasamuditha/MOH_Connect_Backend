@@ -2,9 +2,9 @@
 -- MOH Connect Backend - Database Schema (Updated with MOTHER entity)
 -- ====================================================
 
-DROP DATABASE IF EXISTS moh_db;
-CREATE DATABASE moh_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE moh_db;
+DROP DATABASE IF EXISTS moh_connect;
+CREATE DATABASE moh_connect CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE moh_connect;
 
 -- ====================================================
 -- AUTHENTICATION & USER MANAGEMENT

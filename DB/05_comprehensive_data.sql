@@ -5,7 +5,7 @@
 -- Generated: February 20, 2026
 -- ====================================================
 
-USE moh_db;
+USE moh_connect;
 
 -- Clear existing data (in reverse order of dependencies)
 SET FOREIGN_KEY_CHECKS = 0;
