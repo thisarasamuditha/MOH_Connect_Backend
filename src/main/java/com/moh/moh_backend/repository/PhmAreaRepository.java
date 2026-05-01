@@ -7,4 +7,5 @@ import java.util.Optional;
 
 public interface PhmAreaRepository extends JpaRepository<PhmArea, Integer> {
     Optional<PhmArea> findById(Integer phmAreaId);
+    Optional<PhmArea> findByAreaCode(String areaCode);
 }
