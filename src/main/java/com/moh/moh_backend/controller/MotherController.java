@@ -132,9 +132,17 @@ public class MotherController {
             List<FamilyResponse> families = motherService.getFamiliesForMidwife(midwifeUserId);
             return ResponseEntity.ok(families);
         } catch (IllegalArgumentException e) {
+            System.err.println("Bad request error: " + e.getMessage());
+            e.printStackTrace();
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        } catch (IllegalStateException e) {
+            System.err.println("State error: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(409).body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
-            return ResponseEntity.status(500).body(Map.of("error", "Failed to fetch families: " + e.getMessage()));
+            System.err.println("Unexpected error: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(Map.of("error", "Failed to fetch families: " + e.getMessage(), "details", e.getClass().getName()));
         }
     }
 }
