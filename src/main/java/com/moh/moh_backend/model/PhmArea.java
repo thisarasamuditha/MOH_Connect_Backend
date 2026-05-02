@@ -22,6 +22,11 @@ public class PhmArea {
     public PhmArea() {
     }
 
+    public PhmArea(String areaName, String areaCode) {
+        this.areaName = areaName;
+        this.areaCode = areaCode;
+    }
+
     public PhmArea(String areaName, String areaCode, String description) {
         this.areaName = areaName;
         this.areaCode = areaCode;

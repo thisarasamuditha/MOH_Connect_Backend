@@ -62,6 +62,27 @@ CREATE TABLE MIDWIFE (
     INDEX idx_phm_area (phm_area_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE SECTION (
+    section_id INT AUTO_INCREMENT PRIMARY KEY,
+    midwife_id INT NOT NULL,
+    phm_area_id INT NOT NULL,
+    section_name VARCHAR(255) NOT NULL,
+    section_type VARCHAR(50),
+    description TEXT,
+    location VARCHAR(255),
+    capacity INT,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (midwife_id) REFERENCES MIDWIFE(midwife_id) ON DELETE RESTRICT,
+    FOREIGN KEY (phm_area_id) REFERENCES PHM_AREA(phm_area_id) ON DELETE RESTRICT,
+
+    INDEX idx_midwife_id (midwife_id),
+    INDEX idx_phm_area_id (phm_area_id),
+    INDEX idx_section_name (section_name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE DOCTOR (
     doctor_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT UNIQUE NOT NULL,

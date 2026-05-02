@@ -132,9 +132,76 @@ public class MotherController {
             List<FamilyResponse> families = motherService.getFamiliesForMidwife(midwifeUserId);
             return ResponseEntity.ok(families);
         } catch (IllegalArgumentException e) {
+            System.err.println("Bad request error: " + e.getMessage());
+            e.printStackTrace();
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        } catch (IllegalStateException e) {
+            System.err.println("State error: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(409).body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
-            return ResponseEntity.status(500).body(Map.of("error", "Failed to fetch families: " + e.getMessage()));
+            System.err.println("Unexpected error: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(Map.of("error", "Failed to fetch families: " + e.getMessage(), "details", e.getClass().getName()));
+        }
+    }
+
+    // New endpoint: Update mother details
+    @PutMapping("/{motherId}")
+    public ResponseEntity<?> updateMother(
+            @PathVariable Integer motherId,
+            @RequestHeader("Authorization") String authorization,
+            @RequestBody Map<String, String> updateData) {
+
+        if (authorization == null || !authorization.startsWith("Bearer ")) {
+            return ResponseEntity.status(401).body(Map.of("error", "Missing Bearer token"));
+        }
+        String token = authorization.substring("Bearer ".length()).trim();
+
+        String role = jwtService.getRole(token);
+        if (!"MIDWIFE".equalsIgnoreCase(role)) {
+            return ResponseEntity.status(403).body(Map.of("error", "Only midwives can update mothers"));
+        }
+
+        try {
+            Integer midwifeUserId = jwtService.getUserId(token);
+            Mother mother = motherService.updateMother(motherId, midwifeUserId, updateData);
+            return ResponseEntity.ok(Map.of("message", "Mother updated successfully", "data", MotherResponse.from(mother)));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(403).body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("error", "Failed to update mother: " + e.getMessage()));
+        }
+    }
+
+    // New endpoint: Delete mother record
+    @DeleteMapping("/{motherId}")
+    public ResponseEntity<?> deleteMother(
+            @PathVariable Integer motherId,
+            @RequestHeader("Authorization") String authorization) {
+
+        if (authorization == null || !authorization.startsWith("Bearer ")) {
+            return ResponseEntity.status(401).body(Map.of("error", "Missing Bearer token"));
+        }
+        String token = authorization.substring("Bearer ".length()).trim();
+
+        String role = jwtService.getRole(token);
+        if (!"MIDWIFE".equalsIgnoreCase(role)) {
+            return ResponseEntity.status(403).body(Map.of("error", "Only midwives can delete mothers"));
+        }
+
+        try {
+            Integer midwifeUserId = jwtService.getUserId(token);
+            motherService.deleteMother(motherId, midwifeUserId);
+            return ResponseEntity.ok(Map.of("message", "Mother deleted successfully"));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(403).body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("error", "Failed to delete mother: " + e.getMessage()));
         }
     }
 }
