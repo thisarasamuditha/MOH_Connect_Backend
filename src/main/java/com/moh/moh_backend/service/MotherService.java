@@ -153,4 +153,59 @@ public class MotherService {
                 })
                 .collect(Collectors.toList());
     }
+
+    @Transactional
+    public Mother updateMother(Integer motherId, Integer midwifeUserId, java.util.Map<String, String> updateData) {
+        // Verify midwife exists
+        Midwife midwife = midwifeRepo.findByUser_UserId(midwifeUserId)
+                .orElseThrow(() -> new IllegalArgumentException("Midwife not found"));
+
+        // Get mother
+        Mother mother = motherRepo.findById(motherId)
+                .orElseThrow(() -> new IllegalArgumentException("Mother not found with ID: " + motherId));
+
+        // Verify midwife can only update mothers in their PHM area
+        if (!mother.getPhmArea().getPhmAreaId().equals(midwife.getPhmArea().getPhmAreaId())) {
+            throw new IllegalStateException("Midwife can only update mothers in their PHM area");
+        }
+
+        // Update fields if provided
+        if (updateData.containsKey("name") && updateData.get("name") != null) {
+            mother.setName(updateData.get("name"));
+        }
+        if (updateData.containsKey("contactNumber") && updateData.get("contactNumber") != null) {
+            mother.setContactNumber(updateData.get("contactNumber"));
+        }
+        if (updateData.containsKey("address") && updateData.get("address") != null) {
+            mother.setAddress(updateData.get("address"));
+        }
+        if (updateData.containsKey("bloodGroup") && updateData.get("bloodGroup") != null) {
+            mother.setBloodGroup(updateData.get("bloodGroup"));
+        }
+        if (updateData.containsKey("occupation") && updateData.get("occupation") != null) {
+            mother.setOccupation(updateData.get("occupation"));
+        }
+
+        return motherRepo.save(mother);
+    }
+
+    @Transactional
+    public void deleteMother(Integer motherId, Integer midwifeUserId) {
+        // Verify midwife exists
+        Midwife midwife = midwifeRepo.findByUser_UserId(midwifeUserId)
+                .orElseThrow(() -> new IllegalArgumentException("Midwife not found"));
+
+        // Get mother
+        Mother mother = motherRepo.findById(motherId)
+                .orElseThrow(() -> new IllegalArgumentException("Mother not found with ID: " + motherId));
+
+        // Verify midwife can only delete mothers in their PHM area
+        if (!mother.getPhmArea().getPhmAreaId().equals(midwife.getPhmArea().getPhmAreaId())) {
+            throw new IllegalStateException("Midwife can only delete mothers in their PHM area");
+        }
+
+        // Soft delete: mark as inactive instead of hard delete
+        mother.setActive(false);
+        motherRepo.save(mother);
+    }
 }
