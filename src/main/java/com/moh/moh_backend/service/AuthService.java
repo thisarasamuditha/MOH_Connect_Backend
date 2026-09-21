@@ -44,6 +44,9 @@ public class AuthService {
 
     @Transactional
     public AuthDtos.AuthResponse register(AuthDtos.RegisterRequest req) {
+        if ("ADMIN".equalsIgnoreCase(req.role)) {
+            throw new IllegalArgumentException("Public admin registration is disabled");
+        }
         if (userRepo.existsByUsername(req.username)) {
             throw new IllegalArgumentException("Username already taken");
 
@@ -63,7 +66,7 @@ public class AuthService {
         User user = new User();
         user.setUsername(req.username);
         user.setEmail(req.email);
-        user.setPasswordHash(hashService.hashSha256(req.password));
+        user.setPasswordHash(hashService.hashPassword(req.password));
         user.setRole(UserRole.valueOf(req.role));
         user.setIsActive(true);
         user = userRepo.save(user); // Save and get the persisted user with ID
@@ -120,8 +123,7 @@ public class AuthService {
         Optional<User> byEmail = userRepo.findByEmail(req.email); // Optional<User> specifies a object in JSON format
         User user = byEmail.orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        String suppliedHash = hashService.hashSha256(req.password);
-        if (!suppliedHash.equalsIgnoreCase(user.getPasswordHash())) {
+        if (!hashService.matches(req.password, user.getPasswordHash())) {
             throw new IllegalArgumentException("Invalid credentials");
         }
         if (Boolean.FALSE.equals(user.getIsActive())) {
@@ -233,7 +235,7 @@ public class AuthService {
             if (newPassword.isBlank()) {
                 throw new IllegalArgumentException("Password cannot be blank");
             }
-            user.setPasswordHash(hashService.hashSha256(newPassword));
+            user.setPasswordHash(hashService.hashPassword(newPassword));
             updated = true;
         }
 
