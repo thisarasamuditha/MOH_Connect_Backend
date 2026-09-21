@@ -6,6 +6,7 @@ import com.moh.moh_backend.dto.MotherResponse;
 import com.moh.moh_backend.dto.PregnancyResponse;
 import com.moh.moh_backend.service.MotherService;
 import com.moh.moh_backend.util.JwtService;
+import com.moh.moh_backend.config.RequireRoles;
 import com.moh.moh_backend.model.Mother;
 import com.moh.moh_backend.model.Pregnancy;
 import com.moh.moh_backend.model.User;
@@ -34,6 +35,7 @@ public class MotherController {
     }
     // New endpoint: Get mother details (with email) and active pregnancy by userId
     @GetMapping("/me")
+    @RequireRoles("MOTHER")
     public ResponseEntity<?> getMotherDetailsAndActivePregnancy(@RequestHeader("Authorization") String authorization) {
         if (authorization == null || !authorization.startsWith("Bearer ")) {
             return ResponseEntity.status(401).body(Map.of("error", "Missing Bearer token"));
@@ -63,6 +65,7 @@ public class MotherController {
     }
 
     @PostMapping("/register")
+    @RequireRoles("MIDWIFE")
     public ResponseEntity<?> registerMother(
             @RequestHeader("Authorization") String authorization,
             @RequestBody MotherRegisterRequest req) {
@@ -89,6 +92,7 @@ public class MotherController {
     }
 
     @GetMapping("/my-mothers")
+    @RequireRoles("MIDWIFE")
     public ResponseEntity<?> getMyMothers(
             @RequestHeader("Authorization") String authorization) {
 
@@ -114,6 +118,7 @@ public class MotherController {
     }
 
     @GetMapping("/my-families")
+    @RequireRoles("MIDWIFE")
     public ResponseEntity<?> getMyFamilies(
             @RequestHeader("Authorization") String authorization) {
 
@@ -148,6 +153,7 @@ public class MotherController {
 
     // New endpoint: Update mother details
     @PutMapping("/{motherId}")
+    @RequireRoles("MIDWIFE")
     public ResponseEntity<?> updateMother(
             @PathVariable Integer motherId,
             @RequestHeader("Authorization") String authorization,
@@ -178,6 +184,7 @@ public class MotherController {
 
     // New endpoint: Delete mother record
     @DeleteMapping("/{motherId}")
+    @RequireRoles("MIDWIFE")
     public ResponseEntity<?> deleteMother(
             @PathVariable Integer motherId,
             @RequestHeader("Authorization") String authorization) {

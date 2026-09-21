@@ -90,7 +90,7 @@ public class MotherService {
         User user = new User();
         user.setUsername(username);
         user.setEmail(req.email);
-        user.setPasswordHash(hashService.hashSha256(password));
+        user.setPasswordHash(hashService.hashPassword(password));
         user.setRole(UserRole.MOTHER);
         user.setIsActive(true);
         userRepo.save(user);

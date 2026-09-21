@@ -20,20 +20,25 @@ public class MotherRecordService {
     private final PregnancyRepository pregnancyRepository;
     private final MidwifeRepository midwifeRepository;
     private final DoctorRepository doctorRepository;
+    private final PregnancyService pregnancyService;
 
     public MotherRecordService(MotherRecordRepository motherRecordRepository,
                                PregnancyRepository pregnancyRepository,
                                MidwifeRepository midwifeRepository,
-                               DoctorRepository doctorRepository) {
+                               DoctorRepository doctorRepository,
+                               PregnancyService pregnancyService) {
         this.motherRecordRepository = motherRecordRepository;
         this.pregnancyRepository = pregnancyRepository;
         this.midwifeRepository = midwifeRepository;
         this.doctorRepository = doctorRepository;
+        this.pregnancyService = pregnancyService;
     }
 
     @Transactional
     public MotherRecord createMotherRecord(MotherRecord motherRecord, Integer pregnancyId, 
-                                           Integer midwifeId, Integer doctorId) {
+                                           Integer midwifeId, Integer doctorId,
+                                           Integer userId, String role) {
+        pregnancyService.assertCanAccessPregnancy(pregnancyId, userId, role);
         // Validate and set pregnancy (required)
         Pregnancy pregnancy = pregnancyRepository.findById(pregnancyId)
                 .orElseThrow(() -> new RuntimeException("Pregnancy not found with id: " + pregnancyId));
@@ -56,19 +61,23 @@ public class MotherRecordService {
         return motherRecordRepository.save(motherRecord);
     }
 
-    public MotherRecord getMotherRecordById(Integer id) {
-        return motherRecordRepository.findById(id)
+    public MotherRecord getMotherRecordById(Integer id, Integer userId, String role) {
+        MotherRecord record = motherRecordRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Mother record not found with id: " + id));
+        pregnancyService.assertCanAccessPregnancy(record.getPregnancy().getPregnancyId(), userId, role);
+        return record;
     }
 
-    public List<MotherRecord> getMotherRecordsByPregnancyId(Integer pregnancyId) {
+    public List<MotherRecord> getMotherRecordsByPregnancyId(Integer pregnancyId, Integer userId, String role) {
+        pregnancyService.assertCanAccessPregnancy(pregnancyId, userId, role);
         return motherRecordRepository.findByPregnancy_PregnancyId(pregnancyId);
     }
 
     @Transactional
     public MotherRecord updateMotherRecord(Integer id, MotherRecord updatedRecord, 
-                                           Integer midwifeId, Integer doctorId) {
-        MotherRecord existing = getMotherRecordById(id);
+                                           Integer midwifeId, Integer doctorId,
+                                           Integer userId, String role) {
+        MotherRecord existing = getMotherRecordById(id, userId, role);
 
         // Update fields
         if (updatedRecord.getRecordDate() != null) {
@@ -123,10 +132,8 @@ public class MotherRecordService {
     }
 
     @Transactional
-    public void deleteMotherRecord(Integer id) {
-        if (!motherRecordRepository.existsById(id)) {
-            throw new RuntimeException("Mother record not found with id: " + id);
-        }
-        motherRecordRepository.deleteById(id);
+    public void deleteMotherRecord(Integer id, Integer userId, String role) {
+        MotherRecord existing = getMotherRecordById(id, userId, role);
+        motherRecordRepository.delete(existing);
     }
 }

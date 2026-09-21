@@ -17,22 +17,27 @@ public class MotherVaccinationService {
     private final PregnancyRepository pregnancyRepository;
     private final MidwifeRepository midwifeRepository;
     private final VaccineScheduleRepository vaccineScheduleRepository;
+    private final PregnancyService pregnancyService;
 
     public MotherVaccinationService(MotherVaccinationRepository motherVaccinationRepository,
                                     PregnancyRepository pregnancyRepository,
                                     MidwifeRepository midwifeRepository,
-                                    VaccineScheduleRepository vaccineScheduleRepository) {
+                                    VaccineScheduleRepository vaccineScheduleRepository,
+                                    PregnancyService pregnancyService) {
         this.motherVaccinationRepository = motherVaccinationRepository;
         this.pregnancyRepository = pregnancyRepository;
         this.midwifeRepository = midwifeRepository;
         this.vaccineScheduleRepository = vaccineScheduleRepository;
+        this.pregnancyService = pregnancyService;
     }
 
     @Transactional
-    public MotherVaccinationResponseDto administerVaccine(MotherVaccinationCreateDto dto) {
+    public MotherVaccinationResponseDto administerVaccine(MotherVaccinationCreateDto dto,
+                                                           Integer userId, String role) {
         // Validate pregnancy
         Pregnancy pregnancy = pregnancyRepository.findById(dto.getPregnancyId())
                 .orElseThrow(() -> new RuntimeException("Pregnancy not found with id: " + dto.getPregnancyId()));
+        pregnancyService.assertCanAccessPregnancy(dto.getPregnancyId(), userId, role);
 
         // Validate vaccine schedule
         VaccineSchedule schedule = vaccineScheduleRepository.findById(dto.getScheduleId())
@@ -69,20 +74,25 @@ public class MotherVaccinationService {
         return mapToResponseDto(saved);
     }
 
-    public MotherVaccinationResponseDto getVaccinationById(Integer vaccinationId) {
+    public MotherVaccinationResponseDto getVaccinationById(Integer vaccinationId, Integer userId, String role) {
         MotherVaccination vaccination = motherVaccinationRepository.findById(vaccinationId)
                 .orElseThrow(() -> new RuntimeException("Mother vaccination not found with id: " + vaccinationId));
+            pregnancyService.assertCanAccessPregnancy(vaccination.getPregnancy().getPregnancyId(), userId, role);
         return mapToResponseDto(vaccination);
     }
 
-    public List<MotherVaccinationResponseDto> getVaccinationsByPregnancy(Integer pregnancyId) {
+    public List<MotherVaccinationResponseDto> getVaccinationsByPregnancy(Integer pregnancyId, Integer userId, String role) {
+        pregnancyService.assertCanAccessPregnancy(pregnancyId, userId, role);
         return motherVaccinationRepository.findByPregnancyIdOrderByVaccinationDateDesc(pregnancyId)
                 .stream()
                 .map(this::mapToResponseDto)
                 .collect(Collectors.toList());
     }
 
-    public List<MotherVaccinationResponseDto> getVaccinationsByMother(Integer motherId) {
+    public List<MotherVaccinationResponseDto> getVaccinationsByMother(Integer motherId, Integer userId, String role) {
+        var pregnancy = pregnancyRepository.findByMother_MotherId(motherId).stream().findFirst()
+                .orElseThrow(() -> new RuntimeException("Mother has no pregnancy record"));
+        pregnancyService.assertCanAccessPregnancy(pregnancy.getPregnancyId(), userId, role);
         return motherVaccinationRepository.findByMotherId(motherId)
                 .stream()
                 .map(this::mapToResponseDto)
@@ -90,11 +100,11 @@ public class MotherVaccinationService {
     }
 
     @Transactional
-    public void deleteVaccination(Integer vaccinationId) {
-        if (!motherVaccinationRepository.existsById(vaccinationId)) {
-            throw new RuntimeException("Mother vaccination not found with id: " + vaccinationId);
-        }
-        motherVaccinationRepository.deleteById(vaccinationId);
+    public void deleteVaccination(Integer vaccinationId, Integer userId, String role) {
+        MotherVaccination vaccination = motherVaccinationRepository.findById(vaccinationId)
+                .orElseThrow(() -> new RuntimeException("Mother vaccination not found with id: " + vaccinationId));
+        pregnancyService.assertCanAccessPregnancy(vaccination.getPregnancy().getPregnancyId(), userId, role);
+        motherVaccinationRepository.delete(vaccination);
     }
 
     private MotherVaccinationResponseDto mapToResponseDto(MotherVaccination vaccination) {
