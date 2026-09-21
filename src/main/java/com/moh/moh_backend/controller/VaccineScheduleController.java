@@ -3,6 +3,7 @@ package com.moh.moh_backend.controller;
 import com.moh.moh_backend.model.TargetGroup;
 import com.moh.moh_backend.model.VaccineSchedule;
 import com.moh.moh_backend.service.VaccineScheduleService;
+import com.moh.moh_backend.config.RequireRoles;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,6 +22,7 @@ public class VaccineScheduleController {
     }
 
     @PostMapping
+    @RequireRoles("ADMIN")
     public ResponseEntity<?> createSchedule(@RequestBody VaccineSchedule schedule) {
         try {
             VaccineSchedule created = vaccineScheduleService.createSchedule(schedule);
@@ -35,6 +37,7 @@ public class VaccineScheduleController {
     }
 
     @GetMapping("/{id}")
+    @RequireRoles({"ADMIN", "MIDWIFE", "DOCTOR", "MOTHER"})
     public ResponseEntity<?> getScheduleById(@PathVariable Integer id) {
         try {
             VaccineSchedule schedule = vaccineScheduleService.getScheduleById(id);
@@ -45,6 +48,7 @@ public class VaccineScheduleController {
     }
 
     @GetMapping
+    @RequireRoles({"ADMIN", "MIDWIFE", "DOCTOR", "MOTHER"})
     public ResponseEntity<?> getAllSchedules() {
         try {
             List<VaccineSchedule> schedules = vaccineScheduleService.getAllSchedules();
@@ -55,6 +59,7 @@ public class VaccineScheduleController {
     }
 
     @GetMapping("/by-target-group/{targetGroup}")
+    @RequireRoles({"ADMIN", "MIDWIFE", "DOCTOR", "MOTHER"})
     public ResponseEntity<?> getSchedulesByTargetGroup(@PathVariable String targetGroup) {
         try {
             TargetGroup target = TargetGroup.valueOf(targetGroup.toUpperCase());
@@ -69,6 +74,7 @@ public class VaccineScheduleController {
     }
 
     @PutMapping("/{id}")
+    @RequireRoles("ADMIN")
     public ResponseEntity<?> updateSchedule(@PathVariable Integer id, 
                                            @RequestBody VaccineSchedule schedule) {
         try {
@@ -80,6 +86,7 @@ public class VaccineScheduleController {
     }
 
     @DeleteMapping("/{id}")
+    @RequireRoles("ADMIN")
     public ResponseEntity<?> deleteSchedule(@PathVariable Integer id) {
         try {
             vaccineScheduleService.deleteSchedule(id);

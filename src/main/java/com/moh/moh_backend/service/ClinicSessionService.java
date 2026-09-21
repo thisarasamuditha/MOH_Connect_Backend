@@ -30,7 +30,7 @@ public class ClinicSessionService {
     private final PhmAreaRepository phmAreaRepository;
 
     @Transactional
-    public SessionResponse create(SessionCreateRequest request) {
+    public SessionResponse create(SessionCreateRequest request, Integer userId, String role) {
         if (request.getMidwifeId() == null) {
             throw new IllegalArgumentException("Midwife ID is required");
         }
@@ -49,6 +49,7 @@ public class ClinicSessionService {
 
         Midwife midwife = midwifeRepository.findById(request.getMidwifeId())
                 .orElseThrow(() -> new IllegalArgumentException("Midwife not found with id: " + request.getMidwifeId()));
+        assertCanManage(midwife, request.getPhmAreaId(), userId, role);
 
         SessionType sessionType = sessionTypeRepository.findById(request.getSessionTypeId())
                 .orElseThrow(() -> new IllegalArgumentException("Session type not found with id: " + request.getSessionTypeId()));
@@ -106,9 +107,10 @@ public class ClinicSessionService {
     }
 
     @Transactional
-    public SessionResponse update(Integer sessionId, SessionUpdateRequest request) {
+    public SessionResponse update(Integer sessionId, SessionUpdateRequest request, Integer userId, String role) {
         ClinicSession session = sessionRepository.findById(sessionId)
                 .orElseThrow(() -> new IllegalArgumentException("Session not found with id: " + sessionId));
+            assertCanManage(session.getMidwife(), session.getPhmArea().getPhmAreaId(), userId, role);
 
         if (request.getSessionDate() != null) session.setSessionDate(request.getSessionDate());
         if (request.getStartTime() != null) session.setStartTime(request.getStartTime());
@@ -123,11 +125,21 @@ public class ClinicSessionService {
     }
 
     @Transactional
-    public void delete(Integer sessionId) {
-        if (!sessionRepository.existsById(sessionId)) {
-            throw new IllegalArgumentException("Session not found with id: " + sessionId);
+    public void delete(Integer sessionId, Integer userId, String role) {
+        ClinicSession session = sessionRepository.findById(sessionId)
+                .orElseThrow(() -> new IllegalArgumentException("Session not found with id: " + sessionId));
+        assertCanManage(session.getMidwife(), session.getPhmArea().getPhmAreaId(), userId, role);
+        sessionRepository.delete(session);
+    }
+
+    private void assertCanManage(Midwife midwife, Integer phmAreaId, Integer userId, String role) {
+        if ("ADMIN".equalsIgnoreCase(role)) return;
+        if (midwife == null || midwife.getUser() == null || !userId.equals(midwife.getUser().getUserId())) {
+            throw new IllegalStateException("Midwives can only manage their own sessions");
         }
-        sessionRepository.deleteById(sessionId);
+        if (midwife.getPhmArea() == null || !phmAreaId.equals(midwife.getPhmArea().getPhmAreaId())) {
+            throw new IllegalStateException("Session PHM area does not match the midwife");
+        }
     }
 
     private SessionResponse toResponse(ClinicSession s) {

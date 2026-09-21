@@ -3,6 +3,7 @@ package com.moh.moh_backend.controller;
 import com.moh.moh_backend.model.Pregnancy;
 import com.moh.moh_backend.service.PregnancyService;
 import com.moh.moh_backend.util.JwtService;
+import com.moh.moh_backend.config.RequireRoles;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,10 +23,12 @@ public class PregnancyController {
     }
 
     @PostMapping
+    @RequireRoles({"MIDWIFE", "DOCTOR"})
     public ResponseEntity<?> createPregnancy(
             @RequestHeader("Authorization") String authorization,
             @RequestParam Integer motherId,
-            @RequestBody Pregnancy pregnancy) {
+            @RequestBody Pregnancy pregnancy,
+            jakarta.servlet.http.HttpServletRequest request) {
         
         if (authorization == null || !authorization.startsWith("Bearer ")) {
             return ResponseEntity.status(401).body("Missing Bearer token");
@@ -38,7 +41,8 @@ public class PregnancyController {
         }
 
         try {
-            Pregnancy created = pregnancyService.createPregnancy(pregnancy, motherId);
+                Pregnancy created = pregnancyService.createPregnancy(pregnancy, motherId,
+                    (Integer) request.getAttribute("moh.userId"), role);
             return ResponseEntity.status(HttpStatus.CREATED).body(created);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
@@ -46,16 +50,20 @@ public class PregnancyController {
     }
 
     @GetMapping("/{pregnancyId}")
+    @RequireRoles({"MIDWIFE", "DOCTOR", "MOTHER"})
     public ResponseEntity<?> getPregnancyById(
             @RequestHeader("Authorization") String authorization,
-            @PathVariable Integer pregnancyId) {
+            @PathVariable Integer pregnancyId,
+            jakarta.servlet.http.HttpServletRequest request) {
         
         if (authorization == null || !authorization.startsWith("Bearer ")) {
             return ResponseEntity.status(401).body("Missing Bearer token");
         }
 
         try {
-            Pregnancy pregnancy = pregnancyService.getPregnancyById(pregnancyId);
+                Pregnancy pregnancy = pregnancyService.getPregnancyById(pregnancyId,
+                    (Integer) request.getAttribute("moh.userId"),
+                    (String) request.getAttribute("moh.role"));
             return ResponseEntity.ok(pregnancy);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
@@ -63,16 +71,20 @@ public class PregnancyController {
     }
 
     @GetMapping("/mother/{motherId}")
+    @RequireRoles({"MIDWIFE", "DOCTOR", "MOTHER"})
     public ResponseEntity<?> getPregnanciesByMotherId(
             @RequestHeader("Authorization") String authorization,
-            @PathVariable Integer motherId) {
+            @PathVariable Integer motherId,
+            jakarta.servlet.http.HttpServletRequest request) {
         
         if (authorization == null || !authorization.startsWith("Bearer ")) {
             return ResponseEntity.status(401).body("Missing Bearer token");
         }
 
         try {
-            List<Pregnancy> pregnancies = pregnancyService.getPregnanciesByMotherId(motherId);
+                List<Pregnancy> pregnancies = pregnancyService.getPregnanciesByMotherId(motherId,
+                    (Integer) request.getAttribute("moh.userId"),
+                    (String) request.getAttribute("moh.role"));
             return ResponseEntity.ok(pregnancies);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
@@ -80,8 +92,10 @@ public class PregnancyController {
     }
 
     @GetMapping("/active")
+    @RequireRoles({"MIDWIFE", "DOCTOR"})
     public ResponseEntity<?> getActivePregnancies(
-            @RequestHeader("Authorization") String authorization) {
+            @RequestHeader("Authorization") String authorization,
+            jakarta.servlet.http.HttpServletRequest request) {
         
         if (authorization == null || !authorization.startsWith("Bearer ")) {
             return ResponseEntity.status(401).body("Missing Bearer token");
@@ -95,7 +109,9 @@ public class PregnancyController {
         }
 
         try {
-            List<Pregnancy> pregnancies = pregnancyService.getActivePregnancies();
+                List<Pregnancy> pregnancies = pregnancyService.getActivePregnancies(
+                    (Integer) request.getAttribute("moh.userId"),
+                    (String) request.getAttribute("moh.role"));
             return ResponseEntity.ok(pregnancies);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
@@ -103,10 +119,12 @@ public class PregnancyController {
     }
 
     @PutMapping("/{pregnancyId}")
+    @RequireRoles({"MIDWIFE", "DOCTOR"})
     public ResponseEntity<?> updatePregnancy(
             @RequestHeader("Authorization") String authorization,
             @PathVariable Integer pregnancyId,
-            @RequestBody Pregnancy pregnancy) {
+            @RequestBody Pregnancy pregnancy,
+            jakarta.servlet.http.HttpServletRequest request) {
         
         if (authorization == null || !authorization.startsWith("Bearer ")) {
             return ResponseEntity.status(401).body("Missing Bearer token");
@@ -120,7 +138,9 @@ public class PregnancyController {
         }
 
         try {
-            Pregnancy updated = pregnancyService.updatePregnancy(pregnancyId, pregnancy);
+                Pregnancy updated = pregnancyService.updatePregnancy(pregnancyId, pregnancy,
+                    (Integer) request.getAttribute("moh.userId"),
+                    (String) request.getAttribute("moh.role"));
             return ResponseEntity.ok(updated);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
@@ -128,6 +148,7 @@ public class PregnancyController {
     }
 
     @DeleteMapping("/{pregnancyId}")
+    @RequireRoles("DOCTOR")
     public ResponseEntity<?> deletePregnancy(
             @RequestHeader("Authorization") String authorization,
             @PathVariable Integer pregnancyId) {
