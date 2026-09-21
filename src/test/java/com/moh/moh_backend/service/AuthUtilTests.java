@@ -35,4 +35,17 @@ class AuthUtilTests {
         assertNotNull(token);
         assertTrue(jwt.isValid(token));
     }
+
+    @Test
+    void testPasswordMatchingSupportsBcryptAndLegacySha256() {
+        PasswordHashService hasher = new PasswordHashService();
+
+        String bcryptHash = hasher.hashPassword("password123");
+        assertTrue(hasher.matches("password123", bcryptHash));
+        assertFalse(hasher.matches("wrong-password", bcryptHash));
+
+        String legacyHash = hasher.hashSha256("password123");
+        assertTrue(hasher.matches("password123", legacyHash));
+        assertFalse(hasher.matches("wrong-password", legacyHash));
+    }
 }
