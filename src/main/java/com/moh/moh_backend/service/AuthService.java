@@ -44,9 +44,6 @@ public class AuthService {
 
     @Transactional
     public AuthDtos.AuthResponse register(AuthDtos.RegisterRequest req) {
-        if ("ADMIN".equalsIgnoreCase(req.role)) {
-            throw new IllegalArgumentException("Public admin registration is disabled");
-        }
         if (userRepo.existsByUsername(req.username)) {
             throw new IllegalArgumentException("Username already taken");
 
