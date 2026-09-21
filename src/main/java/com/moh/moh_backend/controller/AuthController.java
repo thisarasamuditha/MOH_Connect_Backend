@@ -2,6 +2,7 @@ package com.moh.moh_backend.controller;
 
 import com.moh.moh_backend.dto.AuthDtos;
 import com.moh.moh_backend.service.AuthService;
+import com.moh.moh_backend.config.RequireRoles;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -34,31 +35,37 @@ public class AuthController {
      * User management APIs (no Spring Security enforced in this project).
      */
     @GetMapping("/admins")
+    @RequireRoles("ADMIN")
     public ResponseEntity<Iterable<AuthDtos.UserResponse>> getAllAdmins() {
         return ResponseEntity.ok(authService.getAllAdmins());
     }
 
     @GetMapping("/mothers")
+    @RequireRoles("ADMIN")
     public ResponseEntity<Iterable<AuthDtos.UserResponse>> getAllMothers() {
         return ResponseEntity.ok(authService.getAllMothers());
     }
 
     @GetMapping("/midwives")
+    @RequireRoles("ADMIN")
     public ResponseEntity<Iterable<AuthDtos.UserResponse>> getAllMidwives() {
         return ResponseEntity.ok(authService.getAllMidwives());
     }
 
     @GetMapping("/doctors")
+    @RequireRoles("ADMIN")
     public ResponseEntity<Iterable<AuthDtos.UserResponse>> getAllDoctors() {
         return ResponseEntity.ok(authService.getAllDoctors());
     }
 
     @GetMapping("/users/{id}")
+    @RequireRoles("ADMIN")
     public ResponseEntity<AuthDtos.UserResponse> getUserById(@PathVariable Integer id) {
         return ResponseEntity.ok(authService.getUserById(id));
     }
 
     @PutMapping("/users/{id}")
+    @RequireRoles("ADMIN")
     public ResponseEntity<AuthDtos.UserResponse> updateUser(
             @PathVariable Integer id,
             @RequestBody @Valid AuthDtos.UserUpdateRequest req) {
@@ -66,6 +73,7 @@ public class AuthController {
     }
 
     @DeleteMapping("/users/{id}")
+    @RequireRoles("ADMIN")
     public ResponseEntity<Void> deleteUser(@PathVariable Integer id) {
         authService.deleteUser(id);
         return ResponseEntity.noContent().build();

@@ -3,6 +3,7 @@ package com.moh.moh_backend.controller;
 import com.moh.moh_backend.dto.MotherVaccinationCreateDto;
 import com.moh.moh_backend.dto.MotherVaccinationResponseDto;
 import com.moh.moh_backend.service.MotherVaccinationService;
+import com.moh.moh_backend.config.RequireRoles;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,9 +22,11 @@ public class MotherVaccinationController {
     }
 
     @PostMapping
-    public ResponseEntity<?> administerVaccine(@RequestBody MotherVaccinationCreateDto dto) {
+    @RequireRoles({"MIDWIFE", "DOCTOR"})
+    public ResponseEntity<?> administerVaccine(@RequestBody MotherVaccinationCreateDto dto, jakarta.servlet.http.HttpServletRequest request) {
         try {
-            MotherVaccinationResponseDto response = motherVaccinationService.administerVaccine(dto);
+                MotherVaccinationResponseDto response = motherVaccinationService.administerVaccine(dto,
+                    (Integer) request.getAttribute("moh.userId"), (String) request.getAttribute("moh.role"));
             return ResponseEntity
                     .created(URI.create("/api/mother-vaccinations/" + response.getVaccinationId()))
                     .body(response);
@@ -35,9 +38,11 @@ public class MotherVaccinationController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getVaccinationById(@PathVariable Integer id) {
+    @RequireRoles({"MIDWIFE", "DOCTOR", "MOTHER"})
+    public ResponseEntity<?> getVaccinationById(@PathVariable Integer id, jakarta.servlet.http.HttpServletRequest request) {
         try {
-            MotherVaccinationResponseDto vaccination = motherVaccinationService.getVaccinationById(id);
+                MotherVaccinationResponseDto vaccination = motherVaccinationService.getVaccinationById(id,
+                    (Integer) request.getAttribute("moh.userId"), (String) request.getAttribute("moh.role"));
             return ResponseEntity.ok(vaccination);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
@@ -45,10 +50,12 @@ public class MotherVaccinationController {
     }
 
     @GetMapping("/by-pregnancy/{pregnancyId}")
-    public ResponseEntity<?> getVaccinationsByPregnancy(@PathVariable Integer pregnancyId) {
+    @RequireRoles({"MIDWIFE", "DOCTOR", "MOTHER"})
+    public ResponseEntity<?> getVaccinationsByPregnancy(@PathVariable Integer pregnancyId, jakarta.servlet.http.HttpServletRequest request) {
         try {
             List<MotherVaccinationResponseDto> vaccinations = 
-                    motherVaccinationService.getVaccinationsByPregnancy(pregnancyId);
+                        motherVaccinationService.getVaccinationsByPregnancy(pregnancyId,
+                            (Integer) request.getAttribute("moh.userId"), (String) request.getAttribute("moh.role"));
             return ResponseEntity.ok(vaccinations);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
@@ -56,10 +63,12 @@ public class MotherVaccinationController {
     }
 
     @GetMapping("/by-mother/{motherId}")
-    public ResponseEntity<?> getVaccinationsByMother(@PathVariable Integer motherId) {
+    @RequireRoles({"MIDWIFE", "DOCTOR", "MOTHER"})
+    public ResponseEntity<?> getVaccinationsByMother(@PathVariable Integer motherId, jakarta.servlet.http.HttpServletRequest request) {
         try {
             List<MotherVaccinationResponseDto> vaccinations = 
-                    motherVaccinationService.getVaccinationsByMother(motherId);
+                        motherVaccinationService.getVaccinationsByMother(motherId,
+                            (Integer) request.getAttribute("moh.userId"), (String) request.getAttribute("moh.role"));
             return ResponseEntity.ok(vaccinations);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
@@ -67,9 +76,11 @@ public class MotherVaccinationController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteVaccination(@PathVariable Integer id) {
+    @RequireRoles("DOCTOR")
+    public ResponseEntity<?> deleteVaccination(@PathVariable Integer id, jakarta.servlet.http.HttpServletRequest request) {
         try {
-            motherVaccinationService.deleteVaccination(id);
+                motherVaccinationService.deleteVaccination(id,
+                    (Integer) request.getAttribute("moh.userId"), (String) request.getAttribute("moh.role"));
             return ResponseEntity.noContent().build();
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
