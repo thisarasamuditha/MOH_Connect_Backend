@@ -17,22 +17,29 @@ public class BabyVaccinationService {
     private final BabyRepository babyRepository;
     private final MidwifeRepository midwifeRepository;
     private final VaccineScheduleRepository vaccineScheduleRepository;
+    private final MotherRepository motherRepository;
+    private final MidwifeRepository midwifeAccessRepository;
 
     public BabyVaccinationService(BabyVaccinationRepository babyVaccinationRepository,
                                   BabyRepository babyRepository,
                                   MidwifeRepository midwifeRepository,
-                                  VaccineScheduleRepository vaccineScheduleRepository) {
+                                  VaccineScheduleRepository vaccineScheduleRepository,
+                                  MotherRepository motherRepository) {
         this.babyVaccinationRepository = babyVaccinationRepository;
         this.babyRepository = babyRepository;
         this.midwifeRepository = midwifeRepository;
         this.vaccineScheduleRepository = vaccineScheduleRepository;
+        this.motherRepository = motherRepository;
+        this.midwifeAccessRepository = midwifeRepository;
     }
 
     @Transactional
-    public BabyVaccinationResponseDto administerVaccine(BabyVaccinationCreateDto dto) {
+    public BabyVaccinationResponseDto administerVaccine(BabyVaccinationCreateDto dto,
+                                                         Integer userId, String role) {
         // Validate baby
         Baby baby = babyRepository.findById(dto.getBabyId())
                 .orElseThrow(() -> new RuntimeException("Baby not found with id: " + dto.getBabyId()));
+        assertCanAccessBaby(baby, userId, role);
 
         // Validate vaccine schedule
         VaccineSchedule schedule = vaccineScheduleRepository.findById(dto.getScheduleId())
@@ -69,20 +76,27 @@ public class BabyVaccinationService {
         return mapToResponseDto(saved);
     }
 
-    public BabyVaccinationResponseDto getVaccinationById(Integer vaccinationId) {
+    public BabyVaccinationResponseDto getVaccinationById(Integer vaccinationId, Integer userId, String role) {
         BabyVaccination vaccination = babyVaccinationRepository.findById(vaccinationId)
                 .orElseThrow(() -> new RuntimeException("Baby vaccination not found with id: " + vaccinationId));
+            assertCanAccessBaby(vaccination.getBaby(), userId, role);
         return mapToResponseDto(vaccination);
     }
 
-    public List<BabyVaccinationResponseDto> getVaccinationsByBaby(Integer babyId) {
+    public List<BabyVaccinationResponseDto> getVaccinationsByBaby(Integer babyId, Integer userId, String role) {
+        Baby baby = babyRepository.findById(babyId)
+                .orElseThrow(() -> new RuntimeException("Baby not found with id: " + babyId));
+        assertCanAccessBaby(baby, userId, role);
         return babyVaccinationRepository.findByBabyIdOrderByVaccinationDateDesc(babyId)
                 .stream()
                 .map(this::mapToResponseDto)
                 .collect(Collectors.toList());
     }
 
-    public List<BabyVaccinationResponseDto> getVaccinationsByMother(Integer motherId) {
+    public List<BabyVaccinationResponseDto> getVaccinationsByMother(Integer motherId, Integer userId, String role) {
+        var mother = motherRepository.findById(motherId)
+                .orElseThrow(() -> new RuntimeException("Mother not found with id: " + motherId));
+        assertCanAccessMother(mother, userId, role);
         return babyVaccinationRepository.findByMotherId(motherId)
                 .stream()
                 .map(this::mapToResponseDto)
@@ -90,11 +104,32 @@ public class BabyVaccinationService {
     }
 
     @Transactional
-    public void deleteVaccination(Integer vaccinationId) {
-        if (!babyVaccinationRepository.existsById(vaccinationId)) {
-            throw new RuntimeException("Baby vaccination not found with id: " + vaccinationId);
+    public void deleteVaccination(Integer vaccinationId, Integer userId, String role) {
+        BabyVaccination vaccination = babyVaccinationRepository.findById(vaccinationId)
+                .orElseThrow(() -> new RuntimeException("Baby vaccination not found with id: " + vaccinationId));
+        assertCanAccessBaby(vaccination.getBaby(), userId, role);
+        babyVaccinationRepository.delete(vaccination);
+    }
+
+    private void assertCanAccessBaby(Baby baby, Integer userId, String role) {
+        var mother = motherRepository.findById(baby.getMotherId())
+                .orElseThrow(() -> new IllegalStateException("Mother not found for child"));
+        assertCanAccessMother(mother, userId, role);
+    }
+
+    private void assertCanAccessMother(Mother mother, Integer userId, String role) {
+        if ("MOTHER".equalsIgnoreCase(role)) {
+            if (mother.getUser() == null || !userId.equals(mother.getUser().getUserId())) {
+                throw new IllegalStateException("Mothers can only access their own vaccination records");
+            }
+        } else if ("MIDWIFE".equalsIgnoreCase(role)) {
+            Integer areaId = midwifeAccessRepository.findByUser_UserId(userId)
+                    .orElseThrow(() -> new IllegalStateException("Midwife not found"))
+                    .getPhmArea().getPhmAreaId();
+            if (mother.getPhmArea() == null || !areaId.equals(mother.getPhmArea().getPhmAreaId())) {
+                throw new IllegalStateException("Midwives can only access vaccination records in their PHM area");
+            }
         }
-        babyVaccinationRepository.deleteById(vaccinationId);
     }
 
     private BabyVaccinationResponseDto mapToResponseDto(BabyVaccination vaccination) {
