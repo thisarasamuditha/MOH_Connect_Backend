@@ -29,6 +29,7 @@ public class NotificationService {
     private final NotificationTypeRepository typeRepository;
     private final MotherRepository motherRepository;
     private final MidwifeRepository midwifeRepository;
+    private final PregnancyService pregnancyService;
 
     @Transactional
     public NotificationResponse create(NotificationCreateRequest request) {
@@ -69,23 +70,27 @@ public class NotificationService {
         return toResponse(notificationRepository.save(notification));
     }
 
-    public NotificationResponse getById(Integer id) {
+    public NotificationResponse getById(Integer id, Integer userId, String role) {
         Notification n = notificationRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Notification not found with id: " + id));
+        assertCanAccess(n, userId, role);
         return toResponse(n);
     }
 
-    public List<NotificationResponse> getByMotherId(Integer motherId) {
+    public List<NotificationResponse> getByMotherId(Integer motherId, Integer userId, String role) {
+        assertCanAccessMother(motherId, userId, role);
         return notificationRepository.findByMother_MotherIdOrderBySentDateDesc(motherId)
                 .stream().map(this::toResponse).collect(Collectors.toList());
     }
 
-    public List<NotificationResponse> getUnreadByMotherId(Integer motherId) {
+    public List<NotificationResponse> getUnreadByMotherId(Integer motherId, Integer userId, String role) {
+        assertCanAccessMother(motherId, userId, role);
         return notificationRepository.findByMother_MotherIdAndReadAtIsNullOrderBySentDateDesc(motherId)
                 .stream().map(this::toResponse).collect(Collectors.toList());
     }
 
-    public UnreadCountResponse getUnreadCount(Integer motherId) {
+    public UnreadCountResponse getUnreadCount(Integer motherId, Integer userId, String role) {
+        assertCanAccessMother(motherId, userId, role);
         long count = notificationRepository.countByMother_MotherIdAndReadAtIsNull(motherId);
         return UnreadCountResponse.builder().motherId(motherId).unreadCount(count).build();
     }
@@ -102,17 +107,19 @@ public class NotificationService {
     }
 
     @Transactional
-    public NotificationResponse markAsRead(Integer id) {
+    public NotificationResponse markAsRead(Integer id, Integer userId, String role) {
         Notification n = notificationRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Notification not found with id: " + id));
+        assertCanAccess(n, userId, role);
         n.setReadAt(LocalDateTime.now());
         return toResponse(notificationRepository.save(n));
     }
 
     @Transactional
-    public NotificationResponse markAsResponded(Integer id) {
+    public NotificationResponse markAsResponded(Integer id, Integer userId, String role) {
         Notification n = notificationRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Notification not found with id: " + id));
+        assertCanAccess(n, userId, role);
         n.setRespondedAt(LocalDateTime.now());
         return toResponse(notificationRepository.save(n));
     }
@@ -154,5 +161,29 @@ public class NotificationService {
                 .respondedAt(n.getRespondedAt() != null ? n.getRespondedAt().toString() : null)
                 .createdAt(n.getCreatedAt() != null ? n.getCreatedAt().toString() : null)
                 .build();
+    }
+
+    private void assertCanAccess(Notification notification, Integer userId, String role) {
+        if (notification.getMother() == null) {
+            throw new IllegalStateException("Notification has no owner");
+        }
+        assertCanAccessMother(notification.getMother().getMotherId(), userId, role);
+    }
+
+    private void assertCanAccessMother(Integer motherId, Integer userId, String role) {
+        if ("ADMIN".equalsIgnoreCase(role) || "DOCTOR".equalsIgnoreCase(role)) return;
+        Mother mother = motherRepository.findById(motherId)
+                .orElseThrow(() -> new IllegalArgumentException("Mother not found"));
+        if ("MOTHER".equalsIgnoreCase(role)) {
+            if (mother.getUser() == null || !userId.equals(mother.getUser().getUserId())) {
+                throw new IllegalStateException("Mothers can only access their own notifications");
+            }
+            return;
+        }
+        if ("MIDWIFE".equalsIgnoreCase(role)) {
+            pregnancyService.assertCanAccessMother(mother, userId, role);
+            return;
+        }
+        throw new IllegalStateException("Unsupported notification access role");
     }
 }

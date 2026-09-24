@@ -102,7 +102,7 @@ public class PregnancyService {
         return pregnancyRepository.save(existing);
     }
 
-    private void assertCanAccessMother(Mother mother, Integer userId, String role) {
+    public void assertCanAccessMother(Mother mother, Integer userId, String role) {
         if (mother == null || role == null) {
             throw new IllegalStateException("Unable to verify record ownership");
         }

@@ -23,9 +23,10 @@ public class MotherTriposhDistributionService {
     private final PregnancyRepository pregnancyRepository;
     private final MidwifeRepository midwifeRepository;
     private final TriposhStockService stockService;
+    private final PregnancyService pregnancyService;
 
     @Transactional
-    public Response distribute(CreateRequest request) {
+    public Response distribute(CreateRequest request, Integer userId, String role) {
         // Validate required fields
         if (request.getQuantityKg() == null || request.getQuantityKg() <= 0) {
             throw new IllegalArgumentException("Quantity must be greater than 0");
@@ -43,6 +44,7 @@ public class MotherTriposhDistributionService {
         // Validate pregnancy exists and is ACTIVE
         Pregnancy pregnancy = pregnancyRepository.findById(request.getPregnancyId())
                 .orElseThrow(() -> new IllegalArgumentException("Pregnancy not found with id: " + request.getPregnancyId()));
+        pregnancyService.assertCanAccessMother(pregnancy.getMother(), userId, role);
 
         if (pregnancy.getPregnancyStatus() != Pregnancy.PregnancyStatus.ACTIVE) {
             throw new IllegalStateException("Cannot distribute Triposha: pregnancy is not active (status: " + pregnancy.getPregnancyStatus() + ")");
@@ -68,14 +70,18 @@ public class MotherTriposhDistributionService {
         return toResponse(saved);
     }
 
-    public List<Response> getByPregnancyId(Integer pregnancyId) {
+    public List<Response> getByPregnancyId(Integer pregnancyId, Integer userId, String role) {
+        pregnancyService.assertCanAccessPregnancy(pregnancyId, userId, role);
         return distributionRepository.findByPregnancy_PregnancyIdOrderByDistributionDateDesc(pregnancyId)
                 .stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
     }
 
-    public List<Response> getByMotherId(Integer motherId) {
+    public List<Response> getByMotherId(Integer motherId, Integer userId, String role) {
+        var pregnancy = pregnancyRepository.findByMother_MotherId(motherId).stream().findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Mother has no pregnancy record"));
+        pregnancyService.assertCanAccessPregnancy(pregnancy.getPregnancyId(), userId, role);
         return distributionRepository.findByMotherId(motherId)
                 .stream()
                 .map(this::toResponse)

@@ -88,6 +88,26 @@ public class MotherRecordController {
         }
     }
 
+    @PutMapping("/{id}/review")
+    @RequireRoles("DOCTOR")
+    public ResponseEntity<?> reviewMotherRecord(
+            @PathVariable Integer id,
+            @RequestParam String status,
+            @RequestParam(required = false) String comment,
+            jakarta.servlet.http.HttpServletRequest request) {
+        try {
+            MotherRecord reviewed = motherRecordService.reviewMotherRecord(
+                    id, status, comment,
+                    (Integer) request.getAttribute("moh.userId"),
+                    (String) request.getAttribute("moh.role"));
+            return ResponseEntity.ok(reviewed);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+        }
+    }
+
     @DeleteMapping("/{id}")
     @RequireRoles("DOCTOR")
     public ResponseEntity<?> deleteMotherRecord(@PathVariable Integer id,

@@ -2,6 +2,7 @@ package com.moh.moh_backend.controller;
 
 import com.moh.moh_backend.model.PhmArea;
 import com.moh.moh_backend.repository.PhmAreaRepository;
+import com.moh.moh_backend.config.RequireRoles;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,6 +21,7 @@ public class PhmAreaController {
      * Get all PHM Areas
      */
     @GetMapping
+    @RequireRoles({"ADMIN", "MIDWIFE", "DOCTOR"})
     public List<PhmArea> getAllPhmAreas() {
         return phmAreaRepository.findAll();
     }
@@ -28,6 +30,7 @@ public class PhmAreaController {
      * Get PHM Area by ID
      */
     @GetMapping("/{id}")
+    @RequireRoles({"ADMIN", "MIDWIFE", "DOCTOR"})
     public PhmArea getPhmAreaById(@PathVariable Integer id) {
         return phmAreaRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("PHM Area not found with ID: " + id));
@@ -37,6 +40,7 @@ public class PhmAreaController {
      * Create a new PHM Area
      */
     @PostMapping
+    @RequireRoles("ADMIN")
     public PhmArea createPhmArea(@RequestBody PhmArea phmArea) {
         if (phmAreaRepository.findByAreaCode(phmArea.getAreaCode()).isPresent()) {
             throw new IllegalArgumentException("Area code already exists: " + phmArea.getAreaCode());
@@ -48,6 +52,7 @@ public class PhmAreaController {
      * Update PHM Area
      */
     @PutMapping("/{id}")
+    @RequireRoles("ADMIN")
     public PhmArea updatePhmArea(@PathVariable Integer id, @RequestBody PhmArea phmAreaDetails) {
         PhmArea phmArea = phmAreaRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("PHM Area not found with ID: " + id));
@@ -62,6 +67,7 @@ public class PhmAreaController {
      * Delete PHM Area
      */
     @DeleteMapping("/{id}")
+    @RequireRoles("ADMIN")
     public void deletePhmArea(@PathVariable Integer id) {
         if (!phmAreaRepository.existsById(id)) {
             throw new IllegalArgumentException("PHM Area not found with ID: " + id);

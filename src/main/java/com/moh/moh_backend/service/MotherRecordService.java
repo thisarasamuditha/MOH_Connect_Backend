@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.time.LocalDateTime;
 
 @Service
 public class MotherRecordService {
@@ -43,6 +44,14 @@ public class MotherRecordService {
         Pregnancy pregnancy = pregnancyRepository.findById(pregnancyId)
                 .orElseThrow(() -> new RuntimeException("Pregnancy not found with id: " + pregnancyId));
         motherRecord.setPregnancy(pregnancy);
+        if (motherRecord.getVisitType() == null || motherRecord.getVisitType().isBlank()) {
+            motherRecord.setVisitType("ANC");
+        }
+        if ("DOCTOR".equalsIgnoreCase(role)) {
+            motherRecord.setVerificationStatus("APPROVED");
+        } else {
+            motherRecord.setVerificationStatus("SUBMITTED");
+        }
 
         // Validate and set midwife (optional)
         if (midwifeId != null) {
@@ -128,6 +137,22 @@ public class MotherRecordService {
             existing.setDoctor(doctor);
         }
 
+        return motherRecordRepository.save(existing);
+    }
+
+    @Transactional
+    public MotherRecord reviewMotherRecord(Integer id, String status, String comment,
+                                           Integer userId, String role) {
+        if (!"DOCTOR".equalsIgnoreCase(role)) {
+            throw new IllegalStateException("Only doctors can review clinical records");
+        }
+        MotherRecord existing = getMotherRecordById(id, userId, role);
+        if (!List.of("APPROVED", "FLAGGED").contains(status)) {
+            throw new IllegalArgumentException("Review status must be APPROVED or FLAGGED");
+        }
+        existing.setVerificationStatus(status);
+        existing.setReviewComment(comment);
+        existing.setReviewedAt(LocalDateTime.now());
         return motherRecordRepository.save(existing);
     }
 

@@ -29,6 +29,18 @@ public class MotherRecord {
     @Column(name = "record_date", nullable = false)
     private LocalDate recordDate;
 
+    @Column(name = "visit_type", length = 10)
+    private String visitType;
+
+    @Column(name = "verification_status", nullable = false, length = 20)
+    private String verificationStatus = "SUBMITTED";
+
+    @Column(name = "review_comment", columnDefinition = "TEXT")
+    private String reviewComment;
+
+    @Column(name = "reviewed_at")
+    private LocalDateTime reviewedAt;
+
     @Column(name = "gestational_age")
     private Integer gestationalAge;
 
@@ -110,6 +122,15 @@ public class MotherRecord {
     public void setRecordDate(LocalDate recordDate) {
         this.recordDate = recordDate;
     }
+
+    public String getVisitType() { return visitType; }
+    public void setVisitType(String visitType) { this.visitType = visitType; }
+    public String getVerificationStatus() { return verificationStatus; }
+    public void setVerificationStatus(String verificationStatus) { this.verificationStatus = verificationStatus; }
+    public String getReviewComment() { return reviewComment; }
+    public void setReviewComment(String reviewComment) { this.reviewComment = reviewComment; }
+    public LocalDateTime getReviewedAt() { return reviewedAt; }
+    public void setReviewedAt(LocalDateTime reviewedAt) { this.reviewedAt = reviewedAt; }
 
     public Integer getGestationalAge() {
         return gestationalAge;

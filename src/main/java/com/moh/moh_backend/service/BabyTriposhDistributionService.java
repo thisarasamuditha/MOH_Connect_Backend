@@ -23,9 +23,10 @@ public class BabyTriposhDistributionService {
     private final BabyRepository babyRepository;
     private final MidwifeRepository midwifeRepository;
     private final TriposhStockService stockService;
+    private final BabyService babyService;
 
     @Transactional
-    public Response distribute(CreateRequest request) {
+    public Response distribute(CreateRequest request, Integer userId, String role) {
         // Validate required fields
         if (request.getQuantityKg() == null || request.getQuantityKg() <= 0) {
             throw new IllegalArgumentException("Quantity must be greater than 0");
@@ -43,6 +44,7 @@ public class BabyTriposhDistributionService {
         // Validate baby exists and is alive (active)
         Baby baby = babyRepository.findById(request.getBabyId())
                 .orElseThrow(() -> new IllegalArgumentException("Baby not found with id: " + request.getBabyId()));
+        babyService.findById(baby.getBabyId(), userId, role);
 
         if (baby.getIsAlive() != null && !baby.getIsAlive()) {
             throw new IllegalStateException("Cannot distribute Triposha: baby record is not active");
@@ -68,14 +70,16 @@ public class BabyTriposhDistributionService {
         return toResponse(saved);
     }
 
-    public List<Response> getByBabyId(Integer babyId) {
+    public List<Response> getByBabyId(Integer babyId, Integer userId, String role) {
+        babyService.findById(babyId, userId, role);
         return distributionRepository.findByBaby_BabyIdOrderByDistributionDateDesc(babyId)
                 .stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
     }
 
-    public List<Response> getByMotherId(Integer motherId) {
+    public List<Response> getByMotherId(Integer motherId, Integer userId, String role) {
+        babyService.findByMotherId(motherId, userId, role);
         return distributionRepository.findByMotherId(motherId)
                 .stream()
                 .map(this::toResponse)

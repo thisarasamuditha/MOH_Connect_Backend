@@ -4,6 +4,7 @@ import com.moh.moh_backend.model.Baby;
 import com.moh.moh_backend.repository.BabyRepository;
 import com.moh.moh_backend.repository.MotherRepository;
 import com.moh.moh_backend.repository.MidwifeRepository;
+import com.moh.moh_backend.repository.PregnancyRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -14,12 +15,14 @@ public class BabyService {
     private final BabyRepository babyRepository;
     private final MotherRepository motherRepository;
     private final MidwifeRepository midwifeRepository;
+    private final PregnancyRepository pregnancyRepository;
 
     public BabyService(BabyRepository babyRepository, MotherRepository motherRepository,
-                       MidwifeRepository midwifeRepository) {
+                       MidwifeRepository midwifeRepository, PregnancyRepository pregnancyRepository) {
         this.babyRepository = babyRepository;
         this.motherRepository = motherRepository;
         this.midwifeRepository = midwifeRepository;
+        this.pregnancyRepository = pregnancyRepository;
     }
 
     public Baby save(Baby baby, Integer userId, String role) {
@@ -39,6 +42,9 @@ public class BabyService {
 
     public List<Baby> findByPregnancyId(Integer pregnancyId, Integer userId, String role) {
         if (pregnancyId == null) return babyRepository.findByPregnancyId(null);
+        var pregnancy = pregnancyRepository.findById(pregnancyId)
+            .orElseThrow(() -> new IllegalArgumentException("Pregnancy not found"));
+        assertCanAccessMother(pregnancy.getMother().getMotherId(), userId, role);
         return babyRepository.findByPregnancyId(pregnancyId);
     }
 
