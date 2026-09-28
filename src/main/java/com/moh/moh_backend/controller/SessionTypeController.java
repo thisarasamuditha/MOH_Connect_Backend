@@ -25,13 +25,11 @@ public class SessionTypeController {
     }
 
     @GetMapping
-    @RequireRoles({"ADMIN", "MIDWIFE", "DOCTOR", "MOTHER"})
     public ResponseEntity<List<SessionTypeResponse>> getAll() {
         return ResponseEntity.ok(sessionTypeService.getAll());
     }
 
     @GetMapping("/{id}")
-    @RequireRoles({"ADMIN", "MIDWIFE", "DOCTOR", "MOTHER"})
     public ResponseEntity<SessionTypeResponse> getById(@PathVariable Integer id) {
         return ResponseEntity.ok(sessionTypeService.getById(id));
     }

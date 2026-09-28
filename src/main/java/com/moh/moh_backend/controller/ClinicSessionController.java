@@ -29,6 +29,15 @@ public class ClinicSessionController {
                 (String) httpRequest.getAttribute("moh.role")));
     }
 
+    @GetMapping
+    @RequireRoles({"MIDWIFE", "ADMIN", "DOCTOR", "MOTHER"})
+    public ResponseEntity<List<SessionResponse>> list(@RequestParam(required = false) String status) {
+        if (status != null && !status.isBlank()) {
+            return ResponseEntity.ok(sessionService.getByStatus(status));
+        }
+        return ResponseEntity.ok(sessionService.getAll());
+    }
+
     @GetMapping("/{sessionId}")
     @RequireRoles({"MIDWIFE", "ADMIN", "DOCTOR", "MOTHER"})
     public ResponseEntity<SessionResponse> getById(@PathVariable Integer sessionId) {

@@ -32,10 +32,26 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         String path = request.getRequestURI().substring(request.getContextPath().length());
+        boolean isPublicGet = "GET".equalsIgnoreCase(request.getMethod()) && (
+                path.startsWith("/api/phm-areas")
+                || path.startsWith("/api/session-types")
+                || path.startsWith("/api/section-types")
+                || path.startsWith("/api/vaccine-schedules")
+        );
+
         if ("OPTIONS".equalsIgnoreCase(request.getMethod())
                 || "/api/auth/login".equals(path)
                 || "/api/auth/register".equals(path)
-                || "/api/hello".equals(path)) {
+                || "/api/hello".equals(path)
+                || isPublicGet) {
+            String authorization = request.getHeader("Authorization");
+            if (authorization != null && authorization.startsWith("Bearer ")) {
+                String token = authorization.substring("Bearer ".length()).trim();
+                if (jwtService.isValid(token)) {
+                    request.setAttribute(USER_ID_ATTRIBUTE, jwtService.getUserId(token));
+                    request.setAttribute(ROLE_ATTRIBUTE, jwtService.getRole(token));
+                }
+            }
             filterChain.doFilter(request, response);
             return;
         }

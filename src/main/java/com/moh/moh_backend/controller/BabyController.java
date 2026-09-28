@@ -38,7 +38,7 @@ public class BabyController {
     }
 
     @GetMapping
-    @RequireRoles({"MIDWIFE", "DOCTOR", "MOTHER"})
+    @RequireRoles({"MIDWIFE", "DOCTOR", "MOTHER", "ADMIN"})
     public ResponseEntity<List<Baby>> list(@RequestParam(required = false) Integer motherId,
                                            @RequestParam(required = false) Integer pregnancyId,
                                            jakarta.servlet.http.HttpServletRequest request) {
@@ -46,7 +46,7 @@ public class BabyController {
         String role = (String) request.getAttribute("moh.role");
         if (motherId != null) return ResponseEntity.ok(babyService.findByMotherId(motherId, userId, role));
         if (pregnancyId != null) return ResponseEntity.ok(babyService.findByPregnancyId(pregnancyId, userId, role));
-        return ResponseEntity.ok(babyService.findByPregnancyId(null, userId, role));
+        return ResponseEntity.ok(babyService.findAll(userId, role));
     }
 
     @DeleteMapping("/{id}")

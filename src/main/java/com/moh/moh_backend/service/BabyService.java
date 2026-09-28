@@ -40,6 +40,24 @@ public class BabyService {
         return babyRepository.findByMotherId(motherId);
     }
 
+    public List<Baby> findAll(Integer userId, String role) {
+        if ("MOTHER".equalsIgnoreCase(role)) {
+            var mother = motherRepository.findByUser_UserId(userId).orElse(null);
+            if (mother == null) return List.of();
+            return babyRepository.findByMotherId(mother.getMotherId());
+        } else if ("MIDWIFE".equalsIgnoreCase(role)) {
+            var midwife = midwifeRepository.findByUser_UserId(userId).orElse(null);
+            if (midwife == null || midwife.getPhmArea() == null) return List.of();
+            Integer areaId = midwife.getPhmArea().getPhmAreaId();
+            List<Integer> motherIds = motherRepository.findByPhmArea_PhmAreaId(areaId)
+                    .stream().map(m -> m.getMotherId()).toList();
+            return babyRepository.findAll().stream()
+                    .filter(b -> b.getMotherId() != null && motherIds.contains(b.getMotherId()))
+                    .toList();
+        }
+        return babyRepository.findAll();
+    }
+
     public List<Baby> findByPregnancyId(Integer pregnancyId, Integer userId, String role) {
         if (pregnancyId == null) return babyRepository.findByPregnancyId(null);
         var pregnancy = pregnancyRepository.findById(pregnancyId)

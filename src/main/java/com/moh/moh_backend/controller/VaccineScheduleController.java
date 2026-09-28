@@ -37,7 +37,6 @@ public class VaccineScheduleController {
     }
 
     @GetMapping("/{id}")
-    @RequireRoles({"ADMIN", "MIDWIFE", "DOCTOR", "MOTHER"})
     public ResponseEntity<?> getScheduleById(@PathVariable Integer id) {
         try {
             VaccineSchedule schedule = vaccineScheduleService.getScheduleById(id);
@@ -48,7 +47,6 @@ public class VaccineScheduleController {
     }
 
     @GetMapping
-    @RequireRoles({"ADMIN", "MIDWIFE", "DOCTOR", "MOTHER"})
     public ResponseEntity<?> getAllSchedules() {
         try {
             List<VaccineSchedule> schedules = vaccineScheduleService.getAllSchedules();
@@ -59,7 +57,6 @@ public class VaccineScheduleController {
     }
 
     @GetMapping("/by-target-group/{targetGroup}")
-    @RequireRoles({"ADMIN", "MIDWIFE", "DOCTOR", "MOTHER"})
     public ResponseEntity<?> getSchedulesByTargetGroup(@PathVariable String targetGroup) {
         try {
             TargetGroup target = TargetGroup.valueOf(targetGroup.toUpperCase());

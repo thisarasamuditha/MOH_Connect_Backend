@@ -90,6 +90,11 @@ public class ClinicSessionService {
                 .stream().map(this::toResponse).collect(Collectors.toList());
     }
 
+    public List<SessionResponse> getAll() {
+        return sessionRepository.findAll()
+                .stream().map(this::toResponse).collect(Collectors.toList());
+    }
+
     public List<SessionResponse> getByStatus(String status) {
         SessionStatus sessionStatus = SessionStatus.valueOf(status);
         return sessionRepository.findByStatusOrderBySessionDateAsc(sessionStatus)

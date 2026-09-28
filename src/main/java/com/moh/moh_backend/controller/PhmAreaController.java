@@ -21,7 +21,6 @@ public class PhmAreaController {
      * Get all PHM Areas
      */
     @GetMapping
-    @RequireRoles({"ADMIN", "MIDWIFE", "DOCTOR"})
     public List<PhmArea> getAllPhmAreas() {
         return phmAreaRepository.findAll();
     }
@@ -30,7 +29,6 @@ public class PhmAreaController {
      * Get PHM Area by ID
      */
     @GetMapping("/{id}")
-    @RequireRoles({"ADMIN", "MIDWIFE", "DOCTOR"})
     public PhmArea getPhmAreaById(@PathVariable Integer id) {
         return phmAreaRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("PHM Area not found with ID: " + id));
