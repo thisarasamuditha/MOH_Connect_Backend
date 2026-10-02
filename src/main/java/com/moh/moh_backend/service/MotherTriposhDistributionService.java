@@ -79,8 +79,11 @@ public class MotherTriposhDistributionService {
     }
 
     public List<Response> getByMotherId(Integer motherId, Integer userId, String role) {
-        var pregnancy = pregnancyRepository.findByMother_MotherId(motherId).stream().findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("Mother has no pregnancy record"));
+        var pregnancyOpt = pregnancyRepository.findByMother_MotherId(motherId).stream().findFirst();
+        if (pregnancyOpt.isEmpty()) {
+            return List.of();
+        }
+        var pregnancy = pregnancyOpt.get();
         pregnancyService.assertCanAccessPregnancy(pregnancy.getPregnancyId(), userId, role);
         return distributionRepository.findByMotherId(motherId)
                 .stream()

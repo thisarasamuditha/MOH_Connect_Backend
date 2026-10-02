@@ -15,7 +15,7 @@ public class Baby {
     @Column(name = "baby_id")
     private Integer babyId;
 
-    @Column(name = "pregnancy_id", nullable = false)
+    @Column(name = "pregnancy_id")
     private Integer pregnancyId;
 
     @Column(name = "mother_id", nullable = false)

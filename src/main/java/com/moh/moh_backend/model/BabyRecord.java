@@ -16,15 +16,23 @@ public class BabyRecord {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "baby_id", nullable = false)
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private Baby baby;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "midwife_id")
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "user", "phmArea"})
     private Midwife midwife;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "doctor_id")
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "user", "phmArea"})
     private Doctor doctor;
+
+    @com.fasterxml.jackson.annotation.JsonProperty("babyId")
+    public Integer getBabyId() {
+        return baby != null ? baby.getBabyId() : null;
+    }
 
     @Column(name = "record_date", nullable = false)
     private LocalDate recordDate;
