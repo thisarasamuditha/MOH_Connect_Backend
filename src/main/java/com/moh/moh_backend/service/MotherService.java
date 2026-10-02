@@ -111,6 +111,13 @@ public class MotherService {
         mother.setContactNumber(req.contactNumber);
         mother.setBloodGroup(req.bloodGroup);
         mother.setRegistrationDate(req.registrationDate);
+        mother.setAllergies(req.allergies);
+        mother.setHusbandName(req.husbandName);
+        mother.setHusbandNic(req.husbandNic);
+        mother.setHusbandDob(req.husbandDob);
+        mother.setHusbandAge(req.husbandAge);
+        mother.setHusbandPhone(req.husbandPhone);
+        mother.setHusbandEmail(req.husbandEmail);
         mother.setActive(true);
         motherRepo.save(mother);
 

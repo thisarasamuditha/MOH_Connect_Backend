@@ -119,6 +119,27 @@ public class BabyRecordService {
         if (updatedRecord.getNotes() != null) {
             existing.setNotes(updatedRecord.getNotes());
         }
+        if (updatedRecord.getSkinColor() != null) {
+            existing.setSkinColor(updatedRecord.getSkinColor());
+        }
+        if (updatedRecord.getEyeColor() != null) {
+            existing.setEyeColor(updatedRecord.getEyeColor());
+        }
+        if (updatedRecord.getUmbilicalCordStatus() != null) {
+            existing.setUmbilicalCordStatus(updatedRecord.getUmbilicalCordStatus());
+        }
+        if (updatedRecord.getTemperature() != null) {
+            existing.setTemperature(updatedRecord.getTemperature());
+        }
+        if (updatedRecord.getBreastfeedingStatus() != null) {
+            existing.setBreastfeedingStatus(updatedRecord.getBreastfeedingStatus());
+        }
+        if (updatedRecord.getSessionTime() != null) {
+            existing.setSessionTime(updatedRecord.getSessionTime());
+        }
+        if (updatedRecord.getOtherConditions() != null) {
+            existing.setOtherConditions(updatedRecord.getOtherConditions());
+        }
         if (updatedRecord.getNextVisitDate() != null) {
             existing.setNextVisitDate(updatedRecord.getNextVisitDate());
         }
@@ -138,6 +159,22 @@ public class BabyRecordService {
         }
 
         return babyRecordRepository.save(existing);
+    }
+
+    public List<BabyRecord> getBabyRecordsByMotherId(Integer motherId, Integer userId, String role) {
+        var mother = motherRepository.findById(motherId)
+                .orElseThrow(() -> new RuntimeException("Mother not found with id: " + motherId));
+        if ("MOTHER".equalsIgnoreCase(role)) {
+            if (mother.getUser() == null || !userId.equals(mother.getUser().getUserId())) {
+                throw new IllegalStateException("Mothers can only access their own children's records");
+            }
+        }
+        List<Baby> babies = babyRepository.findByMotherId(motherId);
+        if (babies.isEmpty()) {
+            return List.of();
+        }
+        List<Integer> babyIds = babies.stream().map(Baby::getBabyId).toList();
+        return babyRecordRepository.findByBaby_BabyIdIn(babyIds);
     }
 
     @Transactional

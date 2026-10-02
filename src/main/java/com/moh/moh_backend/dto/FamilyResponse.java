@@ -20,6 +20,13 @@ public class FamilyResponse {
     public LocalDate registrationDate;
     public Boolean isActive;
     public String phmAreaName;
+    public String allergies;
+    public String husbandName;
+    public String husbandNic;
+    public LocalDate husbandDob;
+    public Integer husbandAge;
+    public String husbandPhone;
+    public String husbandEmail;
     public List<BabyInfo> babies;
 
     public static class BabyInfo {
@@ -29,6 +36,10 @@ public class FamilyResponse {
         public Integer ageMonths;
         public String gender;
         public Boolean isAlive;
+        public String hospitalBorn;
+        public String specialNotes;
+        public Float birthWeight;
+        public Float birthHeight;
 
         public static BabyInfo from(Baby b) {
             BabyInfo info = new BabyInfo();
@@ -37,6 +48,10 @@ public class FamilyResponse {
             info.dateOfBirth = b.getDateOfBirth();
             info.gender = b.getGender() != null ? b.getGender().name() : null;
             info.isAlive = b.getIsAlive();
+            info.hospitalBorn = b.getHospitalBorn();
+            info.specialNotes = b.getSpecialNotes();
+            info.birthWeight = b.getBirthWeight();
+            info.birthHeight = b.getBirthHeight();
             if (b.getDateOfBirth() != null) {
                 info.ageMonths = Period.between(b.getDateOfBirth(), LocalDate.now()).getMonths()
                         + Period.between(b.getDateOfBirth(), LocalDate.now()).getYears() * 12;
@@ -56,6 +71,13 @@ public class FamilyResponse {
         dto.bloodGroup      = m.getBloodGroup();
         dto.dateOfBirth     = m.getDateOfBirth();
         dto.registrationDate = m.getRegistrationDate();
+        dto.allergies       = m.getAllergies();
+        dto.husbandName     = m.getHusbandName();
+        dto.husbandNic      = m.getHusbandNic();
+        dto.husbandDob      = m.getHusbandDob();
+        dto.husbandAge      = m.getHusbandAge();
+        dto.husbandPhone    = m.getHusbandPhone();
+        dto.husbandEmail    = m.getHusbandEmail();
         dto.isActive        = m.getActive();
         if (m.getPhmArea() != null) {
             dto.phmAreaName = m.getPhmArea().getAreaName();

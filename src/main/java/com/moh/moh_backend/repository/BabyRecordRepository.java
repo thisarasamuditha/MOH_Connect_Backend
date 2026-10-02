@@ -7,4 +7,5 @@ import java.util.List;
 
 public interface BabyRecordRepository extends JpaRepository<BabyRecord, Integer> {
     List<BabyRecord> findByBaby_BabyId(Integer babyId);
+    List<BabyRecord> findByBaby_BabyIdIn(List<Integer> babyIds);
 }

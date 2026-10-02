@@ -49,6 +49,12 @@ public class Baby {
     @Column(name = "is_alive")
     private Boolean isAlive = true;
 
+    @Column(name = "hospital_born", length = 255)
+    private String hospitalBorn;
+
+    @Column(name = "special_notes", columnDefinition = "TEXT")
+    private String specialNotes;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
@@ -96,6 +102,12 @@ public class Baby {
 
     public Boolean getIsAlive() { return isAlive; }
     public void setIsAlive(Boolean isAlive) { this.isAlive = isAlive; }
+
+    public String getHospitalBorn() { return hospitalBorn; }
+    public void setHospitalBorn(String hospitalBorn) { this.hospitalBorn = hospitalBorn; }
+
+    public String getSpecialNotes() { return specialNotes; }
+    public void setSpecialNotes(String specialNotes) { this.specialNotes = specialNotes; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

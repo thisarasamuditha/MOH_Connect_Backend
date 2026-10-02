@@ -19,4 +19,11 @@ public class MotherRegisterRequest {
     public String contactNumber;
     public String bloodGroup;
     public LocalDate registrationDate;
+    public String allergies;
+    public String husbandName;
+    public String husbandNic;
+    public LocalDate husbandDob;
+    public Integer husbandAge;
+    public String husbandPhone;
+    public String husbandEmail;
 }
