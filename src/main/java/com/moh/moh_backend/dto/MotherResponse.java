@@ -17,6 +17,12 @@ public class MotherResponse {
     public Boolean isActive;
     public Integer phmAreaId;
     public String phmAreaName;
+    public String husbandName;
+    public String husbandNic;
+    public LocalDate husbandDob;
+    public Integer husbandAge;
+    public String husbandPhone;
+    public String husbandEmail;
 
     public static MotherResponse from(Mother m) {
         MotherResponse dto = new MotherResponse();
@@ -30,6 +36,12 @@ public class MotherResponse {
         dto.dateOfBirth    = m.getDateOfBirth();
         dto.registrationDate = m.getRegistrationDate();
         dto.isActive       = m.getActive();
+        dto.husbandName    = m.getHusbandName();
+        dto.husbandNic     = m.getHusbandNic();
+        dto.husbandDob     = m.getHusbandDob();
+        dto.husbandAge     = m.getHusbandAge();
+        dto.husbandPhone   = m.getHusbandPhone();
+        dto.husbandEmail   = m.getHusbandEmail();
         if (m.getPhmArea() != null) {
             dto.phmAreaId   = m.getPhmArea().getPhmAreaId();
             dto.phmAreaName = m.getPhmArea().getAreaName();

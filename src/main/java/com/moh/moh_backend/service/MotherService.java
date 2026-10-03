@@ -46,7 +46,7 @@ public class MotherService {
     }
 
     @Transactional
-    public void registerMother(MotherRegisterRequest req, Integer midwifeUserId) {
+    public Mother registerMother(MotherRegisterRequest req, Integer midwifeUserId) {
         // Validate required fields
         if (req.email == null || req.email.trim().isEmpty()) {
             throw new IllegalArgumentException("Mother's email is required");
@@ -119,10 +119,11 @@ public class MotherService {
         mother.setHusbandPhone(req.husbandPhone);
         mother.setHusbandEmail(req.husbandEmail);
         mother.setActive(true);
-        motherRepo.save(mother);
+        Mother savedMother = motherRepo.save(mother);
 
         // Send credentials to mother's email
         emailService.sendMotherCredentials(req.email, username, password, req.name);
+        return savedMother;
     }
 
     @Transactional(readOnly = true)
@@ -193,6 +194,28 @@ public class MotherService {
         }
         if (updateData.containsKey("occupation") && updateData.get("occupation") != null) {
             mother.setOccupation(updateData.get("occupation"));
+        }
+        if (updateData.containsKey("husbandName")) {
+            mother.setHusbandName(updateData.get("husbandName"));
+        }
+        if (updateData.containsKey("husbandNic")) {
+            mother.setHusbandNic(updateData.get("husbandNic"));
+        }
+        if (updateData.containsKey("husbandPhone")) {
+            mother.setHusbandPhone(updateData.get("husbandPhone"));
+        }
+        if (updateData.containsKey("husbandEmail")) {
+            mother.setHusbandEmail(updateData.get("husbandEmail"));
+        }
+        if (updateData.containsKey("husbandAge") && updateData.get("husbandAge") != null) {
+            try {
+                mother.setHusbandAge(Integer.parseInt(updateData.get("husbandAge")));
+            } catch (NumberFormatException ignored) {}
+        }
+        if (updateData.containsKey("husbandDob") && updateData.get("husbandDob") != null && !updateData.get("husbandDob").isEmpty()) {
+            try {
+                mother.setHusbandDob(java.time.LocalDate.parse(updateData.get("husbandDob")));
+            } catch (Exception ignored) {}
         }
 
         return motherRepo.save(mother);
