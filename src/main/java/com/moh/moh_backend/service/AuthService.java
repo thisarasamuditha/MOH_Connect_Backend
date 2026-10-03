@@ -117,8 +117,12 @@ public class AuthService {
 
     @Transactional(readOnly = true)
     public AuthDtos.AuthResponse login(AuthDtos.LoginRequest req) {
-        Optional<User> byEmail = userRepo.findByEmail(req.email); // Optional<User> specifies a object in JSON format
-        User user = byEmail.orElseThrow(() -> new IllegalArgumentException("User not found"));
+        String identifier = req.email != null ? req.email.trim() : "";
+        Optional<User> userOpt = userRepo.findByEmail(identifier);
+        if (userOpt.isEmpty()) {
+            userOpt = userRepo.findByUsername(identifier);
+        }
+        User user = userOpt.orElseThrow(() -> new IllegalArgumentException("Invalid username/email or password"));
 
         if (!hashService.matches(req.password, user.getPasswordHash())) {
             throw new IllegalArgumentException("Invalid credentials");
