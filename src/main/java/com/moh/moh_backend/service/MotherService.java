@@ -135,6 +135,7 @@ public class MotherService {
         Integer phmAreaId = midwife.getPhmArea().getPhmAreaId();
         return motherRepo.findByPhmArea_PhmAreaId(phmAreaId)
                 .stream()
+                .filter(m -> m.getActive() == null || m.getActive())
                 .map(MotherResponse::from)
                 .collect(Collectors.toList());
     }
@@ -152,6 +153,7 @@ public class MotherService {
         List<Mother> mothers = motherRepo.findByPhmArea_PhmAreaId(phmAreaId);
         System.out.println("Found " + mothers.size() + " mothers");
         return mothers.stream()
+                .filter(m -> m.getActive() == null || m.getActive())
                 .map(mother -> {
                     System.out.println("Processing mother: " + mother.getName() + " (ID: " + mother.getMotherId() + ")");
                     List<Baby> babies = babyRepo.findByMotherId(mother.getMotherId());
@@ -211,8 +213,14 @@ public class MotherService {
             throw new IllegalStateException("Midwife can only delete mothers in their PHM area");
         }
 
-        // Soft delete: mark as inactive instead of hard delete
-        mother.setActive(false);
-        motherRepo.save(mother);
+        User user = mother.getUser();
+        // Delete mother record (cascades to BABY, PREGNANCY, NOTIFICATION, SESSION_ATTENDANCE in DB)
+        motherRepo.delete(mother);
+        motherRepo.flush();
+
+        // Also remove login user account if associated
+        if (user != null) {
+            userRepo.delete(user);
+        }
     }
 }
