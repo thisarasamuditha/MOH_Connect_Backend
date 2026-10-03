@@ -110,6 +110,14 @@ public class BabyResponseDto {
             dto.growthStatus = "NORMAL";
         }
 
+        // Evaluate WHO Growth Corridor if off-range and currently marked NORMAL or null
+        if (dto.currentWeight != null && dto.ageMonths != null && ("NORMAL".equalsIgnoreCase(dto.growthStatus) || dto.growthStatus == null)) {
+            var whoStatus = com.moh.moh_backend.service.BabyRecordService.evaluateWhoGrowthStatus(dto.currentWeight, dto.ageMonths);
+            if (whoStatus != null && whoStatus != com.moh.moh_backend.model.GrowthStatus.NORMAL) {
+                dto.growthStatus = whoStatus.name();
+            }
+        }
+
         // Determine Risk Level & Reasons
         dto.riskLevel = "LOW";
 

@@ -61,6 +61,22 @@ public class BabyRecordService {
             babyRecord.setDoctor(doctor);
         }
 
+        // Auto-adjust growth status by WHO standard percentiles if off-range
+        Integer ageMonths = babyRecord.getAgeMonths();
+        if (ageMonths == null && baby.getDateOfBirth() != null && babyRecord.getRecordDate() != null) {
+            long days = java.time.temporal.ChronoUnit.DAYS.between(baby.getDateOfBirth(), babyRecord.getRecordDate());
+            ageMonths = (int) Math.max(0, days / 30.44);
+            babyRecord.setAgeMonths(ageMonths);
+        }
+        if (babyRecord.getWeight() != null && ageMonths != null) {
+            var whoStatus = evaluateWhoGrowthStatus(babyRecord.getWeight(), ageMonths);
+            if (whoStatus != null && whoStatus != com.moh.moh_backend.model.GrowthStatus.NORMAL) {
+                if (babyRecord.getGrowthStatus() == null || babyRecord.getGrowthStatus() == com.moh.moh_backend.model.GrowthStatus.NORMAL) {
+                    babyRecord.setGrowthStatus(whoStatus);
+                }
+            }
+        }
+
         // Auto-flag high risks into baby entity if severe condition detected
         boolean isHighRisk = false;
         String riskDetail = "";
@@ -185,6 +201,22 @@ public class BabyRecordService {
             existing.setDoctor(doctor);
         }
 
+        // Auto-adjust growth status by WHO standard percentiles if off-range
+        Integer updAge = existing.getAgeMonths();
+        if (updAge == null && existing.getBaby() != null && existing.getBaby().getDateOfBirth() != null && existing.getRecordDate() != null) {
+            long days = java.time.temporal.ChronoUnit.DAYS.between(existing.getBaby().getDateOfBirth(), existing.getRecordDate());
+            updAge = (int) Math.max(0, days / 30.44);
+            existing.setAgeMonths(updAge);
+        }
+        if (existing.getWeight() != null && updAge != null) {
+            var whoStatus = evaluateWhoGrowthStatus(existing.getWeight(), updAge);
+            if (whoStatus != null && whoStatus != com.moh.moh_backend.model.GrowthStatus.NORMAL) {
+                if (existing.getGrowthStatus() == null || existing.getGrowthStatus() == com.moh.moh_backend.model.GrowthStatus.NORMAL) {
+                    existing.setGrowthStatus(whoStatus);
+                }
+            }
+        }
+
         return babyRecordRepository.save(existing);
     }
 
@@ -235,5 +267,28 @@ public class BabyRecordService {
                 throw new IllegalStateException("Midwives can only access children in their PHM area");
             }
         }
+    }
+
+    public static com.moh.moh_backend.model.GrowthStatus evaluateWhoGrowthStatus(Number weightNum, Integer ageMonths) {
+        if (weightNum == null || ageMonths == null || weightNum.doubleValue() <= 0 || ageMonths < 0) {
+            return null;
+        }
+        double weight = weightNum.doubleValue();
+        int m = Math.max(0, Math.min(60, ageMonths));
+        double p3, p97;
+        if (m <= 0) { p3 = 2.5; p97 = 4.4; }
+        else if (m <= 2) { p3 = 2.5 + (m / 2.0) * (4.3 - 2.5); p97 = 4.4 + (m / 2.0) * (7.1 - 4.4); }
+        else if (m <= 6) { p3 = 4.3 + ((m - 2) / 4.0) * (6.4 - 4.3); p97 = 7.1 + ((m - 2) / 4.0) * (9.8 - 7.1); }
+        else if (m <= 12) { p3 = 6.4 + ((m - 6) / 6.0) * (7.7 - 6.4); p97 = 9.8 + ((m - 6) / 6.0) * (12.0 - 9.8); }
+        else if (m <= 24) { p3 = 7.7 + ((m - 12) / 12.0) * (9.7 - 7.7); p97 = 12.0 + ((m - 12) / 12.0) * (15.3 - 12.0); }
+        else if (m <= 36) { p3 = 9.7 + ((m - 24) / 12.0) * (11.3 - 9.7); p97 = 15.3 + ((m - 24) / 12.0) * (18.3 - 15.3); }
+        else { p3 = 11.3 + ((m - 36) / 24.0) * (14.1 - 11.3); p97 = 18.3 + ((m - 36) / 24.0) * (24.2 - 18.3); }
+
+        if (weight < p3) {
+            return (weight < p3 * 0.85) ? com.moh.moh_backend.model.GrowthStatus.WASTED : com.moh.moh_backend.model.GrowthStatus.UNDERWEIGHT;
+        } else if (weight > p97) {
+            return com.moh.moh_backend.model.GrowthStatus.OVERWEIGHT;
+        }
+        return com.moh.moh_backend.model.GrowthStatus.NORMAL;
     }
 }
