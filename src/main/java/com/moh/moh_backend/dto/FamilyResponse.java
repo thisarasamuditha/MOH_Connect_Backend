@@ -1,11 +1,13 @@
 package com.moh.moh_backend.dto;
 
 import com.moh.moh_backend.model.Baby;
+import com.moh.moh_backend.model.BabyRecord;
 import com.moh.moh_backend.model.Mother;
 
 import java.time.LocalDate;
 import java.time.Period;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class FamilyResponse {
@@ -40,8 +42,14 @@ public class FamilyResponse {
         public String specialNotes;
         public Float birthWeight;
         public Float birthHeight;
+        public Float currentWeight;
+        public Float currentHeight;
+        public String latestTemperature;
+        public String growthStatus;
+        public String latestFindings;
+        public String riskLevel;
 
-        public static BabyInfo from(Baby b) {
+        public static BabyInfo from(Baby b, BabyRecord latestRecord) {
             BabyInfo info = new BabyInfo();
             info.babyId = b.getBabyId();
             info.name = b.getName();
@@ -56,11 +64,37 @@ public class FamilyResponse {
                 info.ageMonths = Period.between(b.getDateOfBirth(), LocalDate.now()).getMonths()
                         + Period.between(b.getDateOfBirth(), LocalDate.now()).getYears() * 12;
             }
+
+            if (latestRecord != null) {
+                info.currentWeight = latestRecord.getWeight() != null ? latestRecord.getWeight() : b.getBirthWeight();
+                info.currentHeight = latestRecord.getHeight() != null ? latestRecord.getHeight() : b.getBirthHeight();
+                info.latestTemperature = latestRecord.getTemperature();
+                info.growthStatus = latestRecord.getGrowthStatus() != null ? latestRecord.getGrowthStatus().name() : "NORMAL";
+                info.latestFindings = latestRecord.getFindings();
+            } else {
+                info.currentWeight = b.getBirthWeight();
+                info.currentHeight = b.getBirthHeight();
+                info.growthStatus = "NORMAL";
+            }
+
+            // Risk flag
+            if ((b.getSpecialNotes() != null && b.getSpecialNotes().toUpperCase().contains("HIGH RISK"))
+                    || "UNDERWEIGHT".equalsIgnoreCase(info.growthStatus)
+                    || "WASTED".equalsIgnoreCase(info.growthStatus)) {
+                info.riskLevel = "HIGH";
+            } else {
+                info.riskLevel = "LOW";
+            }
+
             return info;
+        }
+
+        public static BabyInfo from(Baby b) {
+            return from(b, null);
         }
     }
 
-    public static FamilyResponse from(Mother m, List<Baby> babies) {
+    public static FamilyResponse from(Mother m, List<Baby> babies, Map<Integer, BabyRecord> latestRecordsMap) {
         FamilyResponse dto = new FamilyResponse();
         dto.motherId        = m.getMotherId();
         dto.name            = m.getName();
@@ -84,8 +118,12 @@ public class FamilyResponse {
         }
         dto.babies = babies.stream()
                 .filter(b -> Boolean.TRUE.equals(b.getIsAlive()))
-                .map(BabyInfo::from)
+                .map(b -> BabyInfo.from(b, latestRecordsMap != null ? latestRecordsMap.get(b.getBabyId()) : null))
                 .collect(Collectors.toList());
         return dto;
+    }
+
+    public static FamilyResponse from(Mother m, List<Baby> babies) {
+        return from(m, babies, null);
     }
 }

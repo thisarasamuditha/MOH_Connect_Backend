@@ -50,6 +50,8 @@ public class BabyRecordService {
             Midwife midwife = midwifeRepository.findById(midwifeId)
                     .orElseThrow(() -> new RuntimeException("Midwife not found with id: " + midwifeId));
             babyRecord.setMidwife(midwife);
+        } else if ("MIDWIFE".equalsIgnoreCase(role) && userId != null) {
+            midwifeRepository.findByUser_UserId(userId).ifPresent(babyRecord::setMidwife);
         }
 
         // Validate and set doctor (optional)
@@ -57,6 +59,31 @@ public class BabyRecordService {
             Doctor doctor = doctorRepository.findById(doctorId)
                     .orElseThrow(() -> new RuntimeException("Doctor not found with id: " + doctorId));
             babyRecord.setDoctor(doctor);
+        }
+
+        // Auto-flag high risks into baby entity if severe condition detected
+        boolean isHighRisk = false;
+        String riskDetail = "";
+        if (babyRecord.getGrowthStatus() != null && 
+            (babyRecord.getGrowthStatus() == com.moh.moh_backend.model.GrowthStatus.UNDERWEIGHT || 
+             babyRecord.getGrowthStatus() == com.moh.moh_backend.model.GrowthStatus.WASTED)) {
+            isHighRisk = true;
+            riskDetail = "Growth: " + babyRecord.getGrowthStatus().name();
+        }
+        if (babyRecord.getTemperature() != null) {
+            try {
+                double temp = Double.parseDouble(babyRecord.getTemperature().trim());
+                if (temp >= 38.0) {
+                    isHighRisk = true;
+                    riskDetail = (riskDetail.isEmpty() ? "" : riskDetail + " & ") + String.format("High fever (%.1f°C)", temp);
+                }
+            } catch (Exception ignored) {}
+        }
+        if (isHighRisk) {
+            String note = "HIGH RISK: " + riskDetail + (babyRecord.getFindings() != null ? " - " + babyRecord.getFindings() : "");
+            if (note.length() > 250) note = note.substring(0, 247) + "...";
+            baby.setSpecialNotes(note);
+            babyRepository.save(baby);
         }
 
         return babyRecordRepository.save(babyRecord);
@@ -73,7 +100,7 @@ public class BabyRecordService {
         Baby baby = babyRepository.findById(babyId)
                 .orElseThrow(() -> new RuntimeException("Baby not found with id: " + babyId));
         assertCanAccessBaby(baby, userId, role);
-        return babyRecordRepository.findByBaby_BabyId(babyId);
+        return babyRecordRepository.findByBaby_BabyIdOrderByRecordDateDesc(babyId);
     }
 
     @Transactional
@@ -168,13 +195,20 @@ public class BabyRecordService {
             if (mother.getUser() == null || !userId.equals(mother.getUser().getUserId())) {
                 throw new IllegalStateException("Mothers can only access their own children's records");
             }
+        } else if ("MIDWIFE".equalsIgnoreCase(role)) {
+            Integer areaId = midwifeRepository.findByUser_UserId(userId)
+                    .orElseThrow(() -> new IllegalStateException("Midwife not found"))
+                    .getPhmArea().getPhmAreaId();
+            if (mother.getPhmArea() == null || !areaId.equals(mother.getPhmArea().getPhmAreaId())) {
+                throw new IllegalStateException("Midwives can only access children in their PHM area");
+            }
         }
         List<Baby> babies = babyRepository.findByMotherId(motherId);
         if (babies.isEmpty()) {
             return List.of();
         }
         List<Integer> babyIds = babies.stream().map(Baby::getBabyId).toList();
-        return babyRecordRepository.findByBaby_BabyIdIn(babyIds);
+        return babyRecordRepository.findByBaby_BabyIdInOrderByRecordDateDesc(babyIds);
     }
 
     @Transactional

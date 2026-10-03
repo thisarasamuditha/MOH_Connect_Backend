@@ -9,6 +9,7 @@ import com.moh.moh_backend.model.Mother;
 import com.moh.moh_backend.model.PhmArea;
 import com.moh.moh_backend.model.User;
 import com.moh.moh_backend.model.UserRole;
+import com.moh.moh_backend.repository.BabyRecordRepository;
 import com.moh.moh_backend.repository.BabyRepository;
 import com.moh.moh_backend.repository.MidwifeRepository;
 import com.moh.moh_backend.repository.MotherRepository;
@@ -31,17 +32,20 @@ public class MotherService {
     private final PhmAreaRepository phmAreaRepo;
     private final PasswordHashService hashService;
     private final BabyRepository babyRepo;
+    private final BabyRecordRepository babyRecordRepo;
     private final EmailService emailService;
 
     public MotherService(UserRepository userRepo, MotherRepository motherRepo,
                          MidwifeRepository midwifeRepo, PhmAreaRepository phmAreaRepo,
-                         PasswordHashService hashService, BabyRepository babyRepo, EmailService emailService) {
+                         PasswordHashService hashService, BabyRepository babyRepo,
+                         BabyRecordRepository babyRecordRepo, EmailService emailService) {
         this.userRepo = userRepo;
         this.motherRepo = motherRepo;
         this.midwifeRepo = midwifeRepo;
         this.phmAreaRepo = phmAreaRepo;
         this.hashService = hashService;
         this.babyRepo = babyRepo;
+        this.babyRecordRepo = babyRecordRepo;
         this.emailService = emailService;
     }
 
@@ -153,13 +157,23 @@ public class MotherService {
         System.out.println("Fetching mothers for PHM Area ID: " + phmAreaId);
         List<Mother> mothers = motherRepo.findByPhmArea_PhmAreaId(phmAreaId);
         System.out.println("Found " + mothers.size() + " mothers");
+
+        java.util.Map<Integer, com.moh.moh_backend.model.BabyRecord> latestRecordsMap = new java.util.HashMap<>();
+        for (Mother m : mothers) {
+            List<Baby> bList = babyRepo.findByMotherId(m.getMotherId());
+            for (Baby b : bList) {
+                babyRecordRepo.findFirstByBaby_BabyIdOrderByRecordDateDesc(b.getBabyId())
+                        .ifPresent(r -> latestRecordsMap.put(b.getBabyId(), r));
+            }
+        }
+
         return mothers.stream()
                 .filter(m -> m.getActive() == null || m.getActive())
                 .map(mother -> {
                     System.out.println("Processing mother: " + mother.getName() + " (ID: " + mother.getMotherId() + ")");
                     List<Baby> babies = babyRepo.findByMotherId(mother.getMotherId());
                     System.out.println("Found " + babies.size() + " babies for mother");
-                    return FamilyResponse.from(mother, babies);
+                    return FamilyResponse.from(mother, babies, latestRecordsMap);
                 })
                 .collect(Collectors.toList());
     }
