@@ -91,6 +91,20 @@ public class MotherTriposhDistributionService {
                 .collect(Collectors.toList());
     }
 
+    public List<Response> getByMidwifeId(Integer midwifeId) {
+        return distributionRepository.findByMidwife_MidwifeIdOrderByDistributionDateDesc(midwifeId)
+                .stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    public List<Response> getAll() {
+        return distributionRepository.findAllByOrderByDistributionDateDesc()
+                .stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
     private Response toResponse(MotherTriposhDistribution d) {
         return Response.builder()
                 .distributionId(d.getDistributionId())

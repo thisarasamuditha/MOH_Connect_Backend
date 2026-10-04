@@ -11,6 +11,10 @@ public interface BabyTriposhDistributionRepository extends JpaRepository<BabyTri
 
     List<BabyTriposhDistribution> findByBaby_BabyIdOrderByDistributionDateDesc(Integer babyId);
 
+    List<BabyTriposhDistribution> findByMidwife_MidwifeIdOrderByDistributionDateDesc(Integer midwifeId);
+
+    List<BabyTriposhDistribution> findAllByOrderByDistributionDateDesc();
+
     @Query("SELECT d FROM BabyTriposhDistribution d WHERE d.baby.motherId = :motherId ORDER BY d.distributionDate DESC")
     List<BabyTriposhDistribution> findByMotherId(@Param("motherId") Integer motherId);
 }
