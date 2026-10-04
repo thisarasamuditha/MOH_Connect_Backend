@@ -122,6 +122,9 @@ public class AuthService {
         if (userOpt.isEmpty()) {
             userOpt = userRepo.findByUsername(identifier);
         }
+        if (userOpt.isEmpty()) {
+            userOpt = motherRepo.findByNic(identifier).map(Mother::getUser);
+        }
         User user = userOpt.orElseThrow(() -> new IllegalArgumentException("Invalid username/email or password"));
 
         if (!hashService.matches(req.password, user.getPasswordHash())) {
