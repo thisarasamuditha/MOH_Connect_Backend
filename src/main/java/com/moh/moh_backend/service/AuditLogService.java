@@ -24,4 +24,8 @@ public class AuditLogService {
         audit.setClientIp(clientIp);
         repository.save(audit);
     }
+
+    public java.util.List<AuditLog> getRecentLogs() {
+        return repository.findTop100ByOrderByAuditIdDesc();
+    }
 }
