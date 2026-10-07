@@ -82,8 +82,16 @@ public class MotherController {
 
         try {
             Integer midwifeUserId = jwtService.getUserId(token);
-            motherService.registerMother(req, midwifeUserId);
-            return ResponseEntity.ok(Map.of("message", "Mother registered"));
+            Mother savedMother = motherService.registerMother(req, midwifeUserId);
+            String assignedUsername = savedMother.getUser() != null ? savedMother.getUser().getUsername() : (req.username != null ? req.username : "");
+            String assignedEmail = savedMother.getUser() != null ? savedMother.getUser().getEmail() : (req.email != null ? req.email : "");
+            return ResponseEntity.ok(Map.of(
+                "message", "Mother registered successfully",
+                "motherId", savedMother.getMotherId(),
+                "id", savedMother.getMotherId(),
+                "username", assignedUsername,
+                "email", assignedEmail
+            ));
         } catch (IllegalArgumentException | IllegalStateException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         } catch (Exception e) {

@@ -16,15 +16,23 @@ public class BabyRecord {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "baby_id", nullable = false)
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private Baby baby;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "midwife_id")
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "user", "phmArea"})
     private Midwife midwife;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "doctor_id")
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "user", "phmArea"})
     private Doctor doctor;
+
+    @com.fasterxml.jackson.annotation.JsonProperty("babyId")
+    public Integer getBabyId() {
+        return baby != null ? baby.getBabyId() : null;
+    }
 
     @Column(name = "record_date", nullable = false)
     private LocalDate recordDate;
@@ -62,6 +70,27 @@ public class BabyRecord {
 
     @Column(name = "notes", columnDefinition = "TEXT")
     private String notes;
+
+    @Column(name = "skin_color", length = 50)
+    private String skinColor;
+
+    @Column(name = "eye_color", length = 50)
+    private String eyeColor;
+
+    @Column(name = "umbilical_cord_status", length = 100)
+    private String umbilicalCordStatus;
+
+    @Column(name = "temperature", length = 20)
+    private String temperature;
+
+    @Column(name = "breastfeeding_status", length = 100)
+    private String breastfeedingStatus;
+
+    @Column(name = "session_time", length = 20)
+    private String sessionTime;
+
+    @Column(name = "other_conditions", columnDefinition = "TEXT")
+    private String otherConditions;
 
     @Column(name = "next_visit_date")
     private LocalDate nextVisitDate;
@@ -213,6 +242,27 @@ public class BabyRecord {
     public void setNextVisitDate(LocalDate nextVisitDate) {
         this.nextVisitDate = nextVisitDate;
     }
+
+    public String getSkinColor() { return skinColor; }
+    public void setSkinColor(String skinColor) { this.skinColor = skinColor; }
+
+    public String getEyeColor() { return eyeColor; }
+    public void setEyeColor(String eyeColor) { this.eyeColor = eyeColor; }
+
+    public String getUmbilicalCordStatus() { return umbilicalCordStatus; }
+    public void setUmbilicalCordStatus(String umbilicalCordStatus) { this.umbilicalCordStatus = umbilicalCordStatus; }
+
+    public String getTemperature() { return temperature; }
+    public void setTemperature(String temperature) { this.temperature = temperature; }
+
+    public String getBreastfeedingStatus() { return breastfeedingStatus; }
+    public void setBreastfeedingStatus(String breastfeedingStatus) { this.breastfeedingStatus = breastfeedingStatus; }
+
+    public String getSessionTime() { return sessionTime; }
+    public void setSessionTime(String sessionTime) { this.sessionTime = sessionTime; }
+
+    public String getOtherConditions() { return otherConditions; }
+    public void setOtherConditions(String otherConditions) { this.otherConditions = otherConditions; }
 
     public LocalDateTime getCreatedAt() {
         return createdAt;
