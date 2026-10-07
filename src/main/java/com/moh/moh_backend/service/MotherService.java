@@ -15,6 +15,7 @@ import com.moh.moh_backend.repository.BabyRepository;
 import com.moh.moh_backend.repository.MidwifeRepository;
 import com.moh.moh_backend.repository.MotherRepository;
 import com.moh.moh_backend.repository.PhmAreaRepository;
+import com.moh.moh_backend.repository.PregnancyRepository;
 import com.moh.moh_backend.repository.UserRepository;
 import com.moh.moh_backend.util.CredentialGenerator;
 import com.moh.moh_backend.util.EmailService;
@@ -39,9 +40,9 @@ public class MotherService {
 
     public MotherService(UserRepository userRepo, MotherRepository motherRepo,
                          MidwifeRepository midwifeRepo, PhmAreaRepository phmAreaRepo,
-                         PasswordHashService hashService, BabyRepository babyRepo, EmailService emailService, PregnancyRepository pregnancyRepo) {
-                         PasswordHashService hashService, BabyRepository babyRepo,
-                         BabyRecordRepository babyRecordRepo, EmailService emailService) {
+                         PasswordHashService hashService, EmailService emailService, PregnancyRepository pregnancyRepo,
+                         BabyRepository babyRepo,
+                         BabyRecordRepository babyRecordRepo) {
         this.userRepo = userRepo;
         this.pregnancyRepo=pregnancyRepo;
         this.motherRepo = motherRepo;
