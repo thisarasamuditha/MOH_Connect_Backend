@@ -3,6 +3,8 @@ package com.moh.moh_backend.service;
 import com.moh.moh_backend.model.TargetGroup;
 import com.moh.moh_backend.model.VaccineSchedule;
 import com.moh.moh_backend.repository.VaccineScheduleRepository;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,6 +20,7 @@ public class VaccineScheduleService {
     }
 
     @Transactional
+    @CacheEvict(value = "vaccineSchedules", allEntries = true)
     public VaccineSchedule createSchedule(VaccineSchedule schedule) {
         if (schedule.getVaccineName() == null || schedule.getVaccineName().trim().isEmpty()) {
             throw new IllegalArgumentException("Vaccine name is required");
@@ -36,15 +39,18 @@ public class VaccineScheduleService {
                 .orElseThrow(() -> new RuntimeException("Vaccine schedule not found with id: " + scheduleId));
     }
 
+    @Cacheable("vaccineSchedules")
     public List<VaccineSchedule> getAllSchedules() {
         return vaccineScheduleRepository.findAll();
     }
 
+    @Cacheable("vaccineSchedules")
     public List<VaccineSchedule> getSchedulesByTargetGroup(TargetGroup targetGroup) {
         return vaccineScheduleRepository.findByTargetGroupOrderByRecommendedAgeDaysAsc(targetGroup);
     }
 
     @Transactional
+    @CacheEvict(value = "vaccineSchedules", allEntries = true)
     public VaccineSchedule updateSchedule(Integer scheduleId, VaccineSchedule updatedSchedule) {
         VaccineSchedule existing = getScheduleById(scheduleId);
 
@@ -68,6 +74,7 @@ public class VaccineScheduleService {
     }
 
     @Transactional
+    @CacheEvict(value = "vaccineSchedules", allEntries = true)
     public void deleteSchedule(Integer scheduleId) {
         if (!vaccineScheduleRepository.existsById(scheduleId)) {
             throw new RuntimeException("Vaccine schedule not found with id: " + scheduleId);

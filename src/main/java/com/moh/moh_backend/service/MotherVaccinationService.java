@@ -90,8 +90,11 @@ public class MotherVaccinationService {
     }
 
     public List<MotherVaccinationResponseDto> getVaccinationsByMother(Integer motherId, Integer userId, String role) {
-        var pregnancy = pregnancyRepository.findByMother_MotherId(motherId).stream().findFirst()
-                .orElseThrow(() -> new RuntimeException("Mother has no pregnancy record"));
+        var pregnancyOpt = pregnancyRepository.findByMother_MotherId(motherId).stream().findFirst();
+        if (pregnancyOpt.isEmpty()) {
+            return List.of();
+        }
+        var pregnancy = pregnancyOpt.get();
         pregnancyService.assertCanAccessPregnancy(pregnancy.getPregnancyId(), userId, role);
         return motherVaccinationRepository.findByMotherId(motherId)
                 .stream()

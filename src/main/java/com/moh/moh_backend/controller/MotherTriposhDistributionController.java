@@ -25,6 +25,15 @@ public class MotherTriposhDistributionController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    @GetMapping
+    @RequireRoles({"ADMIN", "MIDWIFE", "DOCTOR"})
+    public ResponseEntity<List<Response>> getAll(@RequestParam(required = false) Integer midwifeId) {
+        if (midwifeId != null) {
+            return ResponseEntity.ok(distributionService.getByMidwifeId(midwifeId));
+        }
+        return ResponseEntity.ok(distributionService.getAll());
+    }
+
     @GetMapping("/pregnancy/{pregnancyId}")
     @RequireRoles({"ADMIN", "MIDWIFE", "DOCTOR", "MOTHER"})
     public ResponseEntity<List<Response>> getByPregnancy(@PathVariable Integer pregnancyId, jakarta.servlet.http.HttpServletRequest httpRequest) {

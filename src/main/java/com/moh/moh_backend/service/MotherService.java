@@ -9,6 +9,7 @@ import com.moh.moh_backend.model.Mother;
 import com.moh.moh_backend.model.PhmArea;
 import com.moh.moh_backend.model.User;
 import com.moh.moh_backend.model.UserRole;
+import com.moh.moh_backend.repository.BabyRecordRepository;
 import com.moh.moh_backend.repository.BabyRepository;
 import com.moh.moh_backend.repository.MidwifeRepository;
 import com.moh.moh_backend.repository.MotherRepository;
@@ -31,22 +32,25 @@ public class MotherService {
     private final PhmAreaRepository phmAreaRepo;
     private final PasswordHashService hashService;
     private final BabyRepository babyRepo;
+    private final BabyRecordRepository babyRecordRepo;
     private final EmailService emailService;
 
     public MotherService(UserRepository userRepo, MotherRepository motherRepo,
                          MidwifeRepository midwifeRepo, PhmAreaRepository phmAreaRepo,
-                         PasswordHashService hashService, BabyRepository babyRepo, EmailService emailService) {
+                         PasswordHashService hashService, BabyRepository babyRepo,
+                         BabyRecordRepository babyRecordRepo, EmailService emailService) {
         this.userRepo = userRepo;
         this.motherRepo = motherRepo;
         this.midwifeRepo = midwifeRepo;
         this.phmAreaRepo = phmAreaRepo;
         this.hashService = hashService;
         this.babyRepo = babyRepo;
+        this.babyRecordRepo = babyRecordRepo;
         this.emailService = emailService;
     }
 
     @Transactional
-    public void registerMother(MotherRegisterRequest req, Integer midwifeUserId) {
+    public Mother registerMother(MotherRegisterRequest req, Integer midwifeUserId) {
         // Validate required fields
         if (req.email == null || req.email.trim().isEmpty()) {
             throw new IllegalArgumentException("Mother's email is required");
@@ -111,11 +115,19 @@ public class MotherService {
         mother.setContactNumber(req.contactNumber);
         mother.setBloodGroup(req.bloodGroup);
         mother.setRegistrationDate(req.registrationDate);
+        mother.setAllergies(req.allergies);
+        mother.setHusbandName(req.husbandName);
+        mother.setHusbandNic(req.husbandNic);
+        mother.setHusbandDob(req.husbandDob);
+        mother.setHusbandAge(req.husbandAge);
+        mother.setHusbandPhone(req.husbandPhone);
+        mother.setHusbandEmail(req.husbandEmail);
         mother.setActive(true);
-        motherRepo.save(mother);
+        Mother savedMother = motherRepo.save(mother);
 
         // Send credentials to mother's email
         emailService.sendMotherCredentials(req.email, username, password, req.name);
+        return savedMother;
     }
 
     @Transactional(readOnly = true)
@@ -128,6 +140,7 @@ public class MotherService {
         Integer phmAreaId = midwife.getPhmArea().getPhmAreaId();
         return motherRepo.findByPhmArea_PhmAreaId(phmAreaId)
                 .stream()
+                .filter(m -> m.getActive() == null || m.getActive())
                 .map(MotherResponse::from)
                 .collect(Collectors.toList());
     }
@@ -144,12 +157,23 @@ public class MotherService {
         System.out.println("Fetching mothers for PHM Area ID: " + phmAreaId);
         List<Mother> mothers = motherRepo.findByPhmArea_PhmAreaId(phmAreaId);
         System.out.println("Found " + mothers.size() + " mothers");
+
+        java.util.Map<Integer, com.moh.moh_backend.model.BabyRecord> latestRecordsMap = new java.util.HashMap<>();
+        for (Mother m : mothers) {
+            List<Baby> bList = babyRepo.findByMotherId(m.getMotherId());
+            for (Baby b : bList) {
+                babyRecordRepo.findFirstByBaby_BabyIdOrderByRecordDateDesc(b.getBabyId())
+                        .ifPresent(r -> latestRecordsMap.put(b.getBabyId(), r));
+            }
+        }
+
         return mothers.stream()
+                .filter(m -> m.getActive() == null || m.getActive())
                 .map(mother -> {
                     System.out.println("Processing mother: " + mother.getName() + " (ID: " + mother.getMotherId() + ")");
                     List<Baby> babies = babyRepo.findByMotherId(mother.getMotherId());
                     System.out.println("Found " + babies.size() + " babies for mother");
-                    return FamilyResponse.from(mother, babies);
+                    return FamilyResponse.from(mother, babies, latestRecordsMap);
                 })
                 .collect(Collectors.toList());
     }
@@ -185,6 +209,28 @@ public class MotherService {
         if (updateData.containsKey("occupation") && updateData.get("occupation") != null) {
             mother.setOccupation(updateData.get("occupation"));
         }
+        if (updateData.containsKey("husbandName")) {
+            mother.setHusbandName(updateData.get("husbandName"));
+        }
+        if (updateData.containsKey("husbandNic")) {
+            mother.setHusbandNic(updateData.get("husbandNic"));
+        }
+        if (updateData.containsKey("husbandPhone")) {
+            mother.setHusbandPhone(updateData.get("husbandPhone"));
+        }
+        if (updateData.containsKey("husbandEmail")) {
+            mother.setHusbandEmail(updateData.get("husbandEmail"));
+        }
+        if (updateData.containsKey("husbandAge") && updateData.get("husbandAge") != null) {
+            try {
+                mother.setHusbandAge(Integer.parseInt(updateData.get("husbandAge")));
+            } catch (NumberFormatException ignored) {}
+        }
+        if (updateData.containsKey("husbandDob") && updateData.get("husbandDob") != null && !updateData.get("husbandDob").isEmpty()) {
+            try {
+                mother.setHusbandDob(java.time.LocalDate.parse(updateData.get("husbandDob")));
+            } catch (Exception ignored) {}
+        }
 
         return motherRepo.save(mother);
     }
@@ -204,8 +250,14 @@ public class MotherService {
             throw new IllegalStateException("Midwife can only delete mothers in their PHM area");
         }
 
-        // Soft delete: mark as inactive instead of hard delete
-        mother.setActive(false);
-        motherRepo.save(mother);
+        User user = mother.getUser();
+        // Delete mother record (cascades to BABY, PREGNANCY, NOTIFICATION, SESSION_ATTENDANCE in DB)
+        motherRepo.delete(mother);
+        motherRepo.flush();
+
+        // Also remove login user account if associated
+        if (user != null) {
+            userRepo.delete(user);
+        }
     }
 }

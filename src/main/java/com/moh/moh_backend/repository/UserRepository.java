@@ -12,8 +12,8 @@ import java.util.Optional;
  */
 public interface UserRepository extends JpaRepository<User, Integer> {
 
-//  SELECT * FROM user WHERE email = ?; this works under the hood
     Optional<User> findByEmail(String email);
+    Optional<User> findByUsername(String username);
     boolean existsByUsername(String username);
     boolean existsByEmail(String email);
     List<User> findByRole(UserRole role);

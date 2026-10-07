@@ -45,6 +45,27 @@ public class Mother {
     @Column(name = "registration_date")
     private LocalDate registrationDate;
 
+    @Column(name = "allergies", columnDefinition = "TEXT")
+    private String allergies;
+
+    @Column(name = "husband_name", length = 100)
+    private String husbandName;
+
+    @Column(name = "husband_nic", length = 20)
+    private String husbandNic;
+
+    @Column(name = "husband_dob")
+    private LocalDate husbandDob;
+
+    @Column(name = "husband_age")
+    private Integer husbandAge;
+
+    @Column(name = "husband_phone", length = 20)
+    private String husbandPhone;
+
+    @Column(name = "husband_email", length = 100)
+    private String husbandEmail;
+
     @Column(name = "is_active")
     private Boolean isActive = true;
 
@@ -154,6 +175,27 @@ public class Mother {
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
+
+    public String getAllergies() { return allergies; }
+    public void setAllergies(String allergies) { this.allergies = allergies; }
+
+    public String getHusbandName() { return husbandName; }
+    public void setHusbandName(String husbandName) { this.husbandName = husbandName; }
+
+    public String getHusbandNic() { return husbandNic; }
+    public void setHusbandNic(String husbandNic) { this.husbandNic = husbandNic; }
+
+    public LocalDate getHusbandDob() { return husbandDob; }
+    public void setHusbandDob(LocalDate husbandDob) { this.husbandDob = husbandDob; }
+
+    public Integer getHusbandAge() { return husbandAge; }
+    public void setHusbandAge(Integer husbandAge) { this.husbandAge = husbandAge; }
+
+    public String getHusbandPhone() { return husbandPhone; }
+    public void setHusbandPhone(String husbandPhone) { this.husbandPhone = husbandPhone; }
+
+    public String getHusbandEmail() { return husbandEmail; }
+    public void setHusbandEmail(String husbandEmail) { this.husbandEmail = husbandEmail; }
 
     public LocalDateTime getUpdatedAt() {
         return updatedAt;

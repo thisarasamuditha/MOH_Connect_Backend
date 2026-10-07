@@ -69,6 +69,20 @@ public class BabyRecordController {
         }
     }
 
+    @GetMapping("/by-mother/{motherId}")
+    @RequireRoles({"MIDWIFE", "DOCTOR", "MOTHER"})
+    public ResponseEntity<?> getBabyRecordsByMotherId(@PathVariable Integer motherId,
+                                                       jakarta.servlet.http.HttpServletRequest request) {
+        try {
+            List<BabyRecord> records = babyRecordService.getBabyRecordsByMotherId(motherId,
+                    (Integer) request.getAttribute("moh.userId"),
+                    (String) request.getAttribute("moh.role"));
+            return ResponseEntity.ok(records);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
+
     @PutMapping("/{id}")
     @RequireRoles({"MIDWIFE", "DOCTOR"})
     public ResponseEntity<?> updateBabyRecord(

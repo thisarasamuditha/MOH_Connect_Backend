@@ -8,6 +8,7 @@ import java.util.Optional;
 
 public interface MotherRepository extends JpaRepository <Mother, Integer> {
     boolean existsByNic(String nic);
+    Optional<Mother> findByNic(String nic);
     List<Mother> findByPhmArea_PhmAreaId(Integer phmAreaId);
     Optional<Mother> findByUser_UserId(Integer userId);
 }
