@@ -12,7 +12,7 @@ import java.net.URI;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/baby-vaccinations")
+@RequestMapping("/baby-vaccinations")
 public class BabyVaccinationController {
 
     private final BabyVaccinationService babyVaccinationService;

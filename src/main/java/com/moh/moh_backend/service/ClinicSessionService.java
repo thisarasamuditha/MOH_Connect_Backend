@@ -8,11 +8,9 @@ import com.moh.moh_backend.model.ClinicSession.SessionStatus;
 import com.moh.moh_backend.model.Midwife;
 import com.moh.moh_backend.model.PhmArea;
 import com.moh.moh_backend.model.SessionType;
-import com.moh.moh_backend.repository.ClinicSessionRepository;
-import com.moh.moh_backend.repository.MidwifeRepository;
-import com.moh.moh_backend.repository.PhmAreaRepository;
-import com.moh.moh_backend.repository.SessionTypeRepository;
+import com.moh.moh_backend.repository.*;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +18,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ClinicSessionService {
@@ -28,6 +27,7 @@ public class ClinicSessionService {
     private final MidwifeRepository midwifeRepository;
     private final SessionTypeRepository sessionTypeRepository;
     private final PhmAreaRepository phmAreaRepository;
+    private final DoctorRepository doctorRepository;
 
     @Transactional
     public SessionResponse create(SessionCreateRequest request, Integer userId, String role) {
@@ -100,6 +100,26 @@ public class ClinicSessionService {
         return sessionRepository.findByStatusOrderBySessionDateAsc(sessionStatus)
                 .stream().map(this::toResponse).collect(Collectors.toList());
     }
+// updated to doctor data appointment using phm area id
+    public List<SessionResponse> getSessions(String status,String role, Integer userId) {
+        List<ClinicSession> sessions;
+        log.info("userId: {}", userId);
+        Integer areaId = doctorRepository.findByUser_UserId(userId)
+                .orElseThrow(() -> new IllegalStateException("Doctor not found"))
+                .getPhmArea().getPhmAreaId();
+
+            if (status != null && !status.trim().isEmpty()) {
+                SessionStatus sessionStatus = SessionStatus.valueOf(status.toUpperCase());
+                sessions = sessionRepository.findByPhmArea_PhmAreaIdAndStatusOrderBySessionDateAsc(areaId,sessionStatus);
+            } else {
+
+                sessions = sessionRepository.findAllByPhmArea_PhmAreaIdOrderBySessionDateAsc(areaId);
+            }
+
+        return sessions.stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
 
     public List<SessionResponse> getByDateRange(LocalDate from, LocalDate to) {
         return sessionRepository.findBySessionDateBetweenOrderBySessionDateAsc(from, to)
@@ -113,6 +133,8 @@ public class ClinicSessionService {
 
     @Transactional
     public SessionResponse update(Integer sessionId, SessionUpdateRequest request, Integer userId, String role) {
+
+       // log.info("userId: {}", userId);
         ClinicSession session = sessionRepository.findById(sessionId)
                 .orElseThrow(() -> new IllegalArgumentException("Session not found with id: " + sessionId));
             assertCanManage(session.getMidwife(), session.getPhmArea().getPhmAreaId(), userId, role);

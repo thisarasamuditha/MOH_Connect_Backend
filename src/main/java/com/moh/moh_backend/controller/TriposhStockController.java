@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/triposha/stock")
+@RequestMapping("/triposha/stock")
 @RequiredArgsConstructor
 public class TriposhStockController {
 

@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/section-types")
+@RequestMapping("/section-types")
 @RequiredArgsConstructor
 public class SectionTypeController {
 

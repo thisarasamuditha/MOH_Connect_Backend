@@ -5,11 +5,12 @@ import com.moh.moh_backend.repository.BabyRepository;
 import com.moh.moh_backend.repository.MotherRepository;
 import com.moh.moh_backend.repository.MidwifeRepository;
 import com.moh.moh_backend.repository.PregnancyRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
-
+@Slf4j
 @Service
 public class BabyService {
     private final BabyRepository babyRepository;
@@ -31,6 +32,8 @@ public class BabyService {
     }
 
     public Optional<Baby> findById(Integer id, Integer userId, String role) {
+
+        log.info("userId: {}", userId);
         return babyRepository.findById(id)
                 .map(baby -> { assertCanAccessMother(baby.getMotherId(), userId, role); return baby; });
     }
@@ -75,6 +78,7 @@ public class BabyService {
     private void assertCanAccessMother(Integer motherId, Integer userId, String role) {
         var mother = motherRepository.findById(motherId)
                 .orElseThrow(() -> new IllegalStateException("Mother not found for baby"));
+        log.info("motherId: {}", mother.getName());
         if ("MOTHER".equalsIgnoreCase(role)) {
             if (mother.getUser() == null || !userId.equals(mother.getUser().getUserId())) {
                 throw new IllegalStateException("Mothers can only access their own children");

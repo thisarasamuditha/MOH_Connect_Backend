@@ -18,4 +18,10 @@ public interface ClinicSessionRepository extends JpaRepository<ClinicSession, In
     List<ClinicSession> findBySessionDateBetweenOrderBySessionDateAsc(LocalDate from, LocalDate to);
 
     List<ClinicSession> findByMidwife_MidwifeIdAndStatusOrderBySessionDateAsc(Integer midwifeId, SessionStatus status);
+
+    List<ClinicSession> findAllByPhmArea_PhmAreaIdOrderBySessionDateAsc(Integer phmAreaId);
+
+    List<ClinicSession> findByPhmArea_PhmAreaIdAndStatusOrderBySessionDateAsc(Integer phmAreaId,SessionStatus status);
+
+
 }

@@ -1,7 +1,11 @@
 package com.moh.moh_backend.service;
 
+import com.moh.moh_backend.dto.MotherResponse;
+import com.moh.moh_backend.dto.PregnancyResponse;
+import lombok.extern.slf4j.Slf4j;
 import com.moh.moh_backend.model.Mother;
 import com.moh.moh_backend.model.Pregnancy;
+import com.moh.moh_backend.repository.DoctorRepository;
 import com.moh.moh_backend.repository.MotherRepository;
 import com.moh.moh_backend.repository.PregnancyRepository;
 import com.moh.moh_backend.repository.MidwifeRepository;
@@ -9,19 +13,24 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
+import static java.lang.Math.log;
+@Slf4j
 @Service
 public class PregnancyService {
 
     private final PregnancyRepository pregnancyRepository;
     private final MotherRepository motherRepository;
     private final MidwifeRepository midwifeRepository;
+    private final DoctorRepository doctorRepository;
 
     public PregnancyService(PregnancyRepository pregnancyRepository, MotherRepository motherRepository,
-                            MidwifeRepository midwifeRepository) {
+                            MidwifeRepository midwifeRepository , DoctorRepository doctorRepository) {
         this.pregnancyRepository = pregnancyRepository;
         this.motherRepository = motherRepository;
         this.midwifeRepository = midwifeRepository;
+        this .doctorRepository = doctorRepository;
     }
 
     @Transactional
@@ -48,23 +57,60 @@ public class PregnancyService {
         return pregnancyRepository.findByMother_MotherId(motherId);
     }
 
-    public List<Pregnancy> getActivePregnancies(Integer userId, String role) {
-        if ("MIDWIFE".equalsIgnoreCase(role)) {
-            Integer areaId = midwifeRepository.findByUser_UserId(userId)
-                    .orElseThrow(() -> new IllegalStateException("Midwife not found"))
-                    .getPhmArea().getPhmAreaId();
-            return pregnancyRepository.findByPregnancyStatus(Pregnancy.PregnancyStatus.ACTIVE).stream()
-                    .filter(p -> p.getMother() != null && p.getMother().getPhmArea() != null
-                            && areaId.equals(p.getMother().getPhmArea().getPhmAreaId()))
-                    .toList();
-        }
-        return pregnancyRepository.findByPregnancyStatus(Pregnancy.PregnancyStatus.ACTIVE);
-    }
+//    public List<Pregnancy> getActivePregnancies(Integer userId, String role) {
+//        if ("MIDWIFE".equalsIgnoreCase(role)) {
+//            Integer areaId = midwifeRepository.findByUser_UserId(userId)
+//                    .orElseThrow(() -> new IllegalStateException("Midwife not found"))
+//                    .getPhmArea().getPhmAreaId();
+//            return pregnancyRepository.findByPregnancyStatus(Pregnancy.PregnancyStatus.ACTIVE).stream()
+//                    .filter(p -> p.getMother() != null && p.getMother().getPhmArea() != null
+//                            && areaId.equals(p.getMother().getPhmArea().getPhmAreaId()))
+//                    .toList();
+//        }
+//        return pregnancyRepository.findByPregnancyStatus(Pregnancy.PregnancyStatus.ACTIVE);
+//    }
 
     public void assertCanAccessPregnancy(Integer pregnancyId, Integer userId, String role) {
         Pregnancy pregnancy = pregnancyRepository.findById(pregnancyId)
                 .orElseThrow(() -> new RuntimeException("Pregnancy not found with id: " + pregnancyId));
         assertCanAccessMother(pregnancy.getMother(), userId, role);
+    }
+
+
+
+    public List<Pregnancy> getActivePregnancies(Integer userId, String role) {
+
+        log.info("userId: {}", userId);
+
+        if ("MIDWIFE".equalsIgnoreCase(role)) {
+            Integer areaId = midwifeRepository.findByUser_UserId(userId)
+                    .orElseThrow(() -> new IllegalStateException("Midwife not found"))
+                    .getPhmArea().getPhmAreaId();
+            return pregnancyRepository.findByMother_PhmArea_PhmAreaIdAndPregnancyStatus(areaId ,Pregnancy.PregnancyStatus.ACTIVE).stream()
+                    .filter(p -> p.getMother() != null && p.getMother().getPhmArea() != null
+                            && areaId.equals(p.getMother().getPhmArea().getPhmAreaId()))
+                    .toList();
+        }
+       else if ("DOCTOR".equalsIgnoreCase(role)) {
+            Integer areaId = doctorRepository.findByUser_UserId(userId)
+                    .orElseThrow(() -> new IllegalStateException("Doctor not found"))
+                    .getPhmArea().getPhmAreaId();
+            return pregnancyRepository.findByMother_PhmArea_PhmAreaIdAndPregnancyStatus(areaId, Pregnancy.PregnancyStatus.ACTIVE).stream()
+                    .filter(p -> p.getMother() != null && p.getMother().getPhmArea() != null
+                            && areaId.equals(p.getMother().getPhmArea().getPhmAreaId()))
+                    .toList();
+        }
+        return pregnancyRepository.findByPregnancyStatus(Pregnancy.PregnancyStatus.ACTIVE);
+
+    }
+
+    @Transactional(readOnly = true)
+    public List<PregnancyResponse> getPregnancyByPhmArea(Integer phmAreaId) {
+
+        return pregnancyRepository.findByMother_PhmArea_PhmAreaId(phmAreaId)
+                .stream()
+                .map(PregnancyResponse::from)
+                .collect(Collectors.toList());
     }
 
     @Transactional

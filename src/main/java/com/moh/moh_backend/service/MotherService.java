@@ -7,13 +7,10 @@ import com.moh.moh_backend.model.Baby;
 import com.moh.moh_backend.model.Midwife;
 import com.moh.moh_backend.model.Mother;
 import com.moh.moh_backend.model.PhmArea;
+import com.moh.moh_backend.model.Pregnancy;
 import com.moh.moh_backend.model.User;
 import com.moh.moh_backend.model.UserRole;
-import com.moh.moh_backend.repository.BabyRepository;
-import com.moh.moh_backend.repository.MidwifeRepository;
-import com.moh.moh_backend.repository.MotherRepository;
-import com.moh.moh_backend.repository.PhmAreaRepository;
-import com.moh.moh_backend.repository.UserRepository;
+import com.moh.moh_backend.repository.*;
 import com.moh.moh_backend.util.CredentialGenerator;
 import com.moh.moh_backend.util.EmailService;
 import com.moh.moh_backend.util.PasswordHashService;
@@ -27,6 +24,7 @@ import java.util.stream.Collectors;
 public class MotherService {
     private final UserRepository userRepo;
     private final MotherRepository motherRepo;
+    private final PregnancyRepository pregnancyRepo;
     private final MidwifeRepository midwifeRepo;
     private final PhmAreaRepository phmAreaRepo;
     private final PasswordHashService hashService;
@@ -35,8 +33,9 @@ public class MotherService {
 
     public MotherService(UserRepository userRepo, MotherRepository motherRepo,
                          MidwifeRepository midwifeRepo, PhmAreaRepository phmAreaRepo,
-                         PasswordHashService hashService, BabyRepository babyRepo, EmailService emailService) {
+                         PasswordHashService hashService, BabyRepository babyRepo, EmailService emailService, PregnancyRepository pregnancyRepo) {
         this.userRepo = userRepo;
+        this.pregnancyRepo=pregnancyRepo;
         this.motherRepo = motherRepo;
         this.midwifeRepo = midwifeRepo;
         this.phmAreaRepo = phmAreaRepo;
@@ -131,6 +130,8 @@ public class MotherService {
                 .map(MotherResponse::from)
                 .collect(Collectors.toList());
     }
+
+
 
     @Transactional(readOnly = true)
     public List<FamilyResponse> getFamiliesForMidwife(Integer midwifeUserId) {

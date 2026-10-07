@@ -3,34 +3,49 @@ package com.moh.moh_backend.controller;
 import com.moh.moh_backend.model.Baby;
 import com.moh.moh_backend.service.BabyService;
 import com.moh.moh_backend.config.RequireRoles;
+import com.moh.moh_backend.util.JwtService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.moh.moh_backend.util.JwtService;
 
 import java.net.URI;
 import java.util.List;
-
+@Slf4j
 @RestController
-@RequestMapping("/api/babies")
+@RequestMapping("/babies")
 public class BabyController {
 
     private final BabyService babyService;
+    private final JwtService jwtService;
 
-    public BabyController(BabyService babyService) {
+    public BabyController(BabyService babyService , JwtService jwtService) {
         this.babyService = babyService;
+        this.jwtService  = jwtService;
     }
 
     @PostMapping
     @RequireRoles({"MIDWIFE", "DOCTOR"})
-    public ResponseEntity<Baby> create(@RequestBody Baby baby, jakarta.servlet.http.HttpServletRequest request) {
-        Baby saved = babyService.save(baby,
-                (Integer) request.getAttribute("moh.userId"),
-                (String) request.getAttribute("moh.role"));
-        return ResponseEntity.created(URI.create("/api/babies/" + saved.getBabyId())).body(saved);
+    public ResponseEntity<?> create( @RequestHeader("Authorization") String authorization,@RequestBody Baby baby, jakarta.servlet.http.HttpServletRequest request) {
+        if (authorization == null || !authorization.startsWith("Bearer ")) {
+            return ResponseEntity.status(401).body("Missing Bearer token");
+        }
+        String token = authorization.substring("Bearer ".length()).trim();
+
+        {
+            Baby saved = babyService.save(baby,
+                    jwtService.getUserId(token),
+                    jwtService.getRole(token));
+            return ResponseEntity.created(URI.create("/api/babies/" + saved.getBabyId())).body(saved);
+        }
     }
 
     @GetMapping("/{id}")
-    @RequireRoles({"MIDWIFE", "DOCTOR", "MOTHER"})
+    @RequireRoles({"MIDWIFE","MOTHER"})
     public ResponseEntity<Baby> getById(@PathVariable Integer id, jakarta.servlet.http.HttpServletRequest request) {
+     Integer UserID =  (Integer) request.getAttribute("moh.userId");
+        log.info("userId: {}", UserID);
+
         return babyService.findById(id,
                 (Integer) request.getAttribute("moh.userId"),
                 (String) request.getAttribute("moh.role"))

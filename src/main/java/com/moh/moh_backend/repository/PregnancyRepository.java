@@ -12,4 +12,7 @@ public interface PregnancyRepository extends JpaRepository<Pregnancy, Integer> {
     List<Pregnancy> findByMother_MotherIdAndPregnancyStatus(Integer motherId, PregnancyStatus status);
     Optional<Pregnancy> findByPregnancyNumber(String pregnancyNumber);
     List<Pregnancy> findByPregnancyStatus(PregnancyStatus status);
+    List<Pregnancy> findByMother_PhmArea_PhmAreaId(Integer phmAreaId);
+    List<Pregnancy> findByMother_PhmArea_PhmAreaIdAndPregnancyStatus(Integer phmAreaId, PregnancyStatus status);
+
 }
