@@ -42,6 +42,10 @@ public class BabyResponseDto {
     public Float latestBmi;
     public String latestTemperature;
     public String growthStatus; // NORMAL, UNDERWEIGHT, OVERWEIGHT, STUNTED, WASTED
+    public Double weightForAgeZ;
+    public String growthZone; // SEVERE_UNDERWEIGHT, MODERATE_UNDERWEIGHT, NORMAL, ABOVE_NORMAL
+    public String growthZoneLabel;
+    public LocalDate growthMeasuredOn;
     public String latestFindings;
     public String latestRecommendations;
     public LocalDate latestRecordDate;
@@ -110,11 +114,23 @@ public class BabyResponseDto {
             dto.growthStatus = "NORMAL";
         }
 
-        // Evaluate WHO Growth Corridor if off-range and currently marked NORMAL or null
-        if (dto.currentWeight != null && dto.ageMonths != null && ("NORMAL".equalsIgnoreCase(dto.growthStatus) || dto.growthStatus == null)) {
-            var whoStatus = com.moh.moh_backend.service.BabyRecordService.evaluateWhoGrowthStatus(dto.currentWeight, dto.ageMonths);
-            if (whoStatus != null && whoStatus != com.moh.moh_backend.model.GrowthStatus.NORMAL) {
-                dto.growthStatus = whoStatus.name();
+        // Weight-for-age (WHO, sex-specific) evaluated at the date the weight was measured:
+        // the latest visit, otherwise the birth weight at birth.
+        com.moh.moh_backend.model.Baby.Gender sex = b.getGender();
+        if (latestRecord != null && latestRecord.getWeight() != null) {
+            dto.growthMeasuredOn = latestRecord.getRecordDate();
+            dto.weightForAgeZ = com.moh.moh_backend.util.WhoWeightForAge.zScore(sex, b.getDateOfBirth(), latestRecord.getRecordDate(), latestRecord.getWeight());
+        } else if (b.getBirthWeight() != null) {
+            dto.growthMeasuredOn = b.getDateOfBirth();
+            dto.weightForAgeZ = com.moh.moh_backend.util.WhoWeightForAge.zScore(sex, b.getDateOfBirth(), b.getDateOfBirth(), b.getBirthWeight());
+        }
+        var zone = com.moh.moh_backend.util.WhoWeightForAge.zone(dto.weightForAgeZ);
+        if (zone != null) {
+            dto.growthZone = zone.name();
+            dto.growthZoneLabel = com.moh.moh_backend.util.WhoWeightForAge.label(zone);
+            // STUNTED/WASTED are length-based assessments entered by staff; keep them.
+            if (!"STUNTED".equalsIgnoreCase(dto.growthStatus) && !"WASTED".equalsIgnoreCase(dto.growthStatus)) {
+                dto.growthStatus = com.moh.moh_backend.util.WhoWeightForAge.toGrowthStatus(zone).name();
             }
         }
 
@@ -129,7 +145,7 @@ public class BabyResponseDto {
         if (latestRecord != null) {
             if ("UNDERWEIGHT".equalsIgnoreCase(dto.growthStatus) || "WASTED".equalsIgnoreCase(dto.growthStatus)) {
                 dto.riskLevel = "HIGH";
-                dto.riskReasons.add("Growth Status: " + dto.growthStatus);
+                dto.riskReasons.add("Growth Status: " + (dto.growthZoneLabel != null ? dto.growthZoneLabel : dto.growthStatus));
             } else if ("OVERWEIGHT".equalsIgnoreCase(dto.growthStatus) || "STUNTED".equalsIgnoreCase(dto.growthStatus)) {
                 if (!"HIGH".equals(dto.riskLevel)) dto.riskLevel = "MEDIUM";
                 dto.riskReasons.add("Growth Status: " + dto.growthStatus);

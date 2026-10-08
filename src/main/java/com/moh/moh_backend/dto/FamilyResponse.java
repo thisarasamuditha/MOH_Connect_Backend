@@ -46,6 +46,8 @@ public class FamilyResponse {
         public Float currentHeight;
         public String latestTemperature;
         public String growthStatus;
+        public Double weightForAgeZ;
+        public String growthZone;
         public String latestFindings;
         public String riskLevel;
 
@@ -71,6 +73,8 @@ public class FamilyResponse {
                 info.latestTemperature = latestRecord.getTemperature();
                 info.growthStatus = latestRecord.getGrowthStatus() != null ? latestRecord.getGrowthStatus().name() : "NORMAL";
                 info.latestFindings = latestRecord.getFindings();
+                info.weightForAgeZ = latestRecord.getWeightForAgeZ();
+                info.growthZone = latestRecord.getGrowthZone();
             } else {
                 info.currentWeight = b.getBirthWeight();
                 info.currentHeight = b.getBirthHeight();

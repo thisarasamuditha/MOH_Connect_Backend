@@ -1,5 +1,9 @@
 package com.moh.moh_backend.service;
 
+import com.moh.moh_backend.model.GrowthStatus;
+import com.moh.moh_backend.util.ClinicalValidation;
+import com.moh.moh_backend.util.WhoWeightForAge;
+
 import com.moh.moh_backend.model.Baby;
 import com.moh.moh_backend.model.BabyRecord;
 import com.moh.moh_backend.model.Doctor;
@@ -61,30 +65,18 @@ public class BabyRecordService {
             babyRecord.setDoctor(doctor);
         }
 
-        // Auto-adjust growth status by WHO standard percentiles if off-range
-        Integer ageMonths = babyRecord.getAgeMonths();
-        if (ageMonths == null && baby.getDateOfBirth() != null && babyRecord.getRecordDate() != null) {
-            long days = java.time.temporal.ChronoUnit.DAYS.between(baby.getDateOfBirth(), babyRecord.getRecordDate());
-            ageMonths = (int) Math.max(0, days / 30.44);
-            babyRecord.setAgeMonths(ageMonths);
-        }
-        if (babyRecord.getWeight() != null && ageMonths != null) {
-            var whoStatus = evaluateWhoGrowthStatus(babyRecord.getWeight(), ageMonths);
-            if (whoStatus != null && whoStatus != com.moh.moh_backend.model.GrowthStatus.NORMAL) {
-                if (babyRecord.getGrowthStatus() == null || babyRecord.getGrowthStatus() == com.moh.moh_backend.model.GrowthStatus.NORMAL) {
-                    babyRecord.setGrowthStatus(whoStatus);
-                }
-            }
-        }
+        validateRecordValues(babyRecord, baby);
+        WhoWeightForAge.Zone zone = applyWeightForAge(babyRecord, baby);
 
         // Auto-flag high risks into baby entity if severe condition detected
         boolean isHighRisk = false;
         String riskDetail = "";
-        if (babyRecord.getGrowthStatus() != null && 
-            (babyRecord.getGrowthStatus() == com.moh.moh_backend.model.GrowthStatus.UNDERWEIGHT || 
-             babyRecord.getGrowthStatus() == com.moh.moh_backend.model.GrowthStatus.WASTED)) {
+        if (zone == WhoWeightForAge.Zone.SEVERE_UNDERWEIGHT || zone == WhoWeightForAge.Zone.MODERATE_UNDERWEIGHT) {
             isHighRisk = true;
-            riskDetail = "Growth: " + babyRecord.getGrowthStatus().name();
+            riskDetail = "Growth: " + WhoWeightForAge.label(zone) + ", WFA z=" + babyRecord.getWeightForAgeZ();
+        } else if (babyRecord.getGrowthStatus() == com.moh.moh_backend.model.GrowthStatus.WASTED) {
+            isHighRisk = true;
+            riskDetail = "Growth: WASTED";
         }
         if (babyRecord.getTemperature() != null) {
             try {
@@ -201,22 +193,8 @@ public class BabyRecordService {
             existing.setDoctor(doctor);
         }
 
-        // Auto-adjust growth status by WHO standard percentiles if off-range
-        Integer updAge = existing.getAgeMonths();
-        if (updAge == null && existing.getBaby() != null && existing.getBaby().getDateOfBirth() != null && existing.getRecordDate() != null) {
-            long days = java.time.temporal.ChronoUnit.DAYS.between(existing.getBaby().getDateOfBirth(), existing.getRecordDate());
-            updAge = (int) Math.max(0, days / 30.44);
-            existing.setAgeMonths(updAge);
-        }
-        if (existing.getWeight() != null && updAge != null) {
-            var whoStatus = evaluateWhoGrowthStatus(existing.getWeight(), updAge);
-            if (whoStatus != null && whoStatus != com.moh.moh_backend.model.GrowthStatus.NORMAL) {
-                if (existing.getGrowthStatus() == null || existing.getGrowthStatus() == com.moh.moh_backend.model.GrowthStatus.NORMAL) {
-                    existing.setGrowthStatus(whoStatus);
-                }
-            }
-        }
-
+        validateRecordValues(existing, existing.getBaby());
+        applyWeightForAge(existing, existing.getBaby());
         return babyRecordRepository.save(existing);
     }
 
@@ -269,26 +247,46 @@ public class BabyRecordService {
         }
     }
 
-    public static com.moh.moh_backend.model.GrowthStatus evaluateWhoGrowthStatus(Number weightNum, Integer ageMonths) {
-        if (weightNum == null || ageMonths == null || weightNum.doubleValue() <= 0 || ageMonths < 0) {
+    /**
+     * Sets age in months and the weight-for-age growth status (sex-specific WHO z-score, CHDR zones).
+     * A status entered as STUNTED or WASTED is kept, because those are length-based assessments
+     * that weight-for-age cannot determine.
+     */
+    private WhoWeightForAge.Zone applyWeightForAge(BabyRecord record, Baby baby) {
+        if (baby == null) return null;
+        Integer ageDays = null;
+        if (baby.getDateOfBirth() != null && record.getRecordDate() != null) {
+            ageDays = (int) java.time.temporal.ChronoUnit.DAYS.between(baby.getDateOfBirth(), record.getRecordDate());
+            record.setAgeMonths((int) Math.floor(ageDays / WhoWeightForAge.DAYS_PER_MONTH));
+        } else if (record.getAgeMonths() != null) {
+            ageDays = (int) Math.round(record.getAgeMonths() * WhoWeightForAge.DAYS_PER_MONTH);
+        }
+        if (record.getWeight() == null || ageDays == null || baby.getGender() == null) {
             return null;
         }
-        double weight = weightNum.doubleValue();
-        int m = Math.max(0, Math.min(60, ageMonths));
-        double p3, p97;
-        if (m <= 0) { p3 = 2.5; p97 = 4.4; }
-        else if (m <= 2) { p3 = 2.5 + (m / 2.0) * (4.3 - 2.5); p97 = 4.4 + (m / 2.0) * (7.1 - 4.4); }
-        else if (m <= 6) { p3 = 4.3 + ((m - 2) / 4.0) * (6.4 - 4.3); p97 = 7.1 + ((m - 2) / 4.0) * (9.8 - 7.1); }
-        else if (m <= 12) { p3 = 6.4 + ((m - 6) / 6.0) * (7.7 - 6.4); p97 = 9.8 + ((m - 6) / 6.0) * (12.0 - 9.8); }
-        else if (m <= 24) { p3 = 7.7 + ((m - 12) / 12.0) * (9.7 - 7.7); p97 = 12.0 + ((m - 12) / 12.0) * (15.3 - 12.0); }
-        else if (m <= 36) { p3 = 9.7 + ((m - 24) / 12.0) * (11.3 - 9.7); p97 = 15.3 + ((m - 24) / 12.0) * (18.3 - 15.3); }
-        else { p3 = 11.3 + ((m - 36) / 24.0) * (14.1 - 11.3); p97 = 18.3 + ((m - 36) / 24.0) * (24.2 - 18.3); }
-
-        if (weight < p3) {
-            return (weight < p3 * 0.85) ? com.moh.moh_backend.model.GrowthStatus.WASTED : com.moh.moh_backend.model.GrowthStatus.UNDERWEIGHT;
-        } else if (weight > p97) {
-            return com.moh.moh_backend.model.GrowthStatus.OVERWEIGHT;
+        Double z = WhoWeightForAge.zScore(baby.getGender(), ageDays, record.getWeight());
+        WhoWeightForAge.Zone zone = WhoWeightForAge.zone(z);
+        GrowthStatus current = record.getGrowthStatus();
+        if (zone != null && current != GrowthStatus.STUNTED && current != GrowthStatus.WASTED) {
+            record.setGrowthStatus(WhoWeightForAge.toGrowthStatus(zone));
         }
-        return com.moh.moh_backend.model.GrowthStatus.NORMAL;
+        return zone;
+    }
+
+    private void validateRecordValues(BabyRecord r, Baby baby) {
+        if (r.getRecordDate() == null) {
+            throw new IllegalArgumentException("Visit date is required");
+        }
+        ClinicalValidation.notInFuture(r.getRecordDate(), "Visit date");
+        if (baby != null) {
+            ClinicalValidation.notBefore(r.getRecordDate(), baby.getDateOfBirth(), "Visit date", "the date of birth");
+        }
+        ClinicalValidation.range(r.getWeight(), 0.5, 40, "Weight (kg)");
+        ClinicalValidation.range(r.getHeight(), 30, 130, "Length/height (cm)");
+        ClinicalValidation.range(r.getHeadCircumference(), 25, 60, "Head circumference (cm)");
+        ClinicalValidation.temperature(r.getTemperature());
+        if (r.getNextVisitDate() != null && !r.getNextVisitDate().isAfter(r.getRecordDate())) {
+            throw new IllegalArgumentException("Next visit date must be after the visit date");
+        }
     }
 }
