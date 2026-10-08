@@ -11,7 +11,7 @@ import java.net.URI;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/mother-records")
+@RequestMapping("/mother-records")
 public class MotherRecordController {
 
     private final MotherRecordService motherRecordService;

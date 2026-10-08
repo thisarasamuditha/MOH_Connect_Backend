@@ -11,7 +11,7 @@ import java.net.URI;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/baby-records")
+@RequestMapping("/baby-records")
 public class BabyRecordController {
 
     private final BabyRecordService babyRecordService;

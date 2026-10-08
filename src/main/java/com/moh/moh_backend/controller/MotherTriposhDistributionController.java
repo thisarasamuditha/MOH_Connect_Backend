@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/triposha/mother")
+@RequestMapping("/triposha/mother")
 @RequiredArgsConstructor
 public class MotherTriposhDistributionController {
 

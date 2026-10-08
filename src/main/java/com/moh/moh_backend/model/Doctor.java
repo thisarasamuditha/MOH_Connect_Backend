@@ -1,10 +1,18 @@
 package com.moh.moh_backend.model;
 
 import jakarta.persistence.*;
-import java.time.LocalDateTime;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
+import java.time.LocalDateTime;
+@Data
 @Entity
 @Table(name = "DOCTOR")
+@AllArgsConstructor
+@SuperBuilder
+@NoArgsConstructor
 public class Doctor {
 
     @Id
@@ -15,6 +23,10 @@ public class Doctor {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", unique = true, nullable = false)
     private User user;
+
+    @OneToOne (fetch = FetchType.LAZY)
+    @JoinColumn(name = "phm_area_id", nullable = false)
+    private PhmArea phmArea;
 
     @Column(name = "name", nullable = false, length = 255)
     private String name;
@@ -33,88 +45,4 @@ public class Doctor {
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
-
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-    }
-
-    // Constructors
-    public Doctor() {
-    }
-
-    public Doctor(User user, String name, String specialization, String contactNumber,
-                  String email, String licenseNumber) {
-        this.user = user;
-        this.name = name;
-        this.specialization = specialization;
-        this.contactNumber = contactNumber;
-        this.email = email;
-        this.licenseNumber = licenseNumber;
-    }
-
-    // Getters and Setters
-    public Integer getDoctorId() {
-        return doctorId;
-    }
-
-    public void setDoctorId(Integer doctorId) {
-        this.doctorId = doctorId;
-    }
-
-    public User getUser() {
-        return user;
-    }
-
-    public void setUser(User user) {
-        this.user = user;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getSpecialization() {
-        return specialization;
-    }
-
-    public void setSpecialization(String specialization) {
-        this.specialization = specialization;
-    }
-
-    public String getContactNumber() {
-        return contactNumber;
-    }
-
-    public void setContactNumber(String contactNumber) {
-        this.contactNumber = contactNumber;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public String getLicenseNumber() {
-        return licenseNumber;
-    }
-
-    public void setLicenseNumber(String licenseNumber) {
-        this.licenseNumber = licenseNumber;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
 }

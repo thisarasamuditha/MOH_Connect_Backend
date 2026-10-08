@@ -5,7 +5,7 @@ import com.moh.moh_backend.dto.SessionDtos.SessionResponse;
 import com.moh.moh_backend.dto.SessionDtos.SessionUpdateRequest;
 import com.moh.moh_backend.service.ClinicSessionService;
 import com.moh.moh_backend.config.RequireRoles;
-import lombok.RequiredArgsConstructor;
+import com.moh.moh_backend.util.JwtService;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,11 +15,18 @@ import java.time.LocalDate;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/sessions")
-@RequiredArgsConstructor
+@RequestMapping("/sessions")
+
 public class ClinicSessionController {
 
     private final ClinicSessionService sessionService;
+    private final JwtService jwtService;
+
+    public ClinicSessionController(ClinicSessionService sessionService, JwtService jwtService) {
+        this.sessionService = sessionService;
+        this.jwtService = jwtService;
+    }
+
 
     @PostMapping
     @RequireRoles({"MIDWIFE", "ADMIN"})
@@ -67,6 +74,18 @@ public class ClinicSessionController {
     public ResponseEntity<List<SessionResponse>> getByStatus(@PathVariable String status) {
         return ResponseEntity.ok(sessionService.getByStatus(status));
     }
+
+    @GetMapping("/doctor")
+    @RequireRoles({"MIDWIFE", "ADMIN", "DOCTOR", "MOTHER"})
+    public ResponseEntity<List<SessionResponse>> getSessions(@RequestHeader("Authorization") String authorization,
+            @RequestParam(required = false) String status) {
+
+        String token = authorization.substring("Bearer ".length()).trim();
+        Integer userId = jwtService.getUserId(token);
+        String role = jwtService.getRole(token);
+        return ResponseEntity.ok(sessionService.getSessions(status,role,userId));
+    }
+
 
     @GetMapping("/date-range")
     @RequireRoles({"MIDWIFE", "ADMIN", "DOCTOR", "MOTHER"})

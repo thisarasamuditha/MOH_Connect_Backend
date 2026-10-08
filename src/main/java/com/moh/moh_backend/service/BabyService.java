@@ -10,13 +10,15 @@ import com.moh.moh_backend.repository.BabyRepository;
 import com.moh.moh_backend.repository.MotherRepository;
 import com.moh.moh_backend.repository.MidwifeRepository;
 import com.moh.moh_backend.repository.PregnancyRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
+import java.util.stream.Collectors;
+@Slf4j
 @Service
 public class BabyService {
     private final BabyRepository babyRepository;
@@ -101,6 +103,8 @@ public class BabyService {
     }
 
     public Optional<Baby> findById(Integer id, Integer userId, String role) {
+
+        log.info("userId: {}", userId);
         return babyRepository.findById(id)
                 .map(baby -> { assertCanAccessMother(baby.getMotherId(), userId, role); return baby; });
     }
@@ -130,7 +134,7 @@ public class BabyService {
             if (midwife == null || midwife.getPhmArea() == null) return List.of();
             Integer areaId = midwife.getPhmArea().getPhmAreaId();
             List<Integer> motherIds = motherRepository.findByPhmArea_PhmAreaId(areaId)
-                    .stream().map(Mother::getMotherId).toList();
+                    .stream().map(m -> m.getMotherId()).toList();
             return babyRepository.findAll().stream()
                     .filter(b -> b.getMotherId() != null && motherIds.contains(b.getMotherId()))
                     .toList();

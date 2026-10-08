@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/mothers")
+@RequestMapping("/mothers")
 public class MotherController {
     private final MotherService motherService;
     private final JwtService jwtService;
@@ -159,6 +159,9 @@ public class MotherController {
         }
     }
 
+
+
+
     // New endpoint: Update mother details
     @PutMapping("/{motherId}")
     @RequireRoles("MIDWIFE")
@@ -189,6 +192,9 @@ public class MotherController {
             return ResponseEntity.status(500).body(Map.of("error", "Failed to update mother: " + e.getMessage()));
         }
     }
+
+
+
 
     // New endpoint: Delete mother record
     @DeleteMapping("/{motherId}")

@@ -28,6 +28,7 @@ public class AuthDtos {
         public static class DoctorDetails {
             public String name;
             public String specialization;
+            public Integer phmAreaId;
             public String contactNumber;
             public String email;
             public String licenseNumber;
@@ -53,6 +54,7 @@ public class AuthDtos {
         public String token;
         public Integer userId;     // users table PK
         public String username;
+        public String licenseNumber;
         public String role;
         public String name;        // Full name (from Midwife/Doctor profile)
         public Integer staffId;    // midwife_id or doctor_id

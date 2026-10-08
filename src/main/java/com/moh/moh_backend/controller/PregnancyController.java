@@ -1,5 +1,7 @@
 package com.moh.moh_backend.controller;
 
+import com.moh.moh_backend.dto.MotherResponse;
+import com.moh.moh_backend.dto.PregnancyResponse;
 import com.moh.moh_backend.model.Pregnancy;
 import com.moh.moh_backend.service.PregnancyService;
 import com.moh.moh_backend.util.JwtService;
@@ -9,9 +11,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
-@RequestMapping("/api/pregnancies")
+@RequestMapping("/pregnancies")
 public class PregnancyController {
 
     private final PregnancyService pregnancyService;
@@ -91,6 +94,51 @@ public class PregnancyController {
         }
     }
 
+
+    // Get mothers by PHM area ID (Doctor, Midwife, Admin)
+    @GetMapping("/by-phm-area/{phmAreaId}")
+    @RequireRoles({"DOCTOR", "MIDWIFE", "ADMIN"})
+    public ResponseEntity<?> getPregnancyByPhmArea(
+            @PathVariable Integer phmAreaId,
+            @RequestHeader(value = "Authorization", required = false) String authorization) {
+
+
+        if (authorization == null || !authorization.startsWith("Bearer ")) {
+            return ResponseEntity.status(401).body(Map.of("error", "Missing Bearer token"));
+        }
+        String token = authorization.substring("Bearer ".length()).trim();
+
+
+        String role = jwtService.getRole(token);
+        List<String> allowedRoles = List.of("DOCTOR", "MIDWIFE", "ADMIN");
+
+        if (role == null || allowedRoles.stream().noneMatch(r -> r.equalsIgnoreCase(role))) {
+            return ResponseEntity.status(403).body(Map.of("error", "Access denied: Only DOCTOR, MIDWIFE, or ADMIN can access this"));
+        }
+
+
+        try {
+            List<PregnancyResponse> response = pregnancyService.getPregnancyByPhmArea(phmAreaId);
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            System.err.println("Bad request error: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        } catch (IllegalStateException e) {
+            System.err.println("State error: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(409).body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            System.err.println("Unexpected error: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(Map.of(
+                    "error", "Failed to fetch mothers: " + e.getMessage(),
+                    "details", e.getClass().getName()
+            ));
+        }
+    }
+
+
     @GetMapping("/active")
     @RequireRoles({"MIDWIFE", "DOCTOR"})
     public ResponseEntity<?> getActivePregnancies(
@@ -109,11 +157,12 @@ public class PregnancyController {
         }
 
         try {
-                List<Pregnancy> pregnancies = pregnancyService.getActivePregnancies(
-                    (Integer) request.getAttribute("moh.userId"),
-                    (String) request.getAttribute("moh.role"));
+            Integer userId = jwtService.getUserId(token);
+
+            List<Pregnancy> pregnancies = pregnancyService.getActivePregnancies(
+                    userId,role);
             return ResponseEntity.ok(pregnancies);
-        } catch (Exception e) {
+        }  catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }
@@ -132,6 +181,7 @@ public class PregnancyController {
         
         String token = authorization.substring("Bearer ".length()).trim();
         String role = jwtService.getRole(token);
+        Integer userId = jwtService.getUserId(token);
         
         if (!"MIDWIFE".equalsIgnoreCase(role) && !"DOCTOR".equalsIgnoreCase(role)) {
             return ResponseEntity.status(403).body("Only midwives and doctors can update pregnancies");
@@ -139,8 +189,8 @@ public class PregnancyController {
 
         try {
                 Pregnancy updated = pregnancyService.updatePregnancy(pregnancyId, pregnancy,
-                    (Integer) request.getAttribute("moh.userId"),
-                    (String) request.getAttribute("moh.role"));
+                        userId,
+                        role);
             return ResponseEntity.ok(updated);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());

@@ -76,6 +76,9 @@ public class AuthService {
             doctor.setUser(user); // Set the User entity, not userId
             doctor.setName(req.doctorDetails.name);
             doctor.setSpecialization(req.doctorDetails.specialization);
+            PhmArea phmArea = phmAreaRepo.findById(req.doctorDetails.phmAreaId)
+                    .orElseThrow(() -> new IllegalArgumentException("Invalid PHM Area ID: " + req.doctorDetails.phmAreaId));
+            doctor.setPhmArea(phmArea);
             doctor.setContactNumber(req.doctorDetails.contactNumber);
             doctor.setEmail(req.doctorDetails.email);
             doctor.setLicenseNumber(req.doctorDetails.licenseNumber);
@@ -142,7 +145,23 @@ public class AuthService {
         resp.username = user.getUsername();
         resp.role = user.getRole().name();
 
-        if (user.getRole() == UserRole.MIDWIFE) {
+
+
+
+         if (user.getRole() == UserRole.DOCTOR) {
+            doctorRepo.findByUser_UserId(user.getUserId()).ifPresent(d -> {
+                resp.name = d.getName();
+                resp.staffId = d.getDoctorId();
+                resp.licenseNumber = d.getLicenseNumber();
+                if(d.getPhmArea() != null) {
+                    resp.phmAreaId = d.getPhmArea().getPhmAreaId();
+                    resp.phmAreaName = d.getPhmArea().getAreaName();
+
+
+                }
+
+            });
+        } else if (user.getRole() == UserRole.MIDWIFE) {
             midwifeRepo.findByUser_UserId(user.getUserId()).ifPresent(m -> {
                 resp.name = m.getName();
                 resp.staffId = m.getMidwifeId();
@@ -151,12 +170,8 @@ public class AuthService {
                     resp.phmAreaName = m.getPhmArea().getAreaName();
                 }
             });
-        } else if (user.getRole() == UserRole.DOCTOR) {
-            doctorRepo.findByUser_UserId(user.getUserId()).ifPresent(d -> {
-                resp.name = d.getName();
-                resp.staffId = d.getDoctorId();
-            });
-        } else if (user.getRole() == UserRole.MOTHER) {
+
+         } else if (user.getRole() == UserRole.MOTHER) {
             motherRepo.findByUser_UserId(user.getUserId()).ifPresent(m -> {
                 resp.name = m.getName();
                 resp.staffId = m.getMotherId();
