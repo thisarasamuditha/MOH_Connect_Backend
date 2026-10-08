@@ -50,7 +50,7 @@ public class BabyResponseDto {
     public String latestRecommendations;
     public LocalDate latestRecordDate;
     public LocalDate nextVaccineDate;
-    public String vaccineStatus; // up-to-date, delayed, incomplete
+    public String vaccineStatus; // up-to-date, due, delayed (from the active EPI schedule)
 
     // Risk Assessment
     public String riskLevel; // LOW, MEDIUM, HIGH

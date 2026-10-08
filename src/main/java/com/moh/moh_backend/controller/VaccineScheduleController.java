@@ -47,9 +47,11 @@ public class VaccineScheduleController {
     }
 
     @GetMapping
-    public ResponseEntity<?> getAllSchedules() {
+    public ResponseEntity<?> getAllSchedules(@RequestParam(defaultValue = "false") boolean includeInactive) {
         try {
-            List<VaccineSchedule> schedules = vaccineScheduleService.getAllSchedules();
+            List<VaccineSchedule> schedules = includeInactive
+                    ? vaccineScheduleService.getAllSchedulesIncludingInactive()
+                    : vaccineScheduleService.getAllSchedules();
             return ResponseEntity.ok(schedules);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());

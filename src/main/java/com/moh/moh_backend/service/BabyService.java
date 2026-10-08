@@ -26,10 +26,12 @@ public class BabyService {
     private final MidwifeRepository midwifeRepository;
     private final PregnancyRepository pregnancyRepository;
     private final BabyRecordRepository babyRecordRepository;
+    private final VaccinationDueService vaccinationDueService;
 
     public BabyService(BabyRepository babyRepository, MotherRepository motherRepository,
                        MidwifeRepository midwifeRepository, PregnancyRepository pregnancyRepository,
-                       BabyRecordRepository babyRecordRepository) {
+                       BabyRecordRepository babyRecordRepository, VaccinationDueService vaccinationDueService) {
+        this.vaccinationDueService = vaccinationDueService;
         this.babyRepository = babyRepository;
         this.motherRepository = motherRepository;
         this.midwifeRepository = midwifeRepository;
@@ -178,7 +180,11 @@ public class BabyService {
             pregnancy = pregnancyRepository.findById(baby.getPregnancyId()).orElse(null);
         }
         BabyRecord latestRecord = babyRecordRepository.findFirstByBaby_BabyIdOrderByRecordDateDesc(baby.getBabyId()).orElse(null);
-        return BabyResponseDto.from(baby, mother, pregnancy, latestRecord);
+        BabyResponseDto dto = BabyResponseDto.from(baby, mother, pregnancy, latestRecord);
+        var immunization = vaccinationDueService.forBaby(baby);
+        dto.vaccineStatus = immunization.overallStatus;
+        dto.nextVaccineDate = immunization.nextDue != null ? immunization.nextDue.dueDate : null;
+        return dto;
     }
 
     private void assertCanAccessMother(Integer motherId, Integer userId, String role) {

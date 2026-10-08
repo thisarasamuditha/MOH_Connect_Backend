@@ -50,9 +50,24 @@ public class BabyVaccinationService {
             throw new IllegalArgumentException("Selected vaccine schedule is not for babies");
         }
 
+        if (!schedule.isCurrent()) {
+            throw new IllegalArgumentException("This vaccine schedule entry is no longer in use; choose one from the current schedule");
+        }
+        if (schedule.getTargetGender() != null && !schedule.getTargetGender().isBlank()
+                && (baby.getGender() == null || !schedule.getTargetGender().equalsIgnoreCase(baby.getGender().name()))) {
+            throw new IllegalArgumentException(schedule.getVaccineName() + " is only given to " + schedule.getTargetGender().toLowerCase() + " children");
+        }
+
         // Validate vaccination date
         if (dto.getVaccinationDate() == null) {
             throw new IllegalArgumentException("Vaccination date is required");
+        }
+        com.moh.moh_backend.util.ClinicalValidation.notInFuture(dto.getVaccinationDate(), "Vaccination date");
+        com.moh.moh_backend.util.ClinicalValidation.notBefore(dto.getVaccinationDate(), baby.getDateOfBirth(), "Vaccination date", "the date of birth");
+        boolean alreadyGiven = babyVaccinationRepository.findByBaby_BabyId(baby.getBabyId()).stream()
+                .anyMatch(v -> v.getSchedule() != null && schedule.getScheduleId().equals(v.getSchedule().getScheduleId()));
+        if (alreadyGiven) {
+            throw new IllegalArgumentException(schedule.getVaccineName() + " dose " + schedule.getDoseNumber() + " is already recorded for this child");
         }
 
         // Create vaccination entity
