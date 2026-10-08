@@ -26,23 +26,23 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             HttpServletRequest request,
             HttpServletResponse response,
             FilterChain filterChain) throws ServletException, IOException {
-        if (!request.getRequestURI().startsWith(request.getContextPath() + "/api/")) {
+        if (!request.getRequestURI().startsWith(request.getContextPath() + "/")) {
             filterChain.doFilter(request, response);
             return;
         }
 
         String path = request.getRequestURI().substring(request.getContextPath().length());
         boolean isPublicGet = "GET".equalsIgnoreCase(request.getMethod()) && (
-                path.startsWith("/api/phm-areas")
-                || path.startsWith("/api/session-types")
-                || path.startsWith("/api/section-types")
-                || path.startsWith("/api/vaccine-schedules")
+                path.startsWith("/phm-areas")
+                || path.startsWith("/session-types")
+                || path.startsWith("/section-types")
+                || path.startsWith("/vaccine-schedules")
         );
 
         if ("OPTIONS".equalsIgnoreCase(request.getMethod())
-                || "/api/auth/login".equals(path)
-                || "/api/auth/register".equals(path)
-                || "/api/hello".equals(path)
+                || "/auth/login".equals(path)
+                || "/auth/register".equals(path)
+                || "/hello".equals(path)
                 || isPublicGet) {
             String authorization = request.getHeader("Authorization");
             if (authorization != null && authorization.startsWith("Bearer ")) {
