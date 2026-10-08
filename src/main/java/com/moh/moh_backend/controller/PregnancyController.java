@@ -1,6 +1,7 @@
 package com.moh.moh_backend.controller;
 
 import com.moh.moh_backend.dto.MotherResponse;
+import com.moh.moh_backend.dto.PregnancyOutcomeDtos;
 import com.moh.moh_backend.dto.PregnancyResponse;
 import com.moh.moh_backend.model.Pregnancy;
 import com.moh.moh_backend.service.PregnancyService;
@@ -194,6 +195,36 @@ public class PregnancyController {
             return ResponseEntity.ok(updated);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
+
+    /** Record a delivery: closes the pregnancy, updates para and registers the newborn(s). */
+    @PostMapping("/{pregnancyId}/delivery")
+    @RequireRoles({"MIDWIFE", "DOCTOR"})
+    public ResponseEntity<?> recordDelivery(@PathVariable Integer pregnancyId,
+                                            @RequestBody PregnancyOutcomeDtos.DeliveryRequest body,
+                                            jakarta.servlet.http.HttpServletRequest request) {
+        try {
+            return ResponseEntity.status(HttpStatus.CREATED).body(pregnancyService.recordDelivery(pregnancyId, body,
+                    (Integer) request.getAttribute("moh.userId"),
+                    (String) request.getAttribute("moh.role")));
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    /** Close a pregnancy as MISCARRIAGE or TERMINATED with a reason. */
+    @PostMapping("/{pregnancyId}/close")
+    @RequireRoles({"MIDWIFE", "DOCTOR"})
+    public ResponseEntity<?> closePregnancy(@PathVariable Integer pregnancyId,
+                                            @RequestBody PregnancyOutcomeDtos.CloseRequest body,
+                                            jakarta.servlet.http.HttpServletRequest request) {
+        try {
+            return ResponseEntity.ok(pregnancyService.closePregnancy(pregnancyId, body,
+                    (Integer) request.getAttribute("moh.userId"),
+                    (String) request.getAttribute("moh.role")));
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
 

@@ -52,6 +52,17 @@ public class Pregnancy {
     @Column(name = "risk_factors", columnDefinition = "TEXT")
     private String riskFactors;
 
+    /** Date the pregnancy ended (delivery, miscarriage or termination). */
+    @Column(name = "outcome_date")
+    private LocalDate outcomeDate;
+
+    /** Delivery notes or the reason for miscarriage/termination. */
+    @Column(name = "outcome_notes", columnDefinition = "TEXT")
+    private String outcomeNotes;
+
+    @Column(name = "delivery_place", length = 255)
+    private String deliveryPlace;
+
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
@@ -179,6 +190,30 @@ public class Pregnancy {
 
     public void setRiskFactors(String riskFactors) {
         this.riskFactors = riskFactors;
+    }
+
+    public LocalDate getOutcomeDate() {
+        return outcomeDate;
+    }
+
+    public void setOutcomeDate(LocalDate outcomeDate) {
+        this.outcomeDate = outcomeDate;
+    }
+
+    public String getOutcomeNotes() {
+        return outcomeNotes;
+    }
+
+    public void setOutcomeNotes(String outcomeNotes) {
+        this.outcomeNotes = outcomeNotes;
+    }
+
+    public String getDeliveryPlace() {
+        return deliveryPlace;
+    }
+
+    public void setDeliveryPlace(String deliveryPlace) {
+        this.deliveryPlace = deliveryPlace;
     }
 
     public LocalDateTime getCreatedAt() {

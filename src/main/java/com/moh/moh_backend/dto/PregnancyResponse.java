@@ -16,6 +16,9 @@ public class PregnancyResponse {
     public Integer para;
     public String riskLevel;
     public String riskFactors;
+    public LocalDate outcomeDate;
+    public String outcomeNotes;
+    public String deliveryPlace;
 
     public static PregnancyResponse from(Pregnancy p) {
         PregnancyResponse dto = new PregnancyResponse();
@@ -31,6 +34,9 @@ public class PregnancyResponse {
         dto.para = p.getPara();
         dto.riskLevel = p.getRiskLevel() != null ? p.getRiskLevel().name() : null;
         dto.riskFactors = p.getRiskFactors();
+        dto.outcomeDate = p.getOutcomeDate();
+        dto.outcomeNotes = p.getOutcomeNotes();
+        dto.deliveryPlace = p.getDeliveryPlace();
         return dto;
     }
 }
