@@ -17,6 +17,7 @@ import com.moh.moh_backend.repository.MotherRepository;
 import com.moh.moh_backend.repository.PhmAreaRepository;
 import com.moh.moh_backend.repository.PregnancyRepository;
 import com.moh.moh_backend.repository.UserRepository;
+import com.moh.moh_backend.util.ClinicalValidation;
 import com.moh.moh_backend.util.CredentialGenerator;
 import com.moh.moh_backend.util.EmailService;
 import com.moh.moh_backend.util.PasswordHashService;
@@ -66,6 +67,21 @@ public class MotherService {
         if (req.nic == null || req.nic.trim().isEmpty()) {
             throw new IllegalArgumentException("Mother's NIC is required");
         }
+        req.nic = req.nic.trim();
+        ClinicalValidation.nic(req.nic, "Mother's NIC");
+        ClinicalValidation.nic(req.husbandNic, "Husband's NIC");
+        ClinicalValidation.phone(req.contactNumber, "Mother's contact number");
+        ClinicalValidation.phone(req.husbandPhone, "Husband's phone number");
+        ClinicalValidation.notInFuture(req.dateOfBirth, "Mother's date of birth");
+        ClinicalValidation.notInFuture(req.husbandDob, "Husband's date of birth");
+        ClinicalValidation.notInFuture(req.registrationDate, "Registration date");
+        if (req.dateOfBirth != null) {
+            int age = java.time.Period.between(req.dateOfBirth, java.time.LocalDate.now()).getYears();
+            if (age < 10 || age > 60) {
+                throw new IllegalArgumentException("Mother's age from date of birth must be between 10 and 60 years");
+            }
+        }
+        ClinicalValidation.range(req.husbandAge, 14, 100, "Husband's age");
         
         // Auto-generate username and password if not provided by midwife
         String username = (req.username != null && !req.username.trim().isEmpty()) ? 
@@ -198,6 +214,14 @@ public class MotherService {
         // Verify midwife can only update mothers in their PHM area
         if (!mother.getPhmArea().getPhmAreaId().equals(midwife.getPhmArea().getPhmAreaId())) {
             throw new IllegalStateException("Midwife can only update mothers in their PHM area");
+        }
+
+        // Validate values being changed
+        ClinicalValidation.phone(updateData.get("contactNumber"), "Mother's contact number");
+        ClinicalValidation.phone(updateData.get("husbandPhone"), "Husband's phone number");
+        ClinicalValidation.nic(updateData.get("husbandNic"), "Husband's NIC");
+        if (updateData.containsKey("name") && (updateData.get("name") == null || updateData.get("name").isBlank())) {
+            throw new IllegalArgumentException("Mother's name cannot be empty");
         }
 
         // Update fields if provided
