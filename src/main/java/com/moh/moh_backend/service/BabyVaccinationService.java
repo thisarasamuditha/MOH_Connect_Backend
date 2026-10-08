@@ -1,5 +1,6 @@
 package com.moh.moh_backend.service;
 
+import com.moh.moh_backend.Enum.TargetGroup;
 import com.moh.moh_backend.dto.BabyVaccinationCreateDto;
 import com.moh.moh_backend.dto.BabyVaccinationResponseDto;
 import com.moh.moh_backend.model.*;

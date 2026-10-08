@@ -1,6 +1,6 @@
 package com.moh.moh_backend.service;
 
-import com.moh.moh_backend.model.TargetGroup;
+import com.moh.moh_backend.Enum.TargetGroup;
 import com.moh.moh_backend.model.VaccineSchedule;
 import com.moh.moh_backend.repository.VaccineScheduleRepository;
 import org.springframework.cache.annotation.CacheEvict;

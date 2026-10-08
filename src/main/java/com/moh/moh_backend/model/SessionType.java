@@ -2,6 +2,7 @@ package com.moh.moh_backend.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+import com.moh.moh_backend.Enum.TargetAudience;
 
 import java.time.LocalDateTime;
 
@@ -29,7 +30,5 @@ public class SessionType {
     @Enumerated(EnumType.STRING)
     private TargetAudience targetAudience;
 
-    public enum TargetAudience {
-        PREGNANT_MOTHERS, NEW_MOTHERS, FAMILIES, ALL
-    }
+
 }

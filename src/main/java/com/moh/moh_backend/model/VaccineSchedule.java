@@ -1,5 +1,6 @@
 package com.moh.moh_backend.model;
 
+import com.moh.moh_backend.Enum.TargetGroup;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;

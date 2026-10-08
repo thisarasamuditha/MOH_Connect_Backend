@@ -1,6 +1,10 @@
 package com.moh.moh_backend.model;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 import java.time.LocalDateTime;
 
@@ -9,6 +13,10 @@ import java.time.LocalDateTime;
         @Index(name = "idx_audit_created_at", columnList = "created_at"),
         @Index(name = "idx_audit_user_id", columnList = "user_id")
 })
+@AllArgsConstructor
+@NoArgsConstructor
+@SuperBuilder
+@Data
 public class AuditLog {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -43,20 +51,4 @@ public class AuditLog {
         createdAt = LocalDateTime.now();
     }
 
-    public Long getAuditId() { return auditId; }
-    public Integer getUserId() { return userId; }
-    public void setUserId(Integer userId) { this.userId = userId; }
-    public String getRole() { return role; }
-    public void setRole(String role) { this.role = role; }
-    public String getHttpMethod() { return httpMethod; }
-    public void setHttpMethod(String httpMethod) { this.httpMethod = httpMethod; }
-    public String getRequestPath() { return requestPath; }
-    public void setRequestPath(String requestPath) { this.requestPath = requestPath; }
-    public String getAction() { return action; }
-    public void setAction(String action) { this.action = action; }
-    public Integer getResponseStatus() { return responseStatus; }
-    public void setResponseStatus(Integer responseStatus) { this.responseStatus = responseStatus; }
-    public String getClientIp() { return clientIp; }
-    public void setClientIp(String clientIp) { this.clientIp = clientIp; }
-    public LocalDateTime getCreatedAt() { return createdAt; }
 }

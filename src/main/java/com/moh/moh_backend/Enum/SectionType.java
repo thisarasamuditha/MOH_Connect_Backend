@@ -1,4 +1,4 @@
-package com.moh.moh_backend.model;
+package com.moh.moh_backend.Enum;
 
 public enum SectionType {
     HEALTH_CENTER("Health Center"),

@@ -1,5 +1,6 @@
 package com.moh.moh_backend.model;
 
+import com.moh.moh_backend.Enum.GrowthStatus;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;

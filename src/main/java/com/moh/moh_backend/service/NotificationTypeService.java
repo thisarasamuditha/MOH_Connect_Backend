@@ -3,7 +3,7 @@ package com.moh.moh_backend.service;
 import com.moh.moh_backend.dto.NotificationDtos.NotificationTypeRequest;
 import com.moh.moh_backend.dto.NotificationDtos.NotificationTypeResponse;
 import com.moh.moh_backend.model.NotificationType;
-import com.moh.moh_backend.model.NotificationType.Priority;
+import com.moh.moh_backend.Enum.Priority;
 import com.moh.moh_backend.repository.NotificationTypeRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

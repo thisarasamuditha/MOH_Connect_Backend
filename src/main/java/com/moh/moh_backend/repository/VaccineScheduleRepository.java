@@ -1,6 +1,6 @@
 package com.moh.moh_backend.repository;
 
-import com.moh.moh_backend.model.TargetGroup;
+import com.moh.moh_backend.Enum.TargetGroup;
 import com.moh.moh_backend.model.VaccineSchedule;
 import org.springframework.data.jpa.repository.JpaRepository;
 

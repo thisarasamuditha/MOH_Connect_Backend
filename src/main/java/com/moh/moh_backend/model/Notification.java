@@ -1,7 +1,9 @@
 package com.moh.moh_backend.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.moh.moh_backend.Enum.NotificationDeliveryMethod;
 import jakarta.persistence.*;
+import com.moh.moh_backend.Enum.NotificationStatus;
 import lombok.*;
 
 import java.time.LocalDate;
@@ -51,7 +53,7 @@ public class Notification {
 
     @Column(name = "delivery_method")
     @Enumerated(EnumType.STRING)
-    private DeliveryMethod deliveryMethod;
+    private NotificationDeliveryMethod deliveryMethod;
 
     @Column(name = "event_date")
     private LocalDate eventDate;
@@ -68,13 +70,6 @@ public class Notification {
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
-    public enum NotificationStatus {
-        PENDING, SENT, DELIVERED, FAILED
-    }
-
-    public enum DeliveryMethod {
-        SMS, EMAIL, WHATSAPP, CALL
-    }
 
     @PrePersist
     protected void onCreate() {

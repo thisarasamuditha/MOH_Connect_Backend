@@ -1,7 +1,7 @@
 package com.moh.moh_backend.repository;
 
 import com.moh.moh_backend.model.Notification;
-import com.moh.moh_backend.model.Notification.NotificationStatus;
+import com.moh.moh_backend.Enum.NotificationStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

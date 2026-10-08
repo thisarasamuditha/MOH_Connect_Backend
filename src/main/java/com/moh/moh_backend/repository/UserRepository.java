@@ -1,7 +1,7 @@
 package com.moh.moh_backend.repository;
 
 import com.moh.moh_backend.model.User;
-import com.moh.moh_backend.model.UserRole;
+import com.moh.moh_backend.Enum.UserRole;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

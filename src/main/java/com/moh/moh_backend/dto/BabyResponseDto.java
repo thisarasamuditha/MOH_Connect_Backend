@@ -1,5 +1,6 @@
 package com.moh.moh_backend.dto;
 
+import com.moh.moh_backend.Enum.GrowthStatus;
 import com.moh.moh_backend.model.Baby;
 import com.moh.moh_backend.model.BabyRecord;
 import com.moh.moh_backend.model.Mother;
@@ -113,7 +114,7 @@ public class BabyResponseDto {
         // Evaluate WHO Growth Corridor if off-range and currently marked NORMAL or null
         if (dto.currentWeight != null && dto.ageMonths != null && ("NORMAL".equalsIgnoreCase(dto.growthStatus) || dto.growthStatus == null)) {
             var whoStatus = com.moh.moh_backend.service.BabyRecordService.evaluateWhoGrowthStatus(dto.currentWeight, dto.ageMonths);
-            if (whoStatus != null && whoStatus != com.moh.moh_backend.model.GrowthStatus.NORMAL) {
+            if (whoStatus != null && whoStatus != GrowthStatus.NORMAL) {
                 dto.growthStatus = whoStatus.name();
             }
         }

@@ -1,11 +1,20 @@
 package com.moh.moh_backend.model;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "MOTHER")
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@SuperBuilder
 public class Mother {
 
     @Id
@@ -72,138 +81,15 @@ public class Mother {
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
-    public Integer getMotherId() {
-        return motherId;
-    }
 
-    public void setMotherId(Integer motherId) {
-        this.motherId = motherId;
-    }
-
-    public User getUser() {
-        return user;
-    }
-
-    public void setUser(User user) {
-        this.user = user;
-    }
-
-    public PhmArea getPhmArea() {
-        return phmArea;
-    }
-
-    public void setPhmArea(PhmArea phmArea) {
-        this.phmArea = phmArea;
-    }
-
-    public String getAddress() {
-        return address;
-    }
-
-    public void setAddress(String address) {
-        this.address = address;
-    }
-
-    public String getNic() {
-        return nic;
-    }
-
-    public void setNic(String nic) {
-        this.nic = nic;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public LocalDate getDateOfBirth() {
-        return dateOfBirth;
-    }
-
-    public void setDateOfBirth(LocalDate dateOfBirth) {
-        this.dateOfBirth = dateOfBirth;
-    }
-
-    public String getOccupation() {
-        return occupation;
-    }
-
-    public void setOccupation(String occupation) {
-        this.occupation = occupation;
-    }
-
-    public String getContactNumber() {
-        return contactNumber;
-    }
-
-    public void setContactNumber(String contactNumber) {
-        this.contactNumber = contactNumber;
-    }
-
-    public String getBloodGroup() {
-        return bloodGroup;
-    }
-
-    public void setBloodGroup(String bloodGroup) {
-        this.bloodGroup = bloodGroup;
-    }
-
-    public LocalDate getRegistrationDate() {
-        return registrationDate;
-    }
-
-    public void setRegistrationDate(LocalDate registrationDate) {
-        this.registrationDate = registrationDate;
-    }
-
-    public Boolean getActive() {
-        return isActive;
-    }
-
-    public void setActive(Boolean active) {
+        public void setActive(Boolean active) {
         isActive = active;
     }
 
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
+        public Boolean getActive() {
+        return isActive;
     }
 
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public String getAllergies() { return allergies; }
-    public void setAllergies(String allergies) { this.allergies = allergies; }
-
-    public String getHusbandName() { return husbandName; }
-    public void setHusbandName(String husbandName) { this.husbandName = husbandName; }
-
-    public String getHusbandNic() { return husbandNic; }
-    public void setHusbandNic(String husbandNic) { this.husbandNic = husbandNic; }
-
-    public LocalDate getHusbandDob() { return husbandDob; }
-    public void setHusbandDob(LocalDate husbandDob) { this.husbandDob = husbandDob; }
-
-    public Integer getHusbandAge() { return husbandAge; }
-    public void setHusbandAge(Integer husbandAge) { this.husbandAge = husbandAge; }
-
-    public String getHusbandPhone() { return husbandPhone; }
-    public void setHusbandPhone(String husbandPhone) { this.husbandPhone = husbandPhone; }
-
-    public String getHusbandEmail() { return husbandEmail; }
-    public void setHusbandEmail(String husbandEmail) { this.husbandEmail = husbandEmail; }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
-    }
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
