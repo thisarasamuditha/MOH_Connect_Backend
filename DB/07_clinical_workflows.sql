@@ -14,6 +14,9 @@
 -- Take a backup first.
 -- =====================================================================
 
+-- The backend uses the moh_db database; SQL editors do not select it by default.
+USE moh_db;
+
 -- ---------------------------------------------------------------------
 -- 1. PREGNANCY outcome fields
 -- ---------------------------------------------------------------------
