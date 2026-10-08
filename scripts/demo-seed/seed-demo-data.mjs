@@ -233,6 +233,7 @@ async function main() {
   // ------------------------------------------------------------ MOTHER
   step("Mother registration (midwife → New Registration)");
   let mother;
+  let resumed = false;
   try {
     mother = await api("POST", "/mothers/register", {
       token: midwife.token,
@@ -257,22 +258,36 @@ async function main() {
       },
     });
   } catch (e) {
-    if (e instanceof ApiError && /already/i.test(errorText(e))) {
+    if (!(e instanceof ApiError && /already/i.test(errorText(e)))) throw e;
+    // An earlier run stopped part-way (e.g. before DB/07 was applied): resume it.
+    const me = await api("GET", "/mothers/me", { token: (await login(accounts.mother.username)).token });
+    if (me.activePregnancy) {
       throw new Error(
-        `The demo mother already exists (${errorText(e)}). Demo data was seeded before.\n` +
+        "The demo mother already has a pregnancy – demo data was fully seeded before.\n" +
           "Run cleanup-demo-data.mjs first, or set DEMO_SUFFIX=<number> to create a separate demo set.",
       );
     }
-    throw e;
+    mother = { motherId: me.mother.motherId, username: accounts.mother.username };
+    resumed = true;
   }
   const motherId = mother.motherId;
   output.ids.motherId = motherId;
   saveOutput();
-  ok(`mother '${mother.username}' registered (motherId ${motherId})`);
+  ok(`mother '${mother.username}' ${resumed ? "already registered – resuming" : "registered"} (motherId ${motherId})`);
+
+  const schedules = list(await api("GET", "/vaccine-schedules"));
 
   // ------------------------------------------------------------ CHILD (older sibling)
   step("Older child – 14 months (midwife → Child Care)");
   const babyDob = addMonths(today, -14);
+  const existingBaby = resumed
+    ? list(await api("GET", `/babies?motherId=${motherId}`, { token: midwife.token }))[0]
+    : null;
+  const overdue = [];
+  if (existingBaby) {
+    output.ids.babyId = existingBaby.babyId;
+    ok(`child already created in an earlier run (babyId ${existingBaby.babyId}) – skipping child steps`);
+  } else {
   const baby = await api("POST", "/babies", {
     token: midwife.token,
     body: {
@@ -333,7 +348,6 @@ async function main() {
   ok(`${growth.length} growth visits (1 → 13.5 months)`);
 
   step("Child immunizations (Sri Lanka EPI schedule from DB)");
-  const schedules = list(await api("GET", "/vaccine-schedules"));
   const babyAgeDays = Math.round((today - babyDob) / 86400000);
   const babySchedules = schedules
     .filter((s) => s.targetGroup === "BABY" && s.isActive !== false && !s.isConditional)
@@ -344,7 +358,6 @@ async function main() {
   // due/overdue lists have something to show.
   const leaveOverdue = (s) => s.recommendedAgeDays >= 330 && s.recommendedAgeDays <= 400;
   const given = [];
-  const overdue = [];
   for (const s of babySchedules) {
     if (leaveOverdue(s)) {
       overdue.push(`${s.vaccineName} dose ${s.doseNumber}`);
@@ -380,6 +393,7 @@ async function main() {
     });
   }
   ok("2 issues of 1.5 kg");
+  } // end of child steps
 
   // ------------------------------------------------------------ CURRENT PREGNANCY
   step("Current pregnancy – 28 weeks (midwife → Maternal Care)");
@@ -568,6 +582,9 @@ function printCredentials() {
 main().catch((e) => {
   saveOutput();
   console.error(`\n✗ Seed failed at step ${stepNo}: ${e.message}`);
+  if (/Unknown column/i.test(e.message)) {
+    console.error("→ The live DB is missing columns: run DB/07_clinical_workflows.sql, then run this script again (it resumes).");
+  }
   console.error(`Partial IDs saved to ${OUTPUT_FILE} (cleanup-demo-data.mjs can remove them).`);
   process.exit(1);
 });
