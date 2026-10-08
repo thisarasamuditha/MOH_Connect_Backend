@@ -64,6 +64,9 @@ public class MotherRecord {
     @Column(name = "shf")
     private Float shf;
 
+    @Column(name = "hemoglobin")
+    private Float hemoglobin;
+
     @Column(name = "findings", columnDefinition = "TEXT")
     private String findings;
 
@@ -170,6 +173,14 @@ public class MotherRecord {
 
     public void setBloodPressure(String bloodPressure) {
         this.bloodPressure = bloodPressure;
+    }
+
+    public Float getHemoglobin() {
+        return hemoglobin;
+    }
+
+    public void setHemoglobin(Float hemoglobin) {
+        this.hemoglobin = hemoglobin;
     }
 
     public Float getShf() {

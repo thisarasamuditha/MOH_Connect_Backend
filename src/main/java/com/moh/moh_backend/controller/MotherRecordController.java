@@ -55,6 +55,26 @@ public class MotherRecordController {
         }
     }
 
+    /**
+     * Doctor: records waiting for review in their PHM area (default status SUBMITTED).
+     * Midwife: records the doctor flagged in their PHM area (default status FLAGGED).
+     * Optional ?status=SUBMITTED|APPROVED|FLAGGED|ALL
+     */
+    @GetMapping("/review-queue")
+    @RequireRoles({"DOCTOR", "MIDWIFE"})
+    public ResponseEntity<?> getReviewQueue(@RequestParam(required = false) String status,
+                                            jakarta.servlet.http.HttpServletRequest request) {
+        try {
+            return ResponseEntity.ok(motherRecordService.getReviewQueue(status,
+                    (Integer) request.getAttribute("moh.userId"),
+                    (String) request.getAttribute("moh.role")));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+        }
+    }
+
     @GetMapping("/by-pregnancy/{pregnancyId}")
     @RequireRoles({"MIDWIFE", "DOCTOR", "MOTHER"})
     public ResponseEntity<?> getMotherRecordsByPregnancyId(@PathVariable Integer pregnancyId,
