@@ -1,12 +1,20 @@
 package com.moh.moh_backend.model;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
+import com.moh.moh_backend.Enum.Gender;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-
+@Data
 @Entity
 @Table(name = "BABY")
+@AllArgsConstructor
+@NoArgsConstructor
+@SuperBuilder
 
 public class Baby {
 
@@ -61,58 +69,7 @@ public class Baby {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    public enum Gender { MALE, FEMALE }
+   // public Baby() {}
 
-    public Baby() {}
-
-    // Getters and setters
-
-    public Integer getBabyId() { return babyId; }
-    public void setBabyId(Integer babyId) { this.babyId = babyId; }
-
-    public Integer getPregnancyId() { return pregnancyId; }
-    public void setPregnancyId(Integer pregnancyId) { this.pregnancyId = pregnancyId; }
-
-    public Integer getMotherId() { return motherId; }
-    public void setMotherId(Integer motherId) { this.motherId = motherId; }
-
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
-
-    public LocalDate getDateOfBirth() { return dateOfBirth; }
-    public void setDateOfBirth(LocalDate dateOfBirth) { this.dateOfBirth = dateOfBirth; }
-
-    public Gender getGender() { return gender; }
-    public void setGender(Gender gender) { this.gender = gender; }
-
-    public Float getBirthWeight() { return birthWeight; }
-    public void setBirthWeight(Float birthWeight) { this.birthWeight = birthWeight; }
-
-    public Float getBirthHeight() { return birthHeight; }
-    public void setBirthHeight(Float birthHeight) { this.birthHeight = birthHeight; }
-
-    public String getBirthComplications() { return birthComplications; }
-    public void setBirthComplications(String birthComplications) { this.birthComplications = birthComplications; }
-
-    public String getApgarScore() { return apgarScore; }
-    public void setApgarScore(String apgarScore) { this.apgarScore = apgarScore; }
-
-    public Integer getBirthOrder() { return birthOrder; }
-    public void setBirthOrder(Integer birthOrder) { this.birthOrder = birthOrder; }
-
-    public Boolean getIsAlive() { return isAlive; }
-    public void setIsAlive(Boolean isAlive) { this.isAlive = isAlive; }
-
-    public String getHospitalBorn() { return hospitalBorn; }
-    public void setHospitalBorn(String hospitalBorn) { this.hospitalBorn = hospitalBorn; }
-
-    public String getSpecialNotes() { return specialNotes; }
-    public void setSpecialNotes(String specialNotes) { this.specialNotes = specialNotes; }
-
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
-
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 
 }

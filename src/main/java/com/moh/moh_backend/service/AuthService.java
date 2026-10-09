@@ -1,5 +1,6 @@
 package com.moh.moh_backend.service;
 
+import com.moh.moh_backend.Enum.UserRole;
 import com.moh.moh_backend.dto.AuthDtos;
 import com.moh.moh_backend.model.*;
 

@@ -6,8 +6,8 @@ import com.moh.moh_backend.dto.NotificationDtos.UnreadCountResponse;
 import com.moh.moh_backend.model.Midwife;
 import com.moh.moh_backend.model.Mother;
 import com.moh.moh_backend.model.Notification;
-import com.moh.moh_backend.model.Notification.DeliveryMethod;
-import com.moh.moh_backend.model.Notification.NotificationStatus;
+import com.moh.moh_backend.Enum.NotificationDeliveryMethod;
+import com.moh.moh_backend.Enum.NotificationStatus;
 import com.moh.moh_backend.model.NotificationType;
 import com.moh.moh_backend.repository.MidwifeRepository;
 import com.moh.moh_backend.repository.MotherRepository;
@@ -61,7 +61,7 @@ public class NotificationService {
                 .midwife(midwife)
                 .message(request.getMessage())
                 .deliveryMethod(request.getDeliveryMethod() != null
-                        ? DeliveryMethod.valueOf(request.getDeliveryMethod()) : null)
+                        ? NotificationDeliveryMethod.valueOf(request.getDeliveryMethod()) : null)
                 .eventDate(request.getEventDate())
                 .eventType(request.getEventType())
                 .status(NotificationStatus.PENDING)

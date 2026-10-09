@@ -1,7 +1,7 @@
 package com.moh.moh_backend.repository;
 
 import com.moh.moh_backend.model.Pregnancy;
-import com.moh.moh_backend.model.Pregnancy.PregnancyStatus;
+import com.moh.moh_backend.Enum.PregnancyStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

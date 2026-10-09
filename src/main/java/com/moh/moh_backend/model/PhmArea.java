@@ -1,9 +1,17 @@
 package com.moh.moh_backend.model;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "PHM_AREA")
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
 public class PhmArea {
 
     @Id
@@ -18,42 +26,9 @@ public class PhmArea {
     private String areaCode;
 
 
-    // Constructors
-    public PhmArea() {
-    }
-
     public PhmArea(String areaName, String areaCode) {
         this.areaName = areaName;
         this.areaCode = areaCode;
     }
 
-    public PhmArea(String areaName, String areaCode, String description) {
-        this.areaName = areaName;
-        this.areaCode = areaCode;
-    }
-
-    // Getters and Setters
-    public Integer getPhmAreaId() {
-        return phmAreaId;
-    }
-
-    public void setPhmAreaId(Integer phmAreaId) {
-        this.phmAreaId = phmAreaId;
-    }
-
-    public String getAreaName() {
-        return areaName;
-    }
-
-    public void setAreaName(String areaName) {
-        this.areaName = areaName;
-    }
-
-    public String getAreaCode() {
-        return areaCode;
-    }
-
-    public void setAreaCode(String areaCode) {
-        this.areaCode = areaCode;
-    }
 }

@@ -5,6 +5,7 @@ import com.moh.moh_backend.dto.PregnancyResponse;
 import lombok.extern.slf4j.Slf4j;
 import com.moh.moh_backend.model.Mother;
 import com.moh.moh_backend.model.Pregnancy;
+import com.moh.moh_backend.Enum.*;
 import com.moh.moh_backend.repository.DoctorRepository;
 import com.moh.moh_backend.repository.MotherRepository;
 import com.moh.moh_backend.repository.PregnancyRepository;
@@ -86,7 +87,7 @@ public class PregnancyService {
             Integer areaId = midwifeRepository.findByUser_UserId(userId)
                     .orElseThrow(() -> new IllegalStateException("Midwife not found"))
                     .getPhmArea().getPhmAreaId();
-            return pregnancyRepository.findByMother_PhmArea_PhmAreaIdAndPregnancyStatus(areaId ,Pregnancy.PregnancyStatus.ACTIVE).stream()
+            return pregnancyRepository.findByMother_PhmArea_PhmAreaIdAndPregnancyStatus(areaId ,PregnancyStatus.ACTIVE).stream()
                     .filter(p -> p.getMother() != null && p.getMother().getPhmArea() != null
                             && areaId.equals(p.getMother().getPhmArea().getPhmAreaId()))
                     .toList();
@@ -95,12 +96,12 @@ public class PregnancyService {
             Integer areaId = doctorRepository.findByUser_UserId(userId)
                     .orElseThrow(() -> new IllegalStateException("Doctor not found"))
                     .getPhmArea().getPhmAreaId();
-            return pregnancyRepository.findByMother_PhmArea_PhmAreaIdAndPregnancyStatus(areaId, Pregnancy.PregnancyStatus.ACTIVE).stream()
+            return pregnancyRepository.findByMother_PhmArea_PhmAreaIdAndPregnancyStatus(areaId, PregnancyStatus.ACTIVE).stream()
                     .filter(p -> p.getMother() != null && p.getMother().getPhmArea() != null
                             && areaId.equals(p.getMother().getPhmArea().getPhmAreaId()))
                     .toList();
         }
-        return pregnancyRepository.findByPregnancyStatus(Pregnancy.PregnancyStatus.ACTIVE);
+        return pregnancyRepository.findByPregnancyStatus(PregnancyStatus.ACTIVE);
 
     }
 

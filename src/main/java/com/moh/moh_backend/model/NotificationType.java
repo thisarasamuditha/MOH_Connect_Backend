@@ -1,5 +1,6 @@
 package com.moh.moh_backend.model;
 
+import com.moh.moh_backend.Enum.Priority;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -30,7 +31,5 @@ public class NotificationType {
     @Enumerated(EnumType.STRING)
     private Priority priority;
 
-    public enum Priority {
-        LOW, MEDIUM, HIGH, URGENT
-    }
+
 }

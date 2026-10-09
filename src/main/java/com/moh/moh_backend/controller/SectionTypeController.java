@@ -1,6 +1,6 @@
 package com.moh.moh_backend.controller;
 
-import com.moh.moh_backend.model.SectionType;
+import com.moh.moh_backend.Enum.SectionType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;

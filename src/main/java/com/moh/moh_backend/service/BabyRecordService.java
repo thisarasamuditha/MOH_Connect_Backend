@@ -1,5 +1,6 @@
 package com.moh.moh_backend.service;
 
+import com.moh.moh_backend.Enum.GrowthStatus;
 import com.moh.moh_backend.model.Baby;
 import com.moh.moh_backend.model.BabyRecord;
 import com.moh.moh_backend.model.Doctor;
@@ -70,8 +71,8 @@ public class BabyRecordService {
         }
         if (babyRecord.getWeight() != null && ageMonths != null) {
             var whoStatus = evaluateWhoGrowthStatus(babyRecord.getWeight(), ageMonths);
-            if (whoStatus != null && whoStatus != com.moh.moh_backend.model.GrowthStatus.NORMAL) {
-                if (babyRecord.getGrowthStatus() == null || babyRecord.getGrowthStatus() == com.moh.moh_backend.model.GrowthStatus.NORMAL) {
+            if (whoStatus != null && whoStatus != GrowthStatus.NORMAL) {
+                if (babyRecord.getGrowthStatus() == null || babyRecord.getGrowthStatus() == GrowthStatus.NORMAL) {
                     babyRecord.setGrowthStatus(whoStatus);
                 }
             }
@@ -81,8 +82,8 @@ public class BabyRecordService {
         boolean isHighRisk = false;
         String riskDetail = "";
         if (babyRecord.getGrowthStatus() != null && 
-            (babyRecord.getGrowthStatus() == com.moh.moh_backend.model.GrowthStatus.UNDERWEIGHT || 
-             babyRecord.getGrowthStatus() == com.moh.moh_backend.model.GrowthStatus.WASTED)) {
+            (babyRecord.getGrowthStatus() == GrowthStatus.UNDERWEIGHT ||
+             babyRecord.getGrowthStatus() == GrowthStatus.WASTED)) {
             isHighRisk = true;
             riskDetail = "Growth: " + babyRecord.getGrowthStatus().name();
         }
@@ -210,8 +211,8 @@ public class BabyRecordService {
         }
         if (existing.getWeight() != null && updAge != null) {
             var whoStatus = evaluateWhoGrowthStatus(existing.getWeight(), updAge);
-            if (whoStatus != null && whoStatus != com.moh.moh_backend.model.GrowthStatus.NORMAL) {
-                if (existing.getGrowthStatus() == null || existing.getGrowthStatus() == com.moh.moh_backend.model.GrowthStatus.NORMAL) {
+            if (whoStatus != null && whoStatus != GrowthStatus.NORMAL) {
+                if (existing.getGrowthStatus() == null || existing.getGrowthStatus() == GrowthStatus.NORMAL) {
                     existing.setGrowthStatus(whoStatus);
                 }
             }
@@ -269,7 +270,7 @@ public class BabyRecordService {
         }
     }
 
-    public static com.moh.moh_backend.model.GrowthStatus evaluateWhoGrowthStatus(Number weightNum, Integer ageMonths) {
+    public static GrowthStatus evaluateWhoGrowthStatus(Number weightNum, Integer ageMonths) {
         if (weightNum == null || ageMonths == null || weightNum.doubleValue() <= 0 || ageMonths < 0) {
             return null;
         }
@@ -285,10 +286,10 @@ public class BabyRecordService {
         else { p3 = 11.3 + ((m - 36) / 24.0) * (14.1 - 11.3); p97 = 18.3 + ((m - 36) / 24.0) * (24.2 - 18.3); }
 
         if (weight < p3) {
-            return (weight < p3 * 0.85) ? com.moh.moh_backend.model.GrowthStatus.WASTED : com.moh.moh_backend.model.GrowthStatus.UNDERWEIGHT;
+            return (weight < p3 * 0.85) ? GrowthStatus.WASTED : GrowthStatus.UNDERWEIGHT;
         } else if (weight > p97) {
-            return com.moh.moh_backend.model.GrowthStatus.OVERWEIGHT;
+            return GrowthStatus.OVERWEIGHT;
         }
-        return com.moh.moh_backend.model.GrowthStatus.NORMAL;
+        return GrowthStatus.NORMAL;
     }
 }

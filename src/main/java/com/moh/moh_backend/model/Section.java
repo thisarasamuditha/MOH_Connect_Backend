@@ -1,6 +1,7 @@
 package com.moh.moh_backend.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.moh.moh_backend.Enum.SectionType;
 import jakarta.persistence.*;
 import lombok.*;
 

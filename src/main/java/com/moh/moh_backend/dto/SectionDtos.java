@@ -1,6 +1,6 @@
 package com.moh.moh_backend.dto;
 
-import com.moh.moh_backend.model.SectionType;
+import com.moh.moh_backend.Enum.SectionType;
 import lombok.*;
 
 public class SectionDtos {

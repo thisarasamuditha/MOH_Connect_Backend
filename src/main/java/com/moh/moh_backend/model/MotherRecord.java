@@ -1,12 +1,18 @@
 package com.moh.moh_backend.model;
 
 import jakarta.persistence.*;
+import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "MOTHER_RECORD")
+@AllArgsConstructor
+@NoArgsConstructor
+@Data
+@SuperBuilder
 public class MotherRecord {
 
     @Id
@@ -87,144 +93,4 @@ public class MotherRecord {
         createdAt = LocalDateTime.now();
     }
 
-    // Constructors
-    public MotherRecord() {}
-
-    // Getters and Setters
-    public Integer getRecordId() {
-        return recordId;
-    }
-
-    public void setRecordId(Integer recordId) {
-        this.recordId = recordId;
-    }
-
-    public Pregnancy getPregnancy() {
-        return pregnancy;
-    }
-
-    public void setPregnancy(Pregnancy pregnancy) {
-        this.pregnancy = pregnancy;
-    }
-
-    public Midwife getMidwife() {
-        return midwife;
-    }
-
-    public void setMidwife(Midwife midwife) {
-        this.midwife = midwife;
-    }
-
-    public Doctor getDoctor() {
-        return doctor;
-    }
-
-    public void setDoctor(Doctor doctor) {
-        this.doctor = doctor;
-    }
-
-    public LocalDate getRecordDate() {
-        return recordDate;
-    }
-
-    public void setRecordDate(LocalDate recordDate) {
-        this.recordDate = recordDate;
-    }
-
-    public String getVisitType() { return visitType; }
-    public void setVisitType(String visitType) { this.visitType = visitType; }
-    public String getVerificationStatus() { return verificationStatus; }
-    public void setVerificationStatus(String verificationStatus) { this.verificationStatus = verificationStatus; }
-    public String getReviewComment() { return reviewComment; }
-    public void setReviewComment(String reviewComment) { this.reviewComment = reviewComment; }
-    public LocalDateTime getReviewedAt() { return reviewedAt; }
-    public void setReviewedAt(LocalDateTime reviewedAt) { this.reviewedAt = reviewedAt; }
-
-    public Integer getGestationalAge() {
-        return gestationalAge;
-    }
-
-    public void setGestationalAge(Integer gestationalAge) {
-        this.gestationalAge = gestationalAge;
-    }
-
-    public Float getWeight() {
-        return weight;
-    }
-
-    public void setWeight(Float weight) {
-        this.weight = weight;
-    }
-
-    public Float getBmi() {
-        return bmi;
-    }
-
-    public void setBmi(Float bmi) {
-        this.bmi = bmi;
-    }
-
-    public String getBloodPressure() {
-        return bloodPressure;
-    }
-
-    public void setBloodPressure(String bloodPressure) {
-        this.bloodPressure = bloodPressure;
-    }
-
-    public Float getShf() {
-        return shf;
-    }
-
-    public void setShf(Float shf) {
-        this.shf = shf;
-    }
-
-    public String getFindings() {
-        return findings;
-    }
-
-    public void setFindings(String findings) {
-        this.findings = findings;
-    }
-
-    public String getRecommendations() {
-        return recommendations;
-    }
-
-    public void setRecommendations(String recommendations) {
-        this.recommendations = recommendations;
-    }
-
-    public String getComplications() {
-        return complications;
-    }
-
-    public void setComplications(String complications) {
-        this.complications = complications;
-    }
-
-    public String getNotes() {
-        return notes;
-    }
-
-    public void setNotes(String notes) {
-        this.notes = notes;
-    }
-
-    public LocalDate getNextVisitDate() {
-        return nextVisitDate;
-    }
-
-    public void setNextVisitDate(LocalDate nextVisitDate) {
-        this.nextVisitDate = nextVisitDate;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
 }

@@ -1,5 +1,6 @@
 package com.moh.moh_backend.service;
 
+import com.moh.moh_backend.Enum.PregnancyStatus;
 import com.moh.moh_backend.dto.MotherTriposhDistributionDtos.CreateRequest;
 import com.moh.moh_backend.dto.MotherTriposhDistributionDtos.Response;
 import com.moh.moh_backend.model.Midwife;
@@ -46,7 +47,7 @@ public class MotherTriposhDistributionService {
                 .orElseThrow(() -> new IllegalArgumentException("Pregnancy not found with id: " + request.getPregnancyId()));
         pregnancyService.assertCanAccessMother(pregnancy.getMother(), userId, role);
 
-        if (pregnancy.getPregnancyStatus() != Pregnancy.PregnancyStatus.ACTIVE) {
+        if (pregnancy.getPregnancyStatus() != PregnancyStatus.ACTIVE) {
             throw new IllegalStateException("Cannot distribute Triposha: pregnancy is not active (status: " + pregnancy.getPregnancyStatus() + ")");
         }
 
