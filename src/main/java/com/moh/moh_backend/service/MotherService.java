@@ -7,7 +7,9 @@ import com.moh.moh_backend.model.Baby;
 import com.moh.moh_backend.model.Midwife;
 import com.moh.moh_backend.model.Mother;
 import com.moh.moh_backend.model.PhmArea;
+import com.moh.moh_backend.model.Pregnancy;
 import com.moh.moh_backend.model.User;
+import com.moh.moh_backend.Enum.PregnancyStatus;
 import com.moh.moh_backend.Enum.UserRole;
 import com.moh.moh_backend.repository.BabyRecordRepository;
 import com.moh.moh_backend.repository.BabyRepository;
@@ -23,6 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Service
@@ -53,11 +56,20 @@ public class MotherService {
         this.emailService = emailService;
     }
 
+    private static final Pattern EMAIL_PATTERN = Pattern.compile("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$");
+
+    /** Result of a registration: the saved mother and whether the credentials email went out. */
+    public record MotherRegistration(Mother mother, boolean credentialsEmailed) {}
+
     @Transactional
-    public Mother registerMother(MotherRegisterRequest req, Integer midwifeUserId) {
+    public MotherRegistration registerMother(MotherRegisterRequest req, Integer midwifeUserId) {
         // Validate required fields
         if (req.email == null || req.email.trim().isEmpty()) {
             throw new IllegalArgumentException("Mother's email is required");
+        }
+        req.email = req.email.trim();
+        if (!EMAIL_PATTERN.matcher(req.email).matches()) {
+            throw new IllegalArgumentException("Invalid email address: " + req.email);
         }
         if (req.name == null || req.name.trim().isEmpty()) {
             throw new IllegalArgumentException("Mother's name is required");
@@ -130,8 +142,8 @@ public class MotherService {
         Mother savedMother = motherRepo.save(mother);
 
         // Send credentials to mother's email
-        emailService.sendMotherCredentials(req.email, username, password, req.name);
-        return savedMother;
+        boolean emailed = emailService.sendMotherCredentials(req.email, username, password, req.name);
+        return new MotherRegistration(savedMother, emailed);
     }
 
     @Transactional(readOnly = true)
@@ -173,13 +185,19 @@ public class MotherService {
             }
         }
 
+        java.util.Map<Integer, Pregnancy> activePregnancyByMother = new java.util.HashMap<>();
+        for (Pregnancy p : pregnancyRepo.findByMother_PhmArea_PhmAreaIdAndPregnancyStatus(phmAreaId, PregnancyStatus.ACTIVE)) {
+            activePregnancyByMother.put(p.getMother().getMotherId(), p);
+        }
+
         return mothers.stream()
                 .filter(m -> m.getActive() == null || m.getActive())
                 .map(mother -> {
                     System.out.println("Processing mother: " + mother.getName() + " (ID: " + mother.getMotherId() + ")");
                     List<Baby> babies = babyRepo.findByMotherId(mother.getMotherId());
                     System.out.println("Found " + babies.size() + " babies for mother");
-                    return FamilyResponse.from(mother, babies, latestRecordsMap);
+                    return FamilyResponse.from(mother, babies, latestRecordsMap)
+                            .withActivePregnancy(activePregnancyByMother.get(mother.getMotherId()));
                 })
                 .collect(Collectors.toList());
     }

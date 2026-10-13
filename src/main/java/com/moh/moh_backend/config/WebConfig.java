@@ -20,13 +20,14 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addInterceptors(org.springframework.web.servlet.config.annotation.InterceptorRegistry registry) {
-        registry.addInterceptor(roleAuthorizationInterceptor).addPathPatterns("/api/**");
-        registry.addInterceptor(auditLogInterceptor).addPathPatterns("/api/**");
+        // Patterns are relative to the context path (/api/v1/moh-backend)
+        registry.addInterceptor(roleAuthorizationInterceptor).addPathPatterns("/**").excludePathPatterns("/error");
+        registry.addInterceptor(auditLogInterceptor).addPathPatterns("/**").excludePathPatterns("/error");
     }
     
     @Override
     public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/api/**")
+        registry.addMapping("/**")
                 .allowedOrigins("http://localhost:3000", "http://localhost:3002") // React ports
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*")

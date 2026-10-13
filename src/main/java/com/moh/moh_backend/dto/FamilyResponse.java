@@ -3,9 +3,11 @@ package com.moh.moh_backend.dto;
 import com.moh.moh_backend.model.Baby;
 import com.moh.moh_backend.model.BabyRecord;
 import com.moh.moh_backend.model.Mother;
+import com.moh.moh_backend.model.Pregnancy;
 
 import java.time.LocalDate;
 import java.time.Period;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -30,6 +32,34 @@ public class FamilyResponse {
     public String husbandPhone;
     public String husbandEmail;
     public List<BabyInfo> babies;
+
+    // Active pregnancy (null / false when the mother has none)
+    public Boolean hasActivePregnancy = false;
+    public Integer activePregnancyId;
+    public String pregnancyNumber;
+    public LocalDate lmpDate;
+    public LocalDate eddDate;
+    public Integer currentPregnancyWeek;
+    public Integer gravida;
+    public Integer para;
+    public String riskLevel;
+
+    /** Fills the active-pregnancy fields; gestational week is counted from LMP. */
+    public FamilyResponse withActivePregnancy(Pregnancy p) {
+        if (p == null) return this;
+        hasActivePregnancy = true;
+        activePregnancyId = p.getPregnancyId();
+        pregnancyNumber = p.getPregnancyNumber();
+        lmpDate = p.getLmpDate();
+        eddDate = p.getEddDate();
+        gravida = p.getGravida();
+        para = p.getPara();
+        riskLevel = p.getRiskLevel() != null ? p.getRiskLevel().name() : null;
+        if (p.getLmpDate() != null) {
+            currentPregnancyWeek = (int) (ChronoUnit.DAYS.between(p.getLmpDate(), LocalDate.now()) / 7);
+        }
+        return this;
+    }
 
     public static class BabyInfo {
         public Integer babyId;

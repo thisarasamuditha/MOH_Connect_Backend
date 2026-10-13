@@ -7,6 +7,7 @@ import com.moh.moh_backend.dto.PregnancyResponse;
 import com.moh.moh_backend.service.MotherService;
 import com.moh.moh_backend.util.JwtService;
 import com.moh.moh_backend.config.RequireRoles;
+import com.moh.moh_backend.Enum.PregnancyStatus;
 import com.moh.moh_backend.model.Mother;
 import com.moh.moh_backend.model.Pregnancy;
 import com.moh.moh_backend.model.User;
@@ -53,7 +54,7 @@ public class MotherController {
         String email = user != null ? user.getEmail() : null;
         // Get active pregnancy for this mother
         Pregnancy activePregnancy = pregnancyRepository
-                .findByMother_MotherIdAndPregnancyStatus(mother.getMotherId(), Pregnancy.PregnancyStatus.ACTIVE)
+                .findByMother_MotherIdAndPregnancyStatus(mother.getMotherId(), PregnancyStatus.ACTIVE)
                 .stream().findFirst().orElse(null);
         
         java.util.Map<String, Object> response = new java.util.HashMap<>();
@@ -82,7 +83,8 @@ public class MotherController {
 
         try {
             Integer midwifeUserId = jwtService.getUserId(token);
-            Mother savedMother = motherService.registerMother(req, midwifeUserId);
+            MotherService.MotherRegistration registration = motherService.registerMother(req, midwifeUserId);
+            Mother savedMother = registration.mother();
             String assignedUsername = savedMother.getUser() != null ? savedMother.getUser().getUsername() : (req.username != null ? req.username : "");
             String assignedEmail = savedMother.getUser() != null ? savedMother.getUser().getEmail() : (req.email != null ? req.email : "");
             return ResponseEntity.ok(Map.of(
@@ -90,7 +92,8 @@ public class MotherController {
                 "motherId", savedMother.getMotherId(),
                 "id", savedMother.getMotherId(),
                 "username", assignedUsername,
-                "email", assignedEmail
+                "email", assignedEmail,
+                "credentialsEmailed", registration.credentialsEmailed()
             ));
         } catch (IllegalArgumentException | IllegalStateException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));

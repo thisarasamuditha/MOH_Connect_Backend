@@ -17,8 +17,7 @@ public class AuditLogInterceptor implements HandlerInterceptor {
     @Override
     public void afterCompletion(HttpServletRequest request, HttpServletResponse response,
                                 Object handler, Exception exception) {
-        if (!request.getRequestURI().startsWith(request.getContextPath() + "/api/")
-                || !isMutation(request.getMethod())
+        if (!isMutation(request.getMethod())
                 || "OPTIONS".equalsIgnoreCase(request.getMethod())) {
             return;
         }
