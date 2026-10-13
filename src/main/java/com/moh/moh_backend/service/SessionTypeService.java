@@ -3,7 +3,7 @@ package com.moh.moh_backend.service;
 import com.moh.moh_backend.dto.SessionDtos.SessionTypeRequest;
 import com.moh.moh_backend.dto.SessionDtos.SessionTypeResponse;
 import com.moh.moh_backend.model.SessionType;
-import com.moh.moh_backend.model.SessionType.TargetAudience;
+import com.moh.moh_backend.Enum.TargetAudience;
 import com.moh.moh_backend.repository.SessionTypeRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

@@ -23,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Service
@@ -53,11 +54,20 @@ public class MotherService {
         this.emailService = emailService;
     }
 
+    private static final Pattern EMAIL_PATTERN = Pattern.compile("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$");
+
+    /** Result of a registration: the saved mother and whether the credentials email went out. */
+    public record MotherRegistration(Mother mother, boolean credentialsEmailed) {}
+
     @Transactional
-    public Mother registerMother(MotherRegisterRequest req, Integer midwifeUserId) {
+    public MotherRegistration registerMother(MotherRegisterRequest req, Integer midwifeUserId) {
         // Validate required fields
         if (req.email == null || req.email.trim().isEmpty()) {
             throw new IllegalArgumentException("Mother's email is required");
+        }
+        req.email = req.email.trim();
+        if (!EMAIL_PATTERN.matcher(req.email).matches()) {
+            throw new IllegalArgumentException("Invalid email address: " + req.email);
         }
         if (req.name == null || req.name.trim().isEmpty()) {
             throw new IllegalArgumentException("Mother's name is required");
@@ -130,8 +140,8 @@ public class MotherService {
         Mother savedMother = motherRepo.save(mother);
 
         // Send credentials to mother's email
-        emailService.sendMotherCredentials(req.email, username, password, req.name);
-        return savedMother;
+        boolean emailed = emailService.sendMotherCredentials(req.email, username, password, req.name);
+        return new MotherRegistration(savedMother, emailed);
     }
 
     @Transactional(readOnly = true)
