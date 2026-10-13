@@ -5,6 +5,8 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 /**
  * Email service for sending notifications
  */
@@ -47,6 +49,38 @@ public class EmailService {
         } catch (Exception e) {
             System.err.println("Failed to send email to " + toEmail + ": " + e.getMessage());
             // Don't throw exception - registration should still succeed even if email fails
+            return false;
+        }
+    }
+
+    /**
+     * Alert the PHM area's midwives that a mother sent an URGENT visit request.
+     * @return true if the email was handed to the mail server, false if sending failed
+     */
+    public boolean sendUrgentVisitRequestAlert(List<String> toEmails, String motherName, String requestType,
+                                               String reason, String contactNumber, String address) {
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setFrom(fromEmail);
+            message.setTo(toEmails.toArray(new String[0]));
+            message.setSubject("URGENT: " + requestType + " request from " + motherName);
+
+            String body = "An urgent request was sent through the MOH Connect Mother Portal.\n\n" +
+                    "Mother: " + motherName + "\n" +
+                    "Request: " + requestType + "\n" +
+                    "Contact: " + (contactNumber != null ? contactNumber : "not given") + "\n" +
+                    "Address: " + (address != null ? address : "not given") + "\n\n" +
+                    "Reason:\n" + reason + "\n\n" +
+                    "Please contact the mother as soon as possible and update the request in MOH Connect " +
+                    "(Visit Requests page).\n\n" +
+                    "MOH Connect";
+
+            message.setText(body);
+            mailSender.send(message);
+            System.out.println("✓ Urgent visit request alert sent to " + toEmails);
+            return true;
+        } catch (Exception e) {
+            System.err.println("Failed to send urgent visit request alert to " + toEmails + ": " + e.getMessage());
             return false;
         }
     }
