@@ -46,9 +46,10 @@ public class PregnancyController {
         try {
                 Pregnancy created = pregnancyService.createPregnancy(pregnancy, motherId,
                     (Integer) request.getAttribute("moh.userId"), role);
-            return ResponseEntity.status(HttpStatus.CREATED).body(created);
+            return ResponseEntity.status(HttpStatus.CREATED).body(PregnancyResponse.from(created));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error",
+                    e.getMessage() != null ? e.getMessage() : "Could not create pregnancy"));
         }
     }
 

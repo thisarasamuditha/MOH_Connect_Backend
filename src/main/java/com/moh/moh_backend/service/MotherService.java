@@ -7,7 +7,9 @@ import com.moh.moh_backend.model.Baby;
 import com.moh.moh_backend.model.Midwife;
 import com.moh.moh_backend.model.Mother;
 import com.moh.moh_backend.model.PhmArea;
+import com.moh.moh_backend.model.Pregnancy;
 import com.moh.moh_backend.model.User;
+import com.moh.moh_backend.Enum.PregnancyStatus;
 import com.moh.moh_backend.Enum.UserRole;
 import com.moh.moh_backend.repository.BabyRecordRepository;
 import com.moh.moh_backend.repository.BabyRepository;
@@ -183,13 +185,19 @@ public class MotherService {
             }
         }
 
+        java.util.Map<Integer, Pregnancy> activePregnancyByMother = new java.util.HashMap<>();
+        for (Pregnancy p : pregnancyRepo.findByMother_PhmArea_PhmAreaIdAndPregnancyStatus(phmAreaId, PregnancyStatus.ACTIVE)) {
+            activePregnancyByMother.put(p.getMother().getMotherId(), p);
+        }
+
         return mothers.stream()
                 .filter(m -> m.getActive() == null || m.getActive())
                 .map(mother -> {
                     System.out.println("Processing mother: " + mother.getName() + " (ID: " + mother.getMotherId() + ")");
                     List<Baby> babies = babyRepo.findByMotherId(mother.getMotherId());
                     System.out.println("Found " + babies.size() + " babies for mother");
-                    return FamilyResponse.from(mother, babies, latestRecordsMap);
+                    return FamilyResponse.from(mother, babies, latestRecordsMap)
+                            .withActivePregnancy(activePregnancyByMother.get(mother.getMotherId()));
                 })
                 .collect(Collectors.toList());
     }
