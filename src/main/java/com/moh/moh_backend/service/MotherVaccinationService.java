@@ -8,6 +8,8 @@ import com.moh.moh_backend.repository.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -35,44 +37,112 @@ public class MotherVaccinationService {
     @Transactional
     public MotherVaccinationResponseDto administerVaccine(MotherVaccinationCreateDto dto,
                                                            Integer userId, String role) {
-        // Validate pregnancy
+        if (dto == null || dto.getPregnancyId() == null) {
+            throw new IllegalArgumentException("Pregnancy is required");
+        }
+        if (dto.getScheduleId() == null) {
+            throw new IllegalArgumentException("Select the vaccine that was given");
+        }
         Pregnancy pregnancy = pregnancyRepository.findById(dto.getPregnancyId())
-                .orElseThrow(() -> new RuntimeException("Pregnancy not found with id: " + dto.getPregnancyId()));
+                .orElseThrow(() -> new IllegalArgumentException("Pregnancy not found with id: " + dto.getPregnancyId()));
         pregnancyService.assertCanAccessPregnancy(dto.getPregnancyId(), userId, role);
 
-        // Validate vaccine schedule
         VaccineSchedule schedule = vaccineScheduleRepository.findById(dto.getScheduleId())
-                .orElseThrow(() -> new RuntimeException("Vaccine schedule not found with id: " + dto.getScheduleId()));
-
-        // Verify schedule is for mothers
+                .orElseThrow(() -> new IllegalArgumentException("Vaccine schedule not found with id: " + dto.getScheduleId()));
         if (schedule.getTargetGroup() != TargetGroup.MOTHER) {
             throw new IllegalArgumentException("Selected vaccine schedule is not for mothers");
         }
-
-        // Validate vaccination date
-        if (dto.getVaccinationDate() == null) {
-            throw new IllegalArgumentException("Vaccination date is required");
+        if (!schedule.isCurrent()) {
+            throw new IllegalArgumentException("This vaccine schedule entry is no longer in use; choose a current one");
         }
 
-        // Create vaccination entity
+        List<MotherVaccination> existing = motherVaccinationRepository.findByMotherId(pregnancy.getMother().getMotherId());
+        validateDose(dto.getVaccinationDate(), schedule, pregnancy, existing, LocalDate.now());
+
         MotherVaccination vaccination = new MotherVaccination();
         vaccination.setPregnancy(pregnancy);
         vaccination.setSchedule(schedule);
         vaccination.setVaccinationDate(dto.getVaccinationDate());
-        vaccination.setBatchNumber(dto.getBatchNumber());
-        vaccination.setManufacturer(dto.getManufacturer());
+        vaccination.setBatchNumber(blankToNull(dto.getBatchNumber()));
+        vaccination.setManufacturer(blankToNull(dto.getManufacturer()));
         vaccination.setNextDoseDate(dto.getNextDoseDate());
-        vaccination.setAdverseReaction(dto.getAdverseReaction());
+        vaccination.setAdverseReaction(blankToNull(dto.getAdverseReaction()));
 
-        // Set midwife if provided
-        if (dto.getMidwifeId() != null) {
+        // A midwife records her own doses; others may name the midwife who gave it
+        if ("MIDWIFE".equalsIgnoreCase(role)) {
+            midwifeRepository.findByUser_UserId(userId).ifPresent(vaccination::setMidwife);
+        } else if (dto.getMidwifeId() != null) {
             Midwife midwife = midwifeRepository.findById(dto.getMidwifeId())
-                    .orElseThrow(() -> new RuntimeException("Midwife not found with id: " + dto.getMidwifeId()));
+                    .orElseThrow(() -> new IllegalArgumentException("Midwife not found with id: " + dto.getMidwifeId()));
             vaccination.setMidwife(midwife);
         }
 
         MotherVaccination saved = motherVaccinationRepository.save(vaccination);
         return mapToResponseDto(saved);
+    }
+
+    /**
+     * Rules for recording a maternal vaccine: date given, not in the future, within the pregnancy
+     * (from LMP to 6 weeks after its outcome), not the same schedule entry twice in one pregnancy;
+     * tetanus doses at least 4 weeks apart and no more than the full course of 5.
+     */
+    static void validateDose(LocalDate date, VaccineSchedule schedule, Pregnancy pregnancy,
+                             List<MotherVaccination> motherVaccinations, LocalDate today) {
+        if (date == null) {
+            throw new IllegalArgumentException("Vaccination date is required");
+        }
+        if (date.isAfter(today)) {
+            throw new IllegalArgumentException("Vaccination date cannot be in the future");
+        }
+        if (pregnancy.getLmpDate() != null && date.isBefore(pregnancy.getLmpDate())) {
+            throw new IllegalArgumentException("Vaccination date cannot be before the LMP date (" + pregnancy.getLmpDate()
+                    + "). Record doses from before this pregnancy as earlier tetanus history.");
+        }
+        LocalDate outcome = pregnancy.getOutcomeDate() != null ? pregnancy.getOutcomeDate() : pregnancy.getDeliveryDate();
+        if (outcome != null && date.isAfter(outcome.plusWeeks(6))) {
+            throw new IllegalArgumentException("Vaccination date is more than 6 weeks after this pregnancy ended");
+        }
+
+        List<MotherVaccination> all = motherVaccinations == null ? List.of() : motherVaccinations;
+        for (MotherVaccination v : all) {
+            boolean samePregnancy = v.getPregnancy() != null
+                    && pregnancy.getPregnancyId() != null
+                    && pregnancy.getPregnancyId().equals(v.getPregnancy().getPregnancyId());
+            if (samePregnancy && v.getSchedule() != null
+                    && schedule.getScheduleId() != null
+                    && schedule.getScheduleId().equals(v.getSchedule().getScheduleId())) {
+                throw new IllegalArgumentException(schedule.getVaccineName() + " dose " + schedule.getDoseNumber()
+                        + " is already recorded for this pregnancy (" + v.getVaccinationDate() + ")");
+            }
+        }
+
+        if (MaternalVaccinationDueService.isTetanus(schedule)) {
+            Mother mother = pregnancy.getMother();
+            int prior = mother != null && mother.getPriorTtDoses() != null ? mother.getPriorTtDoses() : 0;
+            List<MotherVaccination> tetanus = all.stream()
+                    .filter(v -> MaternalVaccinationDueService.isTetanus(v.getSchedule()))
+                    .toList();
+            if (prior + tetanus.size() >= MaternalVaccinationDueService.FULL_COURSE_DOSES) {
+                throw new IllegalArgumentException("This mother already has " + MaternalVaccinationDueService.FULL_COURSE_DOSES
+                        + " tetanus doses and is protected for all childbearing years; no further dose is needed");
+            }
+            for (MotherVaccination v : tetanus) {
+                if (v.getVaccinationDate() != null
+                        && Math.abs(ChronoUnit.DAYS.between(v.getVaccinationDate(), date)) < MaternalVaccinationDueService.MIN_INTERVAL_DAYS) {
+                    throw new IllegalArgumentException("Tetanus doses must be at least 4 weeks apart; the previous dose was on "
+                            + v.getVaccinationDate());
+                }
+            }
+            if (mother != null && mother.getPriorTtLastDate() != null
+                    && Math.abs(ChronoUnit.DAYS.between(mother.getPriorTtLastDate(), date)) < MaternalVaccinationDueService.MIN_INTERVAL_DAYS) {
+                throw new IllegalArgumentException("Tetanus doses must be at least 4 weeks apart; the earlier recorded dose was on "
+                        + mother.getPriorTtLastDate());
+            }
+        }
+    }
+
+    private static String blankToNull(String s) {
+        return s == null || s.isBlank() ? null : s.trim();
     }
 
     public MotherVaccinationResponseDto getVaccinationById(Integer vaccinationId, Integer userId, String role) {

@@ -13,6 +13,9 @@ public interface MotherVaccinationRepository extends JpaRepository<MotherVaccina
     
     @Query("SELECT mv FROM MotherVaccination mv WHERE mv.pregnancy.mother.motherId = :motherId")
     List<MotherVaccination> findByMotherId(@Param("motherId") Integer motherId);
+
+    @Query("SELECT mv FROM MotherVaccination mv WHERE mv.pregnancy.mother.motherId IN :motherIds")
+    List<MotherVaccination> findByMotherIdIn(@Param("motherIds") List<Integer> motherIds);
     
     @Query("SELECT mv FROM MotherVaccination mv WHERE mv.pregnancy.pregnancyId = :pregnancyId ORDER BY mv.vaccinationDate DESC")
     List<MotherVaccination> findByPregnancyIdOrderByVaccinationDateDesc(@Param("pregnancyId") Integer pregnancyId);
