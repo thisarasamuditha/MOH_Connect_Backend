@@ -10,6 +10,8 @@ import java.util.List;
 public interface BabyVaccinationRepository extends JpaRepository<BabyVaccination, Integer> {
     
     List<BabyVaccination> findByBaby_BabyId(Integer babyId);
+
+    List<BabyVaccination> findByBaby_BabyIdIn(List<Integer> babyIds);
     
     @Query("SELECT bv FROM BabyVaccination bv WHERE bv.baby.motherId = :motherId")
     List<BabyVaccination> findByMotherId(@Param("motherId") Integer motherId);

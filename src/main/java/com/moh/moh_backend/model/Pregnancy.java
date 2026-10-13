@@ -61,6 +61,17 @@ public class Pregnancy {
     @Column(name = "risk_factors", columnDefinition = "TEXT")
     private String riskFactors;
 
+    /** Date the pregnancy ended (delivery, miscarriage or termination). */
+    @Column(name = "outcome_date")
+    private LocalDate outcomeDate;
+
+    /** Delivery notes or the reason for miscarriage/termination. */
+    @Column(name = "outcome_notes", columnDefinition = "TEXT")
+    private String outcomeNotes;
+
+    @Column(name = "delivery_place", length = 255)
+    private String deliveryPlace;
+
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
