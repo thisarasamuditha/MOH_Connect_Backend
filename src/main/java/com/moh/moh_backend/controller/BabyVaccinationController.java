@@ -16,9 +16,46 @@ import java.util.List;
 public class BabyVaccinationController {
 
     private final BabyVaccinationService babyVaccinationService;
+    private final com.moh.moh_backend.service.VaccinationDueService vaccinationDueService;
+    private final com.moh.moh_backend.service.BabyService babyService;
 
-    public BabyVaccinationController(BabyVaccinationService babyVaccinationService) {
+    public BabyVaccinationController(BabyVaccinationService babyVaccinationService,
+                                     com.moh.moh_backend.service.VaccinationDueService vaccinationDueService,
+                                     com.moh.moh_backend.service.BabyService babyService) {
         this.babyVaccinationService = babyVaccinationService;
+        this.vaccinationDueService = vaccinationDueService;
+        this.babyService = babyService;
+    }
+
+    /** Immunization card for one child: every schedule item with GIVEN/OVERDUE/DUE/DUE_SOON/UPCOMING/CONDITIONAL. */
+    @GetMapping("/due/baby/{babyId}")
+    @RequireRoles({"MIDWIFE", "DOCTOR", "MOTHER"})
+    public ResponseEntity<?> getDueForBaby(@PathVariable Integer babyId, jakarta.servlet.http.HttpServletRequest request) {
+        try {
+            var baby = babyService.findById(babyId,
+                            (Integer) request.getAttribute("moh.userId"), (String) request.getAttribute("moh.role"))
+                    .orElseThrow(() -> new IllegalArgumentException("Baby not found with id: " + babyId));
+            return ResponseEntity.ok(vaccinationDueService.forBaby(baby));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+        }
+    }
+
+    /** Children in the caller's PHM area with overdue or due vaccines (admins pass ?phmAreaId=). */
+    @GetMapping("/due/area")
+    @RequireRoles({"MIDWIFE", "DOCTOR", "ADMIN"})
+    public ResponseEntity<?> getAreaDefaulters(@RequestParam(required = false) Integer phmAreaId,
+                                               jakarta.servlet.http.HttpServletRequest request) {
+        try {
+            return ResponseEntity.ok(vaccinationDueService.defaultersForArea(phmAreaId,
+                    (Integer) request.getAttribute("moh.userId"), (String) request.getAttribute("moh.role")));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+        }
     }
 
     @PostMapping

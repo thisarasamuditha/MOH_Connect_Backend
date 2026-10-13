@@ -11,6 +11,7 @@ import com.moh.moh_backend.model.SessionType;
 import com.moh.moh_backend.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,6 +29,7 @@ public class ClinicSessionService {
     private final SessionTypeRepository sessionTypeRepository;
     private final PhmAreaRepository phmAreaRepository;
     private final DoctorRepository doctorRepository;
+    private final SessionAttendanceRepository attendanceRepository;
 
     @Transactional
     public SessionResponse create(SessionCreateRequest request, Integer userId, String role) {
@@ -137,7 +139,7 @@ public class ClinicSessionService {
        // log.info("userId: {}", userId);
         ClinicSession session = sessionRepository.findById(sessionId)
                 .orElseThrow(() -> new IllegalArgumentException("Session not found with id: " + sessionId));
-            assertCanManage(session.getMidwife(), session.getPhmArea().getPhmAreaId(), userId, role);
+        assertOwnsSession(session.getMidwife(), userId, role);
 
         if (request.getSessionDate() != null) session.setSessionDate(request.getSessionDate());
         if (request.getStartTime() != null) session.setStartTime(request.getStartTime());
@@ -155,15 +157,36 @@ public class ClinicSessionService {
     public void delete(Integer sessionId, Integer userId, String role) {
         ClinicSession session = sessionRepository.findById(sessionId)
                 .orElseThrow(() -> new IllegalArgumentException("Session not found with id: " + sessionId));
-        assertCanManage(session.getMidwife(), session.getPhmArea().getPhmAreaId(), userId, role);
+        assertOwnsSession(session.getMidwife(), userId, role);
+
+        // Attendance is part of the mothers' records - keep it and close the session instead
+        if (attendanceRepository.countBySession_SessionIdAndAttendedTrue(sessionId) > 0) {
+            throw new IllegalStateException("This clinic has recorded attendance, so it can't be deleted. "
+                    + "Edit it and set the status to Completed or Cancelled instead.");
+        }
+        // Registrations without attendance would otherwise block the delete (FK on SESSION_ATTENDANCE)
+        attendanceRepository.deleteAll(attendanceRepository.findBySession_SessionIdOrderByCreatedAtDesc(sessionId));
         sessionRepository.delete(session);
+        try {
+            sessionRepository.flush();
+        } catch (DataIntegrityViolationException e) {
+            throw new IllegalStateException("This clinic is linked to other records and can't be deleted. "
+                    + "Set its status to Cancelled instead.");
+        }
     }
 
-    private void assertCanManage(Midwife midwife, Integer phmAreaId, Integer userId, String role) {
+    /** Edit/delete: owning the session is enough, even if its area no longer matches the midwife's current area. */
+    private void assertOwnsSession(Midwife midwife, Integer userId, String role) {
         if ("ADMIN".equalsIgnoreCase(role)) return;
         if (midwife == null || midwife.getUser() == null || !userId.equals(midwife.getUser().getUserId())) {
             throw new IllegalStateException("Midwives can only manage their own sessions");
         }
+    }
+
+    /** Create: the midwife must own it and schedule it in her own PHM area. */
+    private void assertCanManage(Midwife midwife, Integer phmAreaId, Integer userId, String role) {
+        if ("ADMIN".equalsIgnoreCase(role)) return;
+        assertOwnsSession(midwife, userId, role);
         if (midwife.getPhmArea() == null || !phmAreaId.equals(midwife.getPhmArea().getPhmAreaId())) {
             throw new IllegalStateException("Session PHM area does not match the midwife");
         }

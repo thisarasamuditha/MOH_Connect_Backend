@@ -70,6 +70,9 @@ public class MotherRecord {
     @Column(name = "shf")
     private Float shf;
 
+    @Column(name = "hemoglobin")
+    private Float hemoglobin;
+
     @Column(name = "findings", columnDefinition = "TEXT")
     private String findings;
 

@@ -78,6 +78,17 @@ public class Mother {
     @Column(name = "is_active")
     private Boolean isActive = true;
 
+    /**
+     * Tetanus-containing doses (TT/Td/aTd) received before they were recorded in this system,
+     * from the mother's previous pregnancy records or immunization card. null = not yet asked.
+     */
+    @Column(name = "prior_tt_doses")
+    private Integer priorTtDoses;
+
+    /** Date of the most recent of those earlier doses, if known. */
+    @Column(name = "prior_tt_last_date")
+    private LocalDate priorTtLastDate;
+
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 

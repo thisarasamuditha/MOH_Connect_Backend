@@ -26,10 +26,12 @@ public class BabyService {
     private final MidwifeRepository midwifeRepository;
     private final PregnancyRepository pregnancyRepository;
     private final BabyRecordRepository babyRecordRepository;
+    private final VaccinationDueService vaccinationDueService;
 
     public BabyService(BabyRepository babyRepository, MotherRepository motherRepository,
                        MidwifeRepository midwifeRepository, PregnancyRepository pregnancyRepository,
-                       BabyRecordRepository babyRecordRepository) {
+                       BabyRecordRepository babyRecordRepository, VaccinationDueService vaccinationDueService) {
+        this.vaccinationDueService = vaccinationDueService;
         this.babyRepository = babyRepository;
         this.motherRepository = motherRepository;
         this.midwifeRepository = midwifeRepository;
@@ -43,6 +45,7 @@ public class BabyService {
             throw new IllegalArgumentException("Mother ID is required for registering a baby");
         }
         assertCanAccessMother(baby.getMotherId(), userId, role);
+        validateBaby(baby);
 
         // If pregnancyId is specified, verify it belongs to this mother
         if (baby.getPregnancyId() != null) {
@@ -99,7 +102,23 @@ public class BabyService {
             existing.setPregnancyId(updatedBaby.getPregnancyId());
         }
 
+        validateBaby(existing);
         return babyRepository.save(existing);
+    }
+
+    private void validateBaby(Baby baby) {
+        if (baby.getDateOfBirth() == null) {
+            throw new IllegalArgumentException("Date of birth is required");
+        }
+        if (baby.getGender() == null) {
+            throw new IllegalArgumentException("Gender is required");
+        }
+        com.moh.moh_backend.util.ClinicalValidation.notInFuture(baby.getDateOfBirth(), "Date of birth");
+        if (baby.getDateOfBirth().isBefore(java.time.LocalDate.now().minusYears(18))) {
+            throw new IllegalArgumentException("Date of birth is more than 18 years ago");
+        }
+        com.moh.moh_backend.util.ClinicalValidation.range(baby.getBirthWeight(), 0.3, 6.5, "Birth weight (kg)");
+        com.moh.moh_backend.util.ClinicalValidation.range(baby.getBirthHeight(), 20, 65, "Birth length (cm)");
     }
 
     public Optional<Baby> findById(Integer id, Integer userId, String role) {
@@ -178,7 +197,11 @@ public class BabyService {
             pregnancy = pregnancyRepository.findById(baby.getPregnancyId()).orElse(null);
         }
         BabyRecord latestRecord = babyRecordRepository.findFirstByBaby_BabyIdOrderByRecordDateDesc(baby.getBabyId()).orElse(null);
-        return BabyResponseDto.from(baby, mother, pregnancy, latestRecord);
+        BabyResponseDto dto = BabyResponseDto.from(baby, mother, pregnancy, latestRecord);
+        var immunization = vaccinationDueService.forBaby(baby);
+        dto.vaccineStatus = immunization.overallStatus;
+        dto.nextVaccineDate = immunization.nextDue != null ? immunization.nextDue.dueDate : null;
+        return dto;
     }
 
     private void assertCanAccessMother(Integer motherId, Integer userId, String role) {

@@ -35,6 +35,25 @@ public class BabyRecord {
         return baby != null ? baby.getBabyId() : null;
     }
 
+    /** WHO weight-for-age z-score at this visit (sex-specific); null if not computable. */
+    @com.fasterxml.jackson.annotation.JsonProperty("weightForAgeZ")
+    public Double getWeightForAgeZ() {
+        if (baby == null || weight == null) return null;
+        if (baby.getDateOfBirth() != null && recordDate != null) {
+            return com.moh.moh_backend.util.WhoWeightForAge.zScore(baby.getGender(), baby.getDateOfBirth(), recordDate, weight);
+        }
+        if (ageMonths == null) return null;
+        int days = (int) Math.round(ageMonths * com.moh.moh_backend.util.WhoWeightForAge.DAYS_PER_MONTH);
+        return com.moh.moh_backend.util.WhoWeightForAge.zScore(baby.getGender(), days, weight);
+    }
+
+    /** CHDR weight-for-age zone: SEVERE_UNDERWEIGHT, MODERATE_UNDERWEIGHT, NORMAL, ABOVE_NORMAL. */
+    @com.fasterxml.jackson.annotation.JsonProperty("growthZone")
+    public String getGrowthZone() {
+        var zone = com.moh.moh_backend.util.WhoWeightForAge.zone(getWeightForAgeZ());
+        return zone != null ? zone.name() : null;
+    }
+
     @Column(name = "record_date", nullable = false)
     private LocalDate recordDate;
 

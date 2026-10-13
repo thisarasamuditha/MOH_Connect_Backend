@@ -39,14 +39,27 @@ public class VaccineScheduleService {
                 .orElseThrow(() -> new RuntimeException("Vaccine schedule not found with id: " + scheduleId));
     }
 
+    /** Active schedule rows only (the current national schedule). */
     @Cacheable("vaccineSchedules")
     public List<VaccineSchedule> getAllSchedules() {
+        return vaccineScheduleRepository.findAll().stream()
+                .filter(VaccineSchedule::isCurrent)
+                .sorted(java.util.Comparator
+                        .comparing((VaccineSchedule v) -> v.getRecommendedAgeDays() == null ? Integer.MAX_VALUE : v.getRecommendedAgeDays())
+                        .thenComparing(VaccineSchedule::getVaccineName))
+                .toList();
+    }
+
+    /** Includes deactivated rows, for administration and history. */
+    public List<VaccineSchedule> getAllSchedulesIncludingInactive() {
         return vaccineScheduleRepository.findAll();
     }
 
     @Cacheable("vaccineSchedules")
     public List<VaccineSchedule> getSchedulesByTargetGroup(TargetGroup targetGroup) {
-        return vaccineScheduleRepository.findByTargetGroupOrderByRecommendedAgeDaysAsc(targetGroup);
+        return vaccineScheduleRepository.findByTargetGroupOrderByRecommendedAgeDaysAsc(targetGroup).stream()
+                .filter(VaccineSchedule::isCurrent)
+                .toList();
     }
 
     @Transactional
@@ -68,6 +81,15 @@ public class VaccineScheduleService {
         }
         if (updatedSchedule.getDescription() != null) {
             existing.setDescription(updatedSchedule.getDescription());
+        }
+        if (updatedSchedule.getIsActive() != null) {
+            existing.setIsActive(updatedSchedule.getIsActive());
+        }
+        if (updatedSchedule.getIsConditional() != null) {
+            existing.setIsConditional(updatedSchedule.getIsConditional());
+        }
+        if (updatedSchedule.getTargetGender() != null) {
+            existing.setTargetGender(updatedSchedule.getTargetGender().isBlank() ? null : updatedSchedule.getTargetGender().trim().toUpperCase());
         }
 
         return vaccineScheduleRepository.save(existing);
