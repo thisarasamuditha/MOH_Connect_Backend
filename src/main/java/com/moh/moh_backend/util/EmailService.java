@@ -22,8 +22,9 @@ public class EmailService {
 
     /**
      * Send mother credentials to email
+     * @return true if the email was handed to the mail server, false if sending failed
      */
-    public void sendMotherCredentials(String toEmail, String username, String password, String motherName) {
+    public boolean sendMotherCredentials(String toEmail, String username, String password, String motherName) {
         try {
             SimpleMailMessage message = new SimpleMailMessage();
             message.setFrom(fromEmail);
@@ -42,9 +43,11 @@ public class EmailService {
             message.setText(body);
             mailSender.send(message);
             System.out.println("✓ Credentials sent to " + toEmail);
+            return true;
         } catch (Exception e) {
             System.err.println("Failed to send email to " + toEmail + ": " + e.getMessage());
             // Don't throw exception - registration should still succeed even if email fails
+            return false;
         }
     }
 }
