@@ -10,4 +10,6 @@ import java.util.List;
 public interface BabyRepository extends JpaRepository<Baby, Integer> {
     List<Baby> findByMotherId(Integer motherId);
     List<Baby> findByPregnancyId(Integer pregnancyId);
+
+    List<Baby> findByMotherIdIn(List<Integer> motherIds);
 }

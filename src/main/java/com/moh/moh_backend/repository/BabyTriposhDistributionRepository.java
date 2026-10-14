@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDate;
 import java.util.List;
 
 public interface BabyTriposhDistributionRepository extends JpaRepository<BabyTriposhDistribution, Integer> {
@@ -17,4 +18,7 @@ public interface BabyTriposhDistributionRepository extends JpaRepository<BabyTri
 
     @Query("SELECT d FROM BabyTriposhDistribution d WHERE d.baby.motherId = :motherId ORDER BY d.distributionDate DESC")
     List<BabyTriposhDistribution> findByMotherId(@Param("motherId") Integer motherId);
+
+    /** Distributions in a date range for the given children (monthly report). */
+    List<BabyTriposhDistribution> findByBaby_BabyIdInAndDistributionDateBetween(List<Integer> babyIds, LocalDate from, LocalDate to);
 }
