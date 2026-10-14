@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDate;
 import java.util.List;
 
 public interface MotherRecordRepository extends JpaRepository<MotherRecord, Integer> {
@@ -18,4 +19,7 @@ public interface MotherRecordRepository extends JpaRepository<MotherRecord, Inte
             + "AND (:status IS NULL OR r.verificationStatus = :status) "
             + "ORDER BY r.recordDate DESC, r.recordId DESC")
     List<MotherRecord> findForReview(@Param("areaId") Integer areaId, @Param("status") String status);
+
+    /** Visits recorded in a date range for the given pregnancies (monthly report). */
+    List<MotherRecord> findByPregnancy_PregnancyIdInAndRecordDateBetween(List<Integer> pregnancyIds, LocalDate from, LocalDate to);
 }
