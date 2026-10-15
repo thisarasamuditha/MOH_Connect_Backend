@@ -9,8 +9,8 @@ import org.springframework.web.bind.annotation.*;
 
 /**
  * REST endpoints for authentication without Spring Security.
- * - POST /api/auth/register
- * - POST /api/auth/login
+ * - POST /auth/register (ADMIN only)
+ * - POST /auth/login
  */
 @RestController
 @RequestMapping("/auth")
@@ -21,7 +21,9 @@ public class AuthController {
         this.authService = authService;
     }
 
+    /** Staff accounts (ADMIN, DOCTOR, MIDWIFE) are created by an admin only; mothers via /mothers/register. */
     @PostMapping("/register")
+    @RequireRoles("ADMIN")
     public ResponseEntity<AuthDtos.AuthResponse> register(@RequestBody @Valid AuthDtos.RegisterRequest req) {
         return ResponseEntity.ok(authService.register(req));
     }

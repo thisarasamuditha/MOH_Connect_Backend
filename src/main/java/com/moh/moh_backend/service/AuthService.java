@@ -43,8 +43,14 @@ public class AuthService {
         this.phmAreaRepo = phmAreaRepo;
     }
 
+    /**
+     * Creates a staff account (ADMIN, DOCTOR or MIDWIFE). Called by an admin, so no token is issued
+     * for the new user; they log in themselves. Mothers are registered by midwives via MotherService.
+     */
     @Transactional
     public AuthDtos.AuthResponse register(AuthDtos.RegisterRequest req) {
+        UserRole role = parseStaffRole(req.role);
+        req.role = role.name();
         if (userRepo.existsByUsername(req.username)) {
             throw new IllegalArgumentException("Username already taken");
 
@@ -65,7 +71,7 @@ public class AuthService {
         user.setUsername(req.username);
         user.setEmail(req.email);
         user.setPasswordHash(hashService.hashPassword(req.password));
-        user.setRole(UserRole.valueOf(req.role));
+        user.setRole(role);
         user.setIsActive(true);
         user = userRepo.save(user); // Save and get the persisted user with ID
 
@@ -109,14 +115,24 @@ public class AuthService {
             }
         }
 
-        String token = jwtService.issueToken(user.getUserId(), user.getEmail(), user.getRole().name());
-
         AuthDtos.AuthResponse resp = new AuthDtos.AuthResponse();
-        resp.token = token;
         resp.userId = user.getUserId();
         resp.username = user.getUsername();
         resp.role = user.getRole().name();
         return resp;
+    }
+
+    private UserRole parseStaffRole(String rawRole) {
+        UserRole role;
+        try {
+            role = UserRole.valueOf(rawRole == null ? "" : rawRole.trim().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Role must be ADMIN, DOCTOR or MIDWIFE");
+        }
+        if (role == UserRole.MOTHER) {
+            throw new IllegalArgumentException("Mothers are registered by their midwife (New Registration), not here");
+        }
+        return role;
     }
 
     @Transactional(readOnly = true)
