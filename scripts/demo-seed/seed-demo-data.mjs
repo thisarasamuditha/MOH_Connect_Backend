@@ -13,6 +13,10 @@
  *   API_BASE_URL   default http://localhost:8081/api/v1/moh-backend
  *   DEMO_SUFFIX    optional number (1-99999) to create a second, separate demo set
  *   DEMO_PASSWORD  default Demo@2026 (6-30 chars)
+ *   SEED_ADMIN_LOGIN, SEED_ADMIN_PASSWORD
+ *                  an existing admin (username or email) - needed on the first run only,
+ *                  because staff accounts can only be created by an admin (POST /auth/register).
+ *                  Later runs log in as the demo admin instead.
  *
  * Writes demo-seed-output.json next to this file; cleanup-demo-data.mjs uses it.
  */
@@ -23,6 +27,8 @@ import { fileURLToPath } from "node:url";
 const BASE = (process.env.API_BASE_URL || "http://localhost:8081/api/v1/moh-backend").replace(/\/$/, "");
 const SUFFIX = process.env.DEMO_SUFFIX || "";
 const PASSWORD = process.env.DEMO_PASSWORD || "Demo@2026";
+const SEED_ADMIN_LOGIN = process.env.SEED_ADMIN_LOGIN || "";
+const SEED_ADMIN_PASSWORD = process.env.SEED_ADMIN_PASSWORD || "";
 const OUTPUT_FILE = join(dirname(fileURLToPath(import.meta.url)), "demo-seed-output.json");
 
 if (SUFFIX && !/^\d{1,5}$/.test(SUFFIX)) {
@@ -100,14 +106,14 @@ async function api(method, path, { token, body } = {}) {
 
 const errorText = (e) => (e instanceof ApiError ? JSON.stringify(e.body) : e.message);
 
-async function login(identifier) {
-  return api("POST", "/auth/login", { body: { email: identifier, password: PASSWORD } });
+async function login(identifier, password = PASSWORD) {
+  return api("POST", "/auth/login", { body: { email: identifier, password } });
 }
 
-/** Register a staff account, or log in if it already exists from an earlier run. */
-async function registerOrLogin(payload) {
+/** Register a staff account (admin token required), or log in if it already exists from an earlier run. */
+async function registerOrLogin(payload, adminToken) {
   try {
-    await api("POST", "/auth/register", { body: payload });
+    await api("POST", "/auth/register", { token: adminToken, body: payload });
     ok(`created ${payload.role} '${payload.username}'`);
     return login(payload.username); // login response carries staffId + PHM area
   } catch (e) {
@@ -149,12 +155,23 @@ async function main() {
 
   // ------------------------------------------------------------ ADMIN
   step("Admin account");
-  const admin = await registerOrLogin({
-    username: accounts.admin.username,
-    email: accounts.admin.email,
-    password: PASSWORD,
-    role: "ADMIN",
-  });
+  let admin = await login(accounts.admin.username).catch(() => null);
+  if (admin) {
+    ok(`ADMIN '${accounts.admin.username}' already existed – logged in`);
+  } else {
+    if (!SEED_ADMIN_LOGIN || !SEED_ADMIN_PASSWORD) {
+      throw new Error(
+        "The demo admin does not exist yet. Set SEED_ADMIN_LOGIN and SEED_ADMIN_PASSWORD to an existing admin " +
+          "account so the seed can create it (staff accounts can only be created by an admin).",
+      );
+    }
+    const seedAdmin = await login(SEED_ADMIN_LOGIN, SEED_ADMIN_PASSWORD);
+    if (seedAdmin.role !== "ADMIN") throw new Error(`SEED_ADMIN_LOGIN '${SEED_ADMIN_LOGIN}' is not an ADMIN account`);
+    admin = await registerOrLogin(
+      { username: accounts.admin.username, email: accounts.admin.email, password: PASSWORD, role: "ADMIN" },
+      seedAdmin.token,
+    );
+  }
   output.ids.adminUserId = admin.userId;
 
   step("Demo PHM area (admin)");
@@ -206,7 +223,7 @@ async function main() {
       email: accounts.doctor.email,
       licenseNumber: `SLMC-DEMO-${pad5}`,
     },
-  });
+  }, admin.token);
   output.ids.doctorUserId = doctor.userId;
   output.ids.doctorId = doctor.staffId;
 
@@ -224,7 +241,7 @@ async function main() {
       assignmentDate: daysAgo(400),
       qualifications: "Diploma in Midwifery (NIHS Kalutara)",
     },
-  });
+  }, admin.token);
   output.ids.midwifeUserId = midwife.userId;
   output.ids.midwifeId = midwife.staffId;
   if (!midwife.staffId) throw new Error("Midwife login did not return a staffId (midwife profile missing)");
