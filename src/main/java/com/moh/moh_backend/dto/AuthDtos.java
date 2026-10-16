@@ -91,4 +91,35 @@ public class AuthDtos {
 
         public Boolean isActive;
     }
+
+    /** Logged-in user changes their own password. */
+    public static class ChangePasswordRequest {
+        @NotBlank
+        public String currentPassword;
+        @NotBlank @Size(min = 8, max = 128)
+        public String newPassword;
+    }
+
+    /** "Forgot password": ask for a reset link by email. */
+    public static class ForgotPasswordRequest {
+        @NotBlank @Email
+        public String email;
+    }
+
+    /** Set a new password using the token from the emailed link. */
+    public static class ResetPasswordRequest {
+        @NotBlank
+        public String token;
+        @NotBlank @Size(min = 8, max = 128)
+        public String newPassword;
+    }
+
+    /** Simple confirmation body for the password endpoints. */
+    public static class MessageResponse {
+        public String message;
+
+        public MessageResponse(String message) {
+            this.message = message;
+        }
+    }
 }
