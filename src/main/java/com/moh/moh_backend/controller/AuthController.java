@@ -2,6 +2,8 @@ package com.moh.moh_backend.controller;
 
 import com.moh.moh_backend.dto.AuthDtos;
 import com.moh.moh_backend.service.AuthService;
+import com.moh.moh_backend.service.PasswordService;
+import jakarta.servlet.http.HttpServletRequest;
 import com.moh.moh_backend.config.RequireRoles;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -11,14 +13,18 @@ import org.springframework.web.bind.annotation.*;
  * REST endpoints for authentication without Spring Security.
  * - POST /auth/register (ADMIN only)
  * - POST /auth/login
+ * - PUT  /auth/change-password (any logged-in user)
+ * - POST /auth/forgot-password, POST /auth/reset-password (public)
  */
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
     private final AuthService authService;
+    private final PasswordService passwordService;
 
-    public AuthController(AuthService authService) {
+    public AuthController(AuthService authService, PasswordService passwordService) {
         this.authService = authService;
+        this.passwordService = passwordService;
     }
 
     /** Staff accounts (ADMIN, DOCTOR, MIDWIFE) are created by an admin only; mothers via /mothers/register. */
@@ -31,6 +37,27 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<AuthDtos.AuthResponse> login(@RequestBody @Valid AuthDtos.LoginRequest req) {
         return ResponseEntity.ok(authService.login(req));
+    }
+
+    @PutMapping("/change-password")
+    public ResponseEntity<AuthDtos.MessageResponse> changePassword(
+            @RequestBody @Valid AuthDtos.ChangePasswordRequest req, HttpServletRequest request) {
+        passwordService.changePassword((Integer) request.getAttribute("moh.userId"), req);
+        return ResponseEntity.ok(new AuthDtos.MessageResponse("Password changed"));
+    }
+
+    /** Same answer whether or not the email is registered, so accounts cannot be discovered. */
+    @PostMapping("/forgot-password")
+    public ResponseEntity<AuthDtos.MessageResponse> forgotPassword(@RequestBody @Valid AuthDtos.ForgotPasswordRequest req) {
+        passwordService.requestPasswordReset(req.email);
+        return ResponseEntity.ok(new AuthDtos.MessageResponse(
+                "If an account uses this email, a password reset link has been sent to it."));
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<AuthDtos.MessageResponse> resetPassword(@RequestBody @Valid AuthDtos.ResetPasswordRequest req) {
+        passwordService.resetPassword(req);
+        return ResponseEntity.ok(new AuthDtos.MessageResponse("Password has been reset. You can now log in."));
     }
 
     /**
