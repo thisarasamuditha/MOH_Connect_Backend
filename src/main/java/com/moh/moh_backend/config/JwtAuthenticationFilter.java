@@ -37,6 +37,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         if ("OPTIONS".equalsIgnoreCase(request.getMethod())
                 || "/auth/login".equals(path)
+                || "/auth/forgot-password".equals(path)
+                || "/auth/reset-password".equals(path)
                 || "/".equals(path)
                 || path.isEmpty()
                 || isPublicGet) {

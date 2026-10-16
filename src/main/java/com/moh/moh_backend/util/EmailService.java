@@ -54,6 +54,36 @@ public class EmailService {
     }
 
     /**
+     * Send a "forgot password" link.
+     * @return true if the email was handed to the mail server, false if sending failed
+     */
+    public boolean sendPasswordResetLink(String toEmail, String username, String resetLink, int validMinutes) {
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setFrom(fromEmail);
+            message.setTo(toEmail);
+            message.setSubject("MOH Connect - Reset your password");
+
+            String body = "Dear " + username + ",\n\n" +
+                    "We received a request to reset your MOH Connect password.\n\n" +
+                    "Open this link to choose a new password:\n" +
+                    resetLink + "\n\n" +
+                    "The link works once and expires in " + validMinutes + " minutes.\n" +
+                    "If you did not ask for this, you can ignore this email; your password stays the same.\n\n" +
+                    "Best regards,\n" +
+                    "MOH Connect Team";
+
+            message.setText(body);
+            mailSender.send(message);
+            System.out.println("✓ Password reset link sent to " + toEmail);
+            return true;
+        } catch (Exception e) {
+            System.err.println("Failed to send password reset email to " + toEmail + ": " + e.getMessage());
+            return false;
+        }
+    }
+
+    /**
      * Alert the PHM area's midwives that a mother sent an URGENT visit request.
      * @return true if the email was handed to the mail server, false if sending failed
      */

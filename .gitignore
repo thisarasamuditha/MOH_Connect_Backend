@@ -32,3 +32,6 @@ build/
 ### VS Code ###
 .vscode/
 DB/02_data.sql
+
+### Local secrets ###
+.env
