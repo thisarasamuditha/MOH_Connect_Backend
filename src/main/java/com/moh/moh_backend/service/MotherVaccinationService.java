@@ -122,7 +122,19 @@ public class MotherVaccinationService {
             List<MotherVaccination> tetanus = all.stream()
                     .filter(v -> MaternalVaccinationDueService.isTetanus(v.getSchedule()))
                     .toList();
-            if (prior + tetanus.size() >= MaternalVaccinationDueService.FULL_COURSE_DOSES) {
+            if (prior == MaternalVaccinationDueService.FULL_COURSE_DOSES) {
+                throw new IllegalArgumentException("This mother already has " + MaternalVaccinationDueService.FULL_COURSE_DOSES
+                        + " tetanus doses and is protected for all childbearing years; no further dose is needed");
+            }
+            if (prior == MaternalVaccinationDueService.CHILDHOOD_SERIES_DOSES) {
+                List<MotherVaccination> thisPregnancyTetanus = tetanus.stream()
+                        .filter(v -> v.getPregnancy() != null && pregnancy.getPregnancyId() != null
+                                && pregnancy.getPregnancyId().equals(v.getPregnancy().getPregnancyId()))
+                        .toList();
+                if (!thisPregnancyTetanus.isEmpty()) {
+                    throw new IllegalArgumentException("This mother has completed her 6 childhood doses and has already received her 1 booster dose for this pregnancy");
+                }
+            } else if (prior + tetanus.size() >= MaternalVaccinationDueService.FULL_COURSE_DOSES) {
                 throw new IllegalArgumentException("This mother already has " + MaternalVaccinationDueService.FULL_COURSE_DOSES
                         + " tetanus doses and is protected for all childbearing years; no further dose is needed");
             }
