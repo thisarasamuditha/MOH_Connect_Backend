@@ -7,10 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
-/**
- * JPA entity mapped to USER table.
- * Matches schema fields exactly. Passwords are stored as SHA-256 hashes.
- */
+
 @Entity
 @Table(name = "USER")
 @Data
