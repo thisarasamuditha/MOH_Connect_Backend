@@ -39,6 +39,11 @@ public class MaternalVaccinationDtos {
         public boolean historyRecorded;
         public Integer priorTtDoses;
         public LocalDate priorTtLastDate;
+        /** True if mother has completed all 6 childhood/adolescent qualifying doses (infancy, 18m, 5y, aTd). */
+        public boolean childhood6Doses;
+        /** True if a booster dose is indicated during pregnancy due to >= 10 years elapsed. */
+        public boolean boosterIndicated;
+        public boolean isBooster;
 
         /** Tetanus doses before this pregnancy: earlier history + doses recorded here in earlier pregnancies. */
         public int dosesBeforePregnancy;

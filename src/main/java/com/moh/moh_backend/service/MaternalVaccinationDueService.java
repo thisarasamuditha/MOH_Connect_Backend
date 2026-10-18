@@ -43,6 +43,8 @@ import java.util.stream.Collectors;
 public class MaternalVaccinationDueService {
 
     public static final int FULL_COURSE_DOSES = 5;
+    /** 6 qualifying childhood/adolescent doses in Sri Lanka (infant DTP x3, 18m DTP, 5y DT, school aTd). */
+    public static final int CHILDHOOD_SERIES_DOSES = 6;
     public static final int FIRST_DOSE_FROM_WEEK = 12;
     /** Recommended gap between two doses in the same pregnancy. */
     public static final int SAME_PREGNANCY_INTERVAL_DAYS = 42;
@@ -125,14 +127,16 @@ public class MaternalVaccinationDueService {
         return result;
     }
 
-    /** Records how many tetanus doses the mother had before this system (0-5) and when the last one was. */
+    /** Records how many tetanus doses the mother had before this system (0-6) and when the last one was.
+     *  0-5 represents adult maternal doses; 6 represents completed 6 childhood/adolescent doses (infancy, 18m, 5y, aTd).
+     */
     @Transactional
     public Mother saveHistory(Mother mother, MaternalVaccinationDtos.TtHistoryRequest req) {
         if (req == null || req.priorDoses == null) {
             throw new IllegalArgumentException("Number of earlier tetanus doses is required (0 if none)");
         }
-        if (req.priorDoses < 0 || req.priorDoses > FULL_COURSE_DOSES) {
-            throw new IllegalArgumentException("Earlier tetanus doses must be between 0 and " + FULL_COURSE_DOSES);
+        if (req.priorDoses < 0 || req.priorDoses > CHILDHOOD_SERIES_DOSES) {
+            throw new IllegalArgumentException("Earlier tetanus doses must be between 0 and " + CHILDHOOD_SERIES_DOSES);
         }
         if (req.lastDoseDate != null) {
             if (req.priorDoses == 0) {
@@ -170,6 +174,10 @@ public class MaternalVaccinationDueService {
         s.priorTtDoses = mother.getPriorTtDoses();
         s.priorTtLastDate = mother.getPriorTtLastDate();
 
+        int prior = mother.getPriorTtDoses() == null ? 0 : mother.getPriorTtDoses();
+        boolean isChildhoodSeries = (prior == CHILDHOOD_SERIES_DOSES);
+        s.childhood6Doses = isChildhoodSeries;
+
         List<MotherVaccination> all = new ArrayList<>(allMotherVaccinations == null ? List.of() : allMotherVaccinations);
         all.sort(Comparator.comparing(MotherVaccination::getVaccinationDate, Comparator.nullsLast(Comparator.naturalOrder())));
         List<MotherVaccination> thisPregnancy = all.stream()
@@ -182,21 +190,21 @@ public class MaternalVaccinationDueService {
                 .toList();
         List<MotherVaccination> tetanusThis = thisPregnancy.stream().filter(v -> isTetanus(v.getSchedule())).toList();
 
-        int prior = mother.getPriorTtDoses() == null ? 0 : mother.getPriorTtDoses();
-        s.dosesBeforePregnancy = Math.min(FULL_COURSE_DOSES, prior + tetanusEarlier.size());
+        s.dosesBeforePregnancy = isChildhoodSeries ? 6 : Math.min(FULL_COURSE_DOSES, prior + tetanusEarlier.size());
         s.lastDoseBeforePregnancy = latest(mother.getPriorTtLastDate(),
                 tetanusEarlier.isEmpty() ? null : tetanusEarlier.get(tetanusEarlier.size() - 1).getVaccinationDate());
 
         int ordinal = prior;
-        for (MotherVaccination v : tetanusEarlier) s.earlierDoses.add(toDose(v, ++ordinal));
-        ordinal = s.dosesBeforePregnancy;
+        for (MotherVaccination v : tetanusEarlier) s.earlierDoses.add(toDose(v, isChildhoodSeries ? null : ++ordinal));
+        ordinal = isChildhoodSeries ? 6 : s.dosesBeforePregnancy;
         for (MotherVaccination v : thisPregnancy) {
-            s.doses.add(toDose(v, isTetanus(v.getSchedule()) ? ++ordinal : null));
+            s.doses.add(toDose(v, isTetanus(v.getSchedule()) ? (isChildhoodSeries ? null : ++ordinal) : null));
         }
 
         s.dosesNeeded = dosesNeeded(s.dosesBeforePregnancy, s.lastDoseBeforePregnancy, edd);
         s.dosesGivenThisPregnancy = tetanusThis.size();
-        s.lifetimeDoses = Math.min(FULL_COURSE_DOSES, s.dosesBeforePregnancy + s.dosesGivenThisPregnancy);
+        s.lifetimeDoses = isChildhoodSeries ? 6 + s.dosesGivenThisPregnancy : Math.min(FULL_COURSE_DOSES, s.dosesBeforePregnancy + s.dosesGivenThisPregnancy);
+        s.boosterIndicated = isChildhoodSeries && (s.dosesNeeded > 0);
         if (edd != null) s.latestDate = edd.minusDays(FINISH_BEFORE_EDD_DAYS);
 
         if (pregnancy.getPregnancyStatus() != null && pregnancy.getPregnancyStatus() != PregnancyStatus.ACTIVE) {
@@ -209,8 +217,14 @@ public class MaternalVaccinationDueService {
             return s;
         }
 
-        s.nextLifetimeDoseNumber = s.lifetimeDoses + 1;
-        s.nextScheduleId = suggestSchedule(motherSchedules, s.nextLifetimeDoseNumber);
+        if (isChildhoodSeries) {
+            s.isBooster = true;
+            s.nextLifetimeDoseNumber = null;
+            s.nextScheduleId = suggestSchedule(motherSchedules, 1);
+        } else {
+            s.nextLifetimeDoseNumber = s.lifetimeDoses + 1;
+            s.nextScheduleId = suggestSchedule(motherSchedules, s.nextLifetimeDoseNumber);
+        }
 
         LocalDate lastAny = latest(s.lastDoseBeforePregnancy,
                 tetanusThis.isEmpty() ? null : tetanusThis.get(tetanusThis.size() - 1).getVaccinationDate());
@@ -246,8 +260,20 @@ public class MaternalVaccinationDueService {
         return s;
     }
 
-    /** How many tetanus doses a pregnancy needs, from the doses before it (WHO protection periods). */
+    /** How many tetanus doses a pregnancy needs, from the doses before it (WHO & Sri Lanka Epidemiology Unit guidance). */
     static int dosesNeeded(int dosesBefore, LocalDate lastDoseBefore, LocalDate edd) {
+        if (dosesBefore == 5) return 0; // 5 doses in previous pregnancies -> lifelong protection for childbearing years
+        if (dosesBefore == CHILDHOOD_SERIES_DOSES) {
+            // Six documented childhood/adolescent doses (infancy DTP x3, 18m DTP, 5y DT, adolescent aTd):
+            // Under Sri Lanka guidance: protected for 10 years after last qualifying dose.
+            // If < 10 years ago -> 0 doses needed.
+            // If >= 10 years ago (or date unrecorded) -> 1 booster dose needed during pregnancy.
+            if (lastDoseBefore != null && edd != null) {
+                boolean within10Years = !lastDoseBefore.plusYears(10).isBefore(edd);
+                return within10Years ? 0 : 1;
+            }
+            return 1; // booster indicated under national guidance
+        }
         if (dosesBefore >= FULL_COURSE_DOSES) return 0;
         if (dosesBefore == 0) return 2;
         if (dosesBefore == 1) return 1;
@@ -266,7 +292,7 @@ public class MaternalVaccinationDueService {
         if (s == null || s.getVaccineName() == null) return false;
         if (s.getTargetGroup() != null && s.getTargetGroup() != TargetGroup.MOTHER) return false;
         String n = s.getVaccineName().toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9]", "");
-        return n.contains("tetanus") || n.startsWith("tt") || n.equals("td") || n.contains("atd");
+        return n.contains("tetanus") || n.startsWith("tt") || n.equals("td") || n.contains("atd") || n.contains("tdap");
     }
 
     private List<VaccineSchedule> motherSchedules() {

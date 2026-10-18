@@ -127,6 +127,20 @@ class MaternalVaccinationDueServiceTests {
         assertEquals(1, eval(pregnancy(1, mother(3, null), lmp), List.of()).dosesNeeded);
         // Full course
         assertEquals("PROTECTED", eval(pregnancy(1, mother(5, null), lmp), List.of()).status);
+
+        // Sri Lanka 6 childhood/adolescent doses (infancy DTP x3, 18m DTP, 5y DT, school aTd):
+        // Within 10 years -> PROTECTED, no dose needed
+        MaternalVaccinationDtos.PregnancyStatus recentChildhood = eval(pregnancy(1, mother(6, edd.minusYears(8)), lmp), List.of());
+        assertEquals(0, recentChildhood.dosesNeeded);
+        assertEquals("PROTECTED", recentChildhood.status);
+        assertTrue(recentChildhood.childhood6Doses);
+
+        // 10 or more years ago -> 1 booster dose needed
+        MaternalVaccinationDtos.PregnancyStatus oldChildhood = eval(pregnancy(1, mother(6, edd.minusYears(12)), lmp), List.of());
+        assertEquals(1, oldChildhood.dosesNeeded);
+        assertTrue(oldChildhood.boosterIndicated);
+        assertTrue(oldChildhood.isBooster);
+        assertNull(oldChildhood.nextLifetimeDoseNumber); // Marked as booster
     }
 
     @Test
@@ -208,5 +222,9 @@ class MaternalVaccinationDueServiceTests {
 
         Pregnancy recentHistory = pregnancy(3, mother(2, TODAY.minusWeeks(2)), TODAY.minusWeeks(20));
         assertThrows(IllegalArgumentException.class, () -> MotherVaccinationService.validateDose(TODAY, TT3, recentHistory, List.of(), TODAY));
+
+        Pregnancy childhood = pregnancy(4, mother(6, TODAY.minusYears(12)), TODAY.minusWeeks(20));
+        List<MotherVaccination> boosterGiven = List.of(dose(15, childhood, TT1, TODAY.minusWeeks(6)));
+        assertThrows(IllegalArgumentException.class, () -> MotherVaccinationService.validateDose(TODAY, TT2, childhood, boosterGiven, TODAY));
     }
 }
