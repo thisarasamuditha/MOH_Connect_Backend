@@ -2,7 +2,6 @@ package com.moh.moh_backend.util;
 
 import jakarta.mail.internet.MimeMessage;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
@@ -66,22 +65,22 @@ public class EmailService {
      */
     public boolean sendPasswordResetLink(String toEmail, String username, String resetLink, int validMinutes) {
         try {
-            SimpleMailMessage message = new SimpleMailMessage();
-            message.setFrom(fromEmail);
-            message.setTo(toEmail);
-            message.setSubject("MOH Connect - Reset your password");
+            Context context = new Context();
+            context.setVariable("username", username != null ? username : "User");
+            context.setVariable("resetLink", resetLink != null ? resetLink : "#");
+            context.setVariable("validMinutes", validMinutes);
 
-            String body = "Dear " + username + ",\n\n" +
-                    "We received a request to reset your MOH Connect password.\n\n" +
-                    "Open this link to choose a new password:\n" +
-                    resetLink + "\n\n" +
-                    "The link works once and expires in " + validMinutes + " minutes.\n" +
-                    "If you did not ask for this, you can ignore this email; your password stays the same.\n\n" +
-                    "Best regards,\n" +
-                    "MOH Connect Team";
+            String htmlBody = templateEngine.process("email/password-reset", context);
 
-            message.setText(body);
-            mailSender.send(message);
+            MimeMessage mimeMessage = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, "UTF-8");
+
+            helper.setFrom(fromEmail);
+            helper.setTo(toEmail);
+            helper.setSubject("MOH Connect - Reset your password");
+            helper.setText(htmlBody, true);
+
+            mailSender.send(mimeMessage);
             System.out.println("✓ Password reset link sent to " + toEmail);
             return true;
         } catch (Exception e) {
