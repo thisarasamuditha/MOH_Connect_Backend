@@ -157,8 +157,10 @@ public class MotherService {
         mother.setActive(true);
         Mother savedMother = motherRepo.save(mother);
 
+
         // Send credentials to mother's email
-        boolean emailed = emailService.sendMotherCredentials(req.email, username, password, req.name);
+        String mohArea = phmArea.getAreaName();
+        boolean emailed = emailService.sendMotherCredentials(req.email, username, password, req.name,mohArea);
         return new MotherRegistration(savedMother, emailed);
     }
 

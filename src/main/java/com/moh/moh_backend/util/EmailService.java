@@ -1,49 +1,56 @@
 package com.moh.moh_backend.util;
 
+import jakarta.mail.internet.MimeMessage;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+import org.thymeleaf.TemplateEngine;
+import org.thymeleaf.context.Context;
 
 import java.util.List;
 
 /**
- * Email service for sending notifications
+ * Email service for sending styled HTML notifications via Thymeleaf templates.
  */
 @Service
 public class EmailService {
 
     private final JavaMailSender mailSender;
+    private final TemplateEngine templateEngine;
 
     @Value("${spring.mail.from:no-reply@moh.gov.lk}")
     private String fromEmail;
 
-    public EmailService(JavaMailSender mailSender) {
+    public EmailService(JavaMailSender mailSender, TemplateEngine templateEngine) {
         this.mailSender = mailSender;
+        this.templateEngine = templateEngine;
     }
 
     /**
-     * Send mother credentials to email
-     * @return true if the email was handed to the mail server, false if sending failed
-     */
-    public boolean sendMotherCredentials(String toEmail, String username, String password, String motherName) {
+     * Send mother credentials to email using the Thymeleaf template.
+     **/
+    public boolean sendMotherCredentials(String toEmail, String username, String password, String motherName, String mohArea) {
         try {
-            SimpleMailMessage message = new SimpleMailMessage();
-            message.setFrom(fromEmail);
-            message.setTo(toEmail);
-            message.setSubject("MOH Connect - Your Account Credentials");
-            
-            String body = "Dear " + motherName + ",\n\n" +
-                    "Your account has been created in the MOH Connect system.\n\n" +
-                    "Login Credentials:\n" +
-                    "Username: " + username + "\n" +
-                    "Password: " + password + "\n\n" +
-                    "Please change your password after first login.\n\n" +
-                    "Best regards,\n" +
-                    "MOH Connect Team";
-            
-            message.setText(body);
-            mailSender.send(message);
+            Context context = new Context();
+            context.setVariable("motherName", motherName != null ? motherName : "Mother");
+            context.setVariable("mohArea", mohArea != null ? mohArea : "");
+            context.setVariable("username", username != null ? username : "");
+            context.setVariable("password", password != null ? password : "");
+            context.setVariable("email", toEmail!= null ? toEmail : "");
+
+            String htmlBody = templateEngine.process("email/mother-credentials", context);
+
+            MimeMessage mimeMessage = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, "UTF-8");
+
+            helper.setFrom(fromEmail);
+            helper.setTo(toEmail);
+            helper.setSubject("MOH Connect - Your Account Credentials");
+            helper.setText(htmlBody, true);
+
+            mailSender.send(mimeMessage);
             System.out.println("✓ Credentials sent to " + toEmail);
             return true;
         } catch (Exception e) {
@@ -85,28 +92,31 @@ public class EmailService {
 
     /**
      * Alert the PHM area's midwives that a mother sent an URGENT visit request.
-     * @return true if the email was handed to the mail server, false if sending failed
-     */
+     **/
     public boolean sendUrgentVisitRequestAlert(List<String> toEmails, String motherName, String requestType,
                                                String reason, String contactNumber, String address) {
+        if (toEmails == null || toEmails.isEmpty()) {
+            return false;
+        }
         try {
-            SimpleMailMessage message = new SimpleMailMessage();
-            message.setFrom(fromEmail);
-            message.setTo(toEmails.toArray(new String[0]));
-            message.setSubject("URGENT: " + requestType + " request from " + motherName);
+            Context context = new Context();
+            context.setVariable("motherName", motherName != null ? motherName : "Mother");
+            context.setVariable("requestType", requestType != null ? requestType : "Visit Request");
+            context.setVariable("reason", reason != null ? reason : "No reason provided");
+            context.setVariable("contactNumber", contactNumber != null && !contactNumber.isBlank() ? contactNumber : "Not provided");
+            context.setVariable("address", address != null && !address.isBlank() ? address : "Not provided");
 
-            String body = "An urgent request was sent through the MOH Connect Mother Portal.\n\n" +
-                    "Mother: " + motherName + "\n" +
-                    "Request: " + requestType + "\n" +
-                    "Contact: " + (contactNumber != null ? contactNumber : "not given") + "\n" +
-                    "Address: " + (address != null ? address : "not given") + "\n\n" +
-                    "Reason:\n" + reason + "\n\n" +
-                    "Please contact the mother as soon as possible and update the request in MOH Connect " +
-                    "(Visit Requests page).\n\n" +
-                    "MOH Connect";
+            String htmlBody = templateEngine.process("email/urgent-visit-alert", context);
 
-            message.setText(body);
-            mailSender.send(message);
+            MimeMessage mimeMessage = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, "UTF-8");
+
+            helper.setFrom(fromEmail);
+            helper.setTo(toEmails.toArray(new String[0]));
+            helper.setSubject("URGENT: " + requestType + " request from " + motherName);
+            helper.setText(htmlBody, true);
+
+            mailSender.send(mimeMessage);
             System.out.println("✓ Urgent visit request alert sent to " + toEmails);
             return true;
         } catch (Exception e) {
