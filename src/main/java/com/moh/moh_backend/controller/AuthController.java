@@ -82,7 +82,7 @@ public class AuthController {
     }
 
     @GetMapping("/doctors")
-    @RequireRoles("ADMIN")
+    @RequireRoles({"ADMIN", "MIDWIFE", "DOCTOR"})
     public ResponseEntity<Iterable<AuthDtos.UserResponse>> getAllDoctors() {
         return ResponseEntity.ok(authService.getAllDoctors());
     }
