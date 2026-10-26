@@ -166,6 +166,7 @@ public class BabyVaccinationService {
         dto.setNextDoseDate(vaccination.getNextDoseDate());
         dto.setAdverseReaction(vaccination.getAdverseReaction());
         dto.setCreatedAt(vaccination.getCreatedAt());
+        dto.setStatus("GIVEN");
         
         return dto;
     }

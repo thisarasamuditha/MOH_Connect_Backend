@@ -24,4 +24,13 @@ public class BabyVaccinationResponseDto {
     private LocalDate nextDoseDate;
     private String adverseReaction;
     private LocalDateTime createdAt;
+    private String status = "GIVEN";
+
+    public String getVaccineName() {
+        return schedule != null ? schedule.getVaccineName() : null;
+    }
+
+    public Integer getDoseNumber() {
+        return schedule != null ? schedule.getDoseNumber() : null;
+    }
 }
