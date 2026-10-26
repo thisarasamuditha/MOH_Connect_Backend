@@ -347,7 +347,7 @@ public class PregnancyService {
     @Transactional(readOnly = true)
     public List<PregnancyResponse> getPregnancyByPhmArea(Integer phmAreaId) {
 
-        return pregnancyRepository.findByMother_PhmArea_PhmAreaId(phmAreaId)
+        return pregnancyRepository.findByMother_PhmArea_PhmAreaIdAndPregnancyStatus(phmAreaId,PregnancyStatus.ACTIVE)
                 .stream()
                 .map(PregnancyResponse::from)
                 .collect(Collectors.toList());

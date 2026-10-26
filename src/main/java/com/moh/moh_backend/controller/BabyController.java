@@ -78,6 +78,8 @@ public class BabyController {
             {
                 Integer userId = (Integer) request.getAttribute("moh.userId");
                 String role = (String) request.getAttribute("moh.role");
+                log.info("userId  :{}",userId);
+                log.info("role :{}",role);
                 return babyService.findDtoById(id, userId, role)
                         .map(ResponseEntity::ok)
                         .orElseGet(() -> ResponseEntity.notFound().build());

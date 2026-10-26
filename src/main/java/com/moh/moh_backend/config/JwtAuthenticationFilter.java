@@ -41,6 +41,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 || "/auth/reset-password".equals(path)
                 || "/".equals(path)
                 || path.isEmpty()
+                || path.startsWith("/ws-chat")
                 || isPublicGet) {
             String authorization = request.getHeader("Authorization");
             if (authorization != null && authorization.startsWith("Bearer ")) {
