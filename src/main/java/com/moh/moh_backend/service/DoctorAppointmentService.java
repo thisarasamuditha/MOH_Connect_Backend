@@ -108,10 +108,21 @@ public class DoctorAppointmentService {
         return DoctorAppointmentDtos.Response.from(saved);
     }
 
-    public List<DoctorAppointmentDtos.Response> getAppointments(String statusFilter, Integer userId, String role) {
+    public List<DoctorAppointmentDtos.Response> getAppointments(String statusFilter, Integer doctorId, Integer userId, String role) {
         List<DoctorAppointment> list;
 
-        if ("DOCTOR".equalsIgnoreCase(role)) {
+        if (doctorId != null) {
+            if (statusFilter != null && !statusFilter.isBlank() && !"ALL".equalsIgnoreCase(statusFilter)) {
+                try {
+                    DoctorAppointmentStatus s = DoctorAppointmentStatus.valueOf(statusFilter.trim().toUpperCase());
+                    list = appointmentRepository.findByDoctor_DoctorIdAndStatusOrderByCreatedAtDesc(doctorId, s);
+                } catch (IllegalArgumentException e) {
+                    list = appointmentRepository.findByDoctor_DoctorIdOrderByCreatedAtDesc(doctorId);
+                }
+            } else {
+                list = appointmentRepository.findByDoctor_DoctorIdOrderByCreatedAtDesc(doctorId);
+            }
+        } else if ("DOCTOR".equalsIgnoreCase(role)) {
             if (statusFilter != null && !statusFilter.isBlank() && !"ALL".equalsIgnoreCase(statusFilter)) {
                 try {
                     DoctorAppointmentStatus s = DoctorAppointmentStatus.valueOf(statusFilter.trim().toUpperCase());
@@ -137,17 +148,24 @@ public class DoctorAppointmentService {
         return list.stream().map(DoctorAppointmentDtos.Response::from).collect(Collectors.toList());
     }
 
+    public List<DoctorAppointmentDtos.Response> getAppointments(String statusFilter, Integer userId, String role) {
+        return getAppointments(statusFilter, null, userId, role);
+    }
+
     /**
      * User requirement: Consultations view only shows PENDING_REVIEW and COMPLETED appointments!
      */
-    public List<DoctorAppointmentDtos.Response> getConsultations(Integer userId, String role) {
+    public List<DoctorAppointmentDtos.Response> getConsultations(Integer doctorId, Integer userId, String role) {
         List<DoctorAppointmentStatus> consultationStatuses = Arrays.asList(
                 DoctorAppointmentStatus.PENDING_REVIEW,
                 DoctorAppointmentStatus.COMPLETED
         );
 
         List<DoctorAppointment> list;
-        if ("DOCTOR".equalsIgnoreCase(role)) {
+        if (doctorId != null) {
+            list = appointmentRepository.findByDoctor_DoctorIdAndStatusInOrderByAppointmentDateAscAppointmentTimeAscCreatedAtDesc(
+                    doctorId, consultationStatuses);
+        } else if ("DOCTOR".equalsIgnoreCase(role)) {
             list = appointmentRepository.findByDoctor_User_UserIdAndStatusInOrderByAppointmentDateAscAppointmentTimeAscCreatedAtDesc(
                     userId, consultationStatuses);
         } else {
@@ -155,6 +173,10 @@ public class DoctorAppointmentService {
         }
 
         return list.stream().map(DoctorAppointmentDtos.Response::from).collect(Collectors.toList());
+    }
+
+    public List<DoctorAppointmentDtos.Response> getConsultations(Integer userId, String role) {
+        return getConsultations(null, userId, role);
     }
 
     @Transactional

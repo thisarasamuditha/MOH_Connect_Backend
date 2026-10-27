@@ -11,6 +11,11 @@ public interface DoctorAppointmentRepository extends JpaRepository<DoctorAppoint
 
     List<DoctorAppointment> findByDoctor_DoctorIdOrderByCreatedAtDesc(Integer doctorId);
 
+    List<DoctorAppointment> findByDoctor_DoctorIdAndStatusOrderByCreatedAtDesc(Integer doctorId, DoctorAppointmentStatus status);
+
+    List<DoctorAppointment> findByDoctor_DoctorIdAndStatusInOrderByAppointmentDateAscAppointmentTimeAscCreatedAtDesc(
+            Integer doctorId, Collection<DoctorAppointmentStatus> statuses);
+
     List<DoctorAppointment> findByDoctor_User_UserIdOrderByCreatedAtDesc(Integer userId);
 
     List<DoctorAppointment> findByDoctor_User_UserIdAndStatusOrderByCreatedAtDesc(Integer userId, DoctorAppointmentStatus status);
