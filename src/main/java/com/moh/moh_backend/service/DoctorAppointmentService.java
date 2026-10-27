@@ -28,6 +28,8 @@ public class DoctorAppointmentService {
     private final PregnancyRepository pregnancyRepository;
     private final BabyRepository babyRepository;
     private final UserRepository userRepository;
+    private final MotherRecordRepository motherRecordRepository;
+    private final BabyRecordRepository babyRecordRepository;
 
     @Transactional
     public DoctorAppointmentDtos.Response createAppointment(DoctorAppointmentDtos.CreateRequest req, Integer userId, String role) {
@@ -108,10 +110,21 @@ public class DoctorAppointmentService {
         return DoctorAppointmentDtos.Response.from(saved);
     }
 
-    public List<DoctorAppointmentDtos.Response> getAppointments(String statusFilter, Integer userId, String role) {
+    public List<DoctorAppointmentDtos.Response> getAppointments(String statusFilter, Integer doctorId, Integer userId, String role) {
         List<DoctorAppointment> list;
 
-        if ("DOCTOR".equalsIgnoreCase(role)) {
+        if (doctorId != null) {
+            if (statusFilter != null && !statusFilter.isBlank() && !"ALL".equalsIgnoreCase(statusFilter)) {
+                try {
+                    DoctorAppointmentStatus s = DoctorAppointmentStatus.valueOf(statusFilter.trim().toUpperCase());
+                    list = appointmentRepository.findByDoctor_DoctorIdAndStatusOrderByCreatedAtDesc(doctorId, s);
+                } catch (IllegalArgumentException e) {
+                    list = appointmentRepository.findByDoctor_DoctorIdOrderByCreatedAtDesc(doctorId);
+                }
+            } else {
+                list = appointmentRepository.findByDoctor_DoctorIdOrderByCreatedAtDesc(doctorId);
+            }
+        } else if ("DOCTOR".equalsIgnoreCase(role)) {
             if (statusFilter != null && !statusFilter.isBlank() && !"ALL".equalsIgnoreCase(statusFilter)) {
                 try {
                     DoctorAppointmentStatus s = DoctorAppointmentStatus.valueOf(statusFilter.trim().toUpperCase());
@@ -137,17 +150,24 @@ public class DoctorAppointmentService {
         return list.stream().map(DoctorAppointmentDtos.Response::from).collect(Collectors.toList());
     }
 
+    public List<DoctorAppointmentDtos.Response> getAppointments(String statusFilter, Integer userId, String role) {
+        return getAppointments(statusFilter, null, userId, role);
+    }
+
     /**
      * User requirement: Consultations view only shows PENDING_REVIEW and COMPLETED appointments!
      */
-    public List<DoctorAppointmentDtos.Response> getConsultations(Integer userId, String role) {
+    public List<DoctorAppointmentDtos.Response> getConsultations(Integer doctorId, Integer userId, String role) {
         List<DoctorAppointmentStatus> consultationStatuses = Arrays.asList(
                 DoctorAppointmentStatus.PENDING_REVIEW,
                 DoctorAppointmentStatus.COMPLETED
         );
 
         List<DoctorAppointment> list;
-        if ("DOCTOR".equalsIgnoreCase(role)) {
+        if (doctorId != null) {
+            list = appointmentRepository.findByDoctor_DoctorIdAndStatusInOrderByAppointmentDateAscAppointmentTimeAscCreatedAtDesc(
+                    doctorId, consultationStatuses);
+        } else if ("DOCTOR".equalsIgnoreCase(role)) {
             list = appointmentRepository.findByDoctor_User_UserIdAndStatusInOrderByAppointmentDateAscAppointmentTimeAscCreatedAtDesc(
                     userId, consultationStatuses);
         } else {
@@ -155,6 +175,10 @@ public class DoctorAppointmentService {
         }
 
         return list.stream().map(DoctorAppointmentDtos.Response::from).collect(Collectors.toList());
+    }
+
+    public List<DoctorAppointmentDtos.Response> getConsultations(Integer userId, String role) {
+        return getConsultations(null, userId, role);
     }
 
     @Transactional
@@ -203,6 +227,56 @@ public class DoctorAppointmentService {
 
         DoctorAppointment saved = appointmentRepository.save(appointment);
         log.info("Appointment {} completed with clinical notes by doctor user {}", appointmentId, userId);
+
+        // Store into Medical Records (MotherRecord or BabyRecord)
+        try {
+            LocalDate recordDate = saved.getAppointmentDate() != null ? saved.getAppointmentDate() : LocalDate.now();
+            String docFindings = saved.getDiagnosis() != null && !saved.getDiagnosis().isBlank()
+                    ? (saved.getDiagnosis() + (saved.getClinicalNotes() != null && !saved.getClinicalNotes().isBlank() ? " — " + saved.getClinicalNotes() : ""))
+                    : saved.getClinicalNotes();
+            String docRecommendations = saved.getPrescriptions();
+            String docNotes = "Doctor Consultation completed by Dr. " + (saved.getDoctor() != null ? saved.getDoctor().getName() : "");
+
+            if (saved.getPatientType() == PatientType.MOTHER && saved.getPregnancy() != null) {
+                Integer gestWeeks = null;
+                if (saved.getPregnancy().getLmpDate() != null) {
+                    long days = java.time.temporal.ChronoUnit.DAYS.between(saved.getPregnancy().getLmpDate(), recordDate);
+                    gestWeeks = (int) Math.max(0, days / 7);
+                }
+                MotherRecord mr = MotherRecord.builder()
+                        .pregnancy(saved.getPregnancy())
+                        .doctor(saved.getDoctor())
+                        .recordDate(recordDate)
+                        .visitType("DOCTOR")
+                        .verificationStatus("APPROVED")
+                        .gestationalAge(gestWeeks)
+                        .findings(docFindings)
+                        .recommendations(docRecommendations)
+                        .notes(docNotes)
+                        .build();
+                motherRecordRepository.save(mr);
+                log.info("Auto-created MotherRecord from completed consultation for pregnancy {}", saved.getPregnancy().getPregnancyId());
+            } else if (saved.getPatientType() == PatientType.BABY && saved.getBaby() != null) {
+                Baby b = saved.getBaby();
+                Integer ageMonths = null;
+                if (b.getDateOfBirth() != null) {
+                    ageMonths = (int) Math.max(0, java.time.temporal.ChronoUnit.MONTHS.between(b.getDateOfBirth(), recordDate));
+                }
+                BabyRecord br = new BabyRecord();
+                br.setBaby(b);
+                br.setDoctor(saved.getDoctor());
+                br.setRecordDate(recordDate);
+                br.setAgeMonths(ageMonths);
+                br.setFindings(docFindings);
+                br.setRecommendations(docRecommendations);
+                br.setNotes(docNotes);
+                babyRecordRepository.save(br);
+                log.info("Auto-created BabyRecord from completed consultation for baby {}", b.getBabyId());
+            }
+        } catch (Exception ex) {
+            log.error("Failed to auto-create medical record from consultation: {}", ex.getMessage(), ex);
+        }
+
         return DoctorAppointmentDtos.Response.from(saved);
     }
 

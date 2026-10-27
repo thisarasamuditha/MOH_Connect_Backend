@@ -58,8 +58,9 @@ public class AuthDtos {
         public String role;
         public String name;        // Full name (from Midwife/Doctor profile)
         public Integer staffId;    // midwife_id or doctor_id
-        public Integer phmAreaId;  // Midwife's PHM area ID
-        public String phmAreaName; // Midwife's PHM area name
+        public Integer doctorId;   // doctor_id for DOCTOR role
+        public Integer phmAreaId;  // PHM area ID
+        public String phmAreaName; // PHM area name
     }
 
     /**

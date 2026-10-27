@@ -169,6 +169,7 @@ public class AuthService {
             doctorRepo.findByUser_UserId(user.getUserId()).ifPresent(d -> {
                 resp.name = d.getName();
                 resp.staffId = d.getDoctorId();
+                resp.doctorId = d.getDoctorId();
                 resp.licenseNumber = d.getLicenseNumber();
                 if(d.getPhmArea() != null) {
                     resp.phmAreaId = d.getPhmArea().getPhmAreaId();

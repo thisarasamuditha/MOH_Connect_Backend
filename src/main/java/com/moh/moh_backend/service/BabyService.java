@@ -181,6 +181,16 @@ public class BabyService {
                 .collect(Collectors.toList());
     }
 
+    public List<BabyResponseDto> findDtosByPhmArea(Integer phmAreaId) {
+        if (phmAreaId == null) return List.of();
+        List<Integer> motherIds = motherRepository.findByPhmArea_PhmAreaId(phmAreaId)
+                .stream().map(Mother::getMotherId).toList();
+        if (motherIds.isEmpty()) return List.of();
+        return babyRepository.findByMotherIdIn(motherIds).stream()
+                .map(this::toDto)
+                .collect(Collectors.toList());
+    }
+
     public void deleteById(Integer id, Integer userId, String role) {
         Baby baby = babyRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Baby not found"));
         assertCanAccessMother(baby.getMotherId(), userId, role);

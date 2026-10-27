@@ -44,11 +44,12 @@ public class DoctorAppointmentController {
     @RequireRoles({"DOCTOR", "MIDWIFE", "ADMIN"})
     public ResponseEntity<?> getAppointments(
             @RequestParam(required = false) String status,
+            @RequestParam(required = false) Integer doctorId,
             HttpServletRequest request) {
         try {
             Integer userId = (Integer) request.getAttribute("moh.userId");
             String role = (String) request.getAttribute("moh.role");
-            List<DoctorAppointmentDtos.Response> list = appointmentService.getAppointments(status, userId, role);
+            List<DoctorAppointmentDtos.Response> list = appointmentService.getAppointments(status, doctorId, userId, role);
             return ResponseEntity.ok(list);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -58,11 +59,13 @@ public class DoctorAppointmentController {
 
     @GetMapping("/consultations")
     @RequireRoles({"DOCTOR", "ADMIN"})
-    public ResponseEntity<?> getConsultations(HttpServletRequest request) {
+    public ResponseEntity<?> getConsultations(
+            @RequestParam(required = false) Integer doctorId,
+            HttpServletRequest request) {
         try {
             Integer userId = (Integer) request.getAttribute("moh.userId");
             String role = (String) request.getAttribute("moh.role");
-            List<DoctorAppointmentDtos.Response> list = appointmentService.getConsultations(userId, role);
+            List<DoctorAppointmentDtos.Response> list = appointmentService.getConsultations(doctorId, userId, role);
             return ResponseEntity.ok(list);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
