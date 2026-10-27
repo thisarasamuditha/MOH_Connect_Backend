@@ -98,6 +98,12 @@ public class BabyController {
                 return ResponseEntity.ok(babyService.findAllDtos(userId, role));
             }
 
+            @GetMapping("/by-phm-area/{phmAreaId}")
+            @RequireRoles({"MIDWIFE", "DOCTOR", "ADMIN"})
+            public ResponseEntity<List<BabyResponseDto>> getByPhmArea(@PathVariable Integer phmAreaId) {
+                return ResponseEntity.ok(babyService.findDtosByPhmArea(phmAreaId));
+            }
+
             @DeleteMapping("/{id}")
             @RequireRoles({"MIDWIFE", "DOCTOR"})
             public ResponseEntity<Void> delete (@PathVariable Integer id, jakarta.servlet.http.HttpServletRequest
